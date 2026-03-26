@@ -160,7 +160,7 @@ export class App {
     // Handle GitHub Pages redirect: /?/some/path
     const search = window.location.search;
     if (search.startsWith("?/")) {
-      const path = "/" + search.slice(2).split("&")[0].replace(/~and~/g, "&");
+      const path = "/" + search.slice(2).split("&")[0].replace(/~and~|\/and\//g, "&")
       history.replaceState({ path }, "", path);
       return path;
     }
