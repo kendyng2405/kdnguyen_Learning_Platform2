@@ -12,7 +12,7 @@ app.post("/api/chat", async (req, res) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.AIzaSyBUtQrpnpTwv9mJoA5RbF1sz1UdepPcNfs}`
+        "Authorization": `Bearer ${process.env.GEMINI_API_KEY}`
       },
       body: JSON.stringify(req.body)
     }
