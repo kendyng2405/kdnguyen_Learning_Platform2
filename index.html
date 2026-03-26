@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KDLearnSpace – Nền tảng học tập</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+
+  <!-- Safe Unicode fonts: Inter (Latin + Vietnamese) + JetBrains Mono for code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Navbar -->
+    <nav id="navbar" class="navbar hidden">
+      <div class="nav-brand" onclick="window.__router?.navigate('dashboard')" style="cursor:pointer">
+        <span class="brand-icon">🎓</span>
+        <span class="brand-text">KDLearnSpace</span>
+      </div>
+      <div class="nav-links" id="navLinks">
+        <a href="/home" class="nav-link" data-page="dashboard" data-vi="Trang chủ" data-en="Home">Trang chủ</a>
+        <a href="/courses" class="nav-link" data-page="courses" data-vi="Khóa học" data-en="Courses">Khóa học</a>
+        <a href="/progress" class="nav-link" data-page="progress" data-vi="Tiến độ" data-en="Progress">Tiến độ</a>
+        <a href="/admin" class="nav-link nav-link--admin hidden" data-page="admin" data-vi="Quản trị" data-en="Admin">Quản trị</a>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-icon" id="langToggle" title="Toggle Language">VI/EN</button>
+        <button class="btn-icon" id="themeToggle" title="Toggle Theme">🌙</button>
+        <div class="nav-user hidden" id="navUser">
+          <a href="/profile" class="nav-avatar-btn" id="navAvatarBtn" title="Hồ sơ cá nhân">
+            <span class="nav-avatar" id="navAvatar">?</span>
+          </a>
+          <span class="welcome-text" id="welcomeText"></span>
+          <button class="btn btn--outline btn--sm" id="logoutBtn" data-vi="Đăng xuất" data-en="Logout">Đăng xuất</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hamburger for mobile -->
+    <button class="nav-hamburger hidden" id="navHamburger" aria-label="Menu">☰</button>
+
+    <!-- Page Container -->
+    <main id="pageContainer" class="page-container"></main>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- AI Chatbot Widget -->
+    <div id="chatbotWidget" class="chatbot-widget hidden">
+      <div class="chatbot-header">
+        <div class="chatbot-title">
+          <span class="chatbot-avatar">🤖</span>
+          <div>
+            <span class="chatbot-name">KDLearnBot AI</span>
+            <span class="chatbot-status" data-vi="Đang hoạt động" data-en="Online">Đang hoạt động</span>
+          </div>
+        </div>
+        <button class="chatbot-close" id="chatbotClose">✕</button>
+      </div>
+      <div class="chatbot-messages" id="chatbotMessages">
+        <div class="chat-message chat-message--bot">
+          <span class="chat-avatar">🤖</span>
+          <div class="chat-bubble">Xin chào! Tôi là KDLearnBot. Hỏi tôi bất cứ điều gì về bài học nhé! 😊</div>
+        </div>
+      </div>
+      <div class="chatbot-input-area">
+        <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Hỏi về bài học..." />
+        <button class="chatbot-send" id="chatbotSend">➤</button>
+      </div>
+    </div>
+    <button class="chatbot-fab hidden" id="chatbotFab">
+      <span class="fab-icon">💬</span>
+      <span class="fab-badge hidden" id="fabBadge">1</span>
+    </button>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="loading-spinner">
+        <div class="spinner-ring"></div>
+        <span class="spinner-text">KDLearnSpace</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth }        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getStorage }     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+    import { firebaseConfig } from "./assets/js/config.js";
+
+    const app = initializeApp(firebaseConfig);
+    window.__firebaseAuth    = getAuth(app);
+    window.__firebaseDB      = getFirestore(app);
+    window.__firebaseStorage = getStorage(app);
+
+    const { App } = await import("./assets/js/app.js");
+    window.__app = new App();
+    window.__app.init();
+  </script>
+</body>
+</html>
