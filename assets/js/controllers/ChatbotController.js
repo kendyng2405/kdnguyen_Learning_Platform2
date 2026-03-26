@@ -2,7 +2,7 @@
 //  ChatbotController.js — AI Chatbot via Gemini API
 // ============================================================
 
-import { GEMINI_API_URL } from "../config.js";
+
 
 export class ChatbotController {
   constructor(app) {
@@ -100,7 +100,7 @@ export class ChatbotController {
       }
     };
 
-    const res = await fetch(GEMINI_API_URL, {
+    const res = await fetch("http://localhost:3000/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
