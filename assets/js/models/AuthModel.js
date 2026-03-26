@@ -113,8 +113,11 @@ export class AuthModel {
 
   // ── Password reset via email ────────────────────────────
   async sendPasswordReset(email) {
-    await sendPasswordResetEmail(this.auth, email);
-  }
+  const { sendPasswordResetEmail } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+  );
+  await sendPasswordResetEmail(auth, email);
+}
 
   // ── Change password (requires re-auth) ─────────────────
   async changePassword(currentPassword, newPassword) {
