@@ -8,6 +8,7 @@
     // Converts /some/path to /?/some/path and redirects to index.html
     var segmentCount = 0; // set to 0 if deploying to root domain (not /repo-name)
     var l = window.location;
+    sessionStorage.redirect = location.href;
     l.replace(
       l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
       l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?/' +
