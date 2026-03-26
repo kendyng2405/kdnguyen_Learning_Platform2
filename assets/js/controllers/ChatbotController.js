@@ -2,7 +2,7 @@
 //  ChatbotController.js — AI Chatbot via Gemini API
 // ============================================================
 
-
+import { GEMINI_API_URL } from "../config.js";
 
 export class ChatbotController {
   constructor(app) {
