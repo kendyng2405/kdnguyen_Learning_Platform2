@@ -127,6 +127,7 @@ export class AuthModel {
     await updatePassword(user, newPassword);
   }
 
+
   getCurrentUser() {
     return this.auth.currentUser;
   }
