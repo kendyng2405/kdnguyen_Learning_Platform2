@@ -12,7 +12,7 @@ export const firebaseConfig = {
 };
 
 export const GEMINI_API_KEY = "AIzaSyC5lkrYl90ALn863Cvojd9_rMDd5B1m4xQ";
-export const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+export const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 export const APP_CONFIG = {
   name: "KDLearnSpace",
