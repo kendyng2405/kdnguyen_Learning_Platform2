@@ -92,7 +92,7 @@ export class ChatbotController {
     }
 
     const body = {
-      system_instruction: { role: "system", parts: [{ text: systemContext }] },
+      system_instruction: { role: "admin", parts: [{ text: systemContext }] },
       contents: this.history,
       generationConfig: {
         temperature: 0.7,
