@@ -3,7 +3,7 @@
 //  Tự động thử nhiều model nếu model đầu bị lỗi 404
 // ============================================================
 
-import { GEMINI_API_KEY } from "../config.js";
+import { GEMINI_PROXY_URL } from "../config.js";
 
 // Thứ tự ưu tiên: thử từ trên xuống, dùng cái đầu tiên OK
 const GEMINI_MODELS = [
