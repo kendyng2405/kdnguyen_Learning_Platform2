@@ -12,7 +12,7 @@ export const firebaseConfig = {
 };
 
 
-export const GEMINI_PROXY_URL = "https://dark-hat-46a2.nguyenk3558.workers.dev";
+export const GEMINI_PROXY_URL = "https://kdnguyen-learning-platform2-t1cm.vercel.app/api/chat";
 
 export const APP_CONFIG = {
   name: "KDLearnSpace",
