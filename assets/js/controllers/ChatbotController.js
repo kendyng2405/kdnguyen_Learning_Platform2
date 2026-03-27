@@ -6,12 +6,12 @@
 import { GEMINI_PROXY_URL } from "../config.js";
 
 // Thứ tự ưu tiên: thử từ trên xuống, dùng cái đầu tiên OK
-const GEMINI_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-];
+//const GEMINI_MODELS = [
+//  "gemini-2.5-flash",
+//  "gemini-2.5-flash-lite",
+//];
 
-const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+// const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 export class ChatbotController {
   constructor(app) {
@@ -79,45 +79,26 @@ export class ChatbotController {
     }
   }
 
-  async _callGemini(userMessage) {
-    const profile    = this.app.getUserProfile();
-    const lang       = window.__i18n?.current || "vi";
-    const userName   = profile?.username || profile?.fullname || "bạn";
+async _callGemini(userMessage) {
+  const profile  = this.app.getUserProfile();
+  const lang     = window.__i18n?.current || "vi";
+  const userName = profile?.username || profile?.fullname || "bạn";
 
-    const systemPrompt = lang === "vi"
-      ? `Bạn là KDLearnBot, trợ lý AI của KDLearnSpace. Người dùng: ${userName}. Trả lời tiếng Việt, thân thiện, ngắn gọn, hữu ích.`
-      : `You are KDLearnBot, AI assistant of KDLearnSpace. User: ${userName}. Reply in English, friendly, concise, helpful.`;
+  const systemPrompt = lang === "vi"
+    ? `Bạn là KDLearnBot, trợ lý AI của KDLearnSpace. Người dùng: ${userName}. Trả lời tiếng Việt, thân thiện, ngắn gọn, hữu ích.`
+    : `You are KDLearnBot, AI assistant of KDLearnSpace. User: ${userName}. Reply in English, friendly, concise, helpful.`;
 
-    this.history.push({ role: "user", parts: [{ text: userMessage }] });
-    if (this.history.length > 20) this.history = this.history.slice(-20);
+  this.history.push({ role: "user", parts: [{ text: userMessage }] });
+  if (this.history.length > 20) this.history = this.history.slice(-20);
 
-    const body = {
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents: this.history,
-      generationConfig: { temperature: 0.7, maxOutputTokens: 512 },
-    };
+  const body = {
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents: this.history,
+    generationConfig: { temperature: 0.7, maxOutputTokens: 512 },
+  };
 
-    // Dùng model đã cache nếu có
-    if (this.activeModel) {
-      return await this._fetchModel(this.activeModel, body);
-    }
-
-    // Thử từng model
-    let lastError = null;
-    for (const model of GEMINI_MODELS) {
-      try {
-        console.log(`[KDLearnBot] Trying: ${model}`);
-        const reply = await this._fetchModel(model, body);
-        this.activeModel = model;
-        console.log(`[KDLearnBot] OK: ${model}`);
-        return reply;
-      } catch (err) {
-        console.warn(`[KDLearnBot] Failed ${model}: ${err.message}`);
-        lastError = err;
-      }
-    }
-    throw lastError || new Error("All models failed");
-  }
+  return await this._fetchModel(null, body);
+}
 
 async _fetchModel(model, body) {
   const res = await fetch(GEMINI_PROXY_URL, {
