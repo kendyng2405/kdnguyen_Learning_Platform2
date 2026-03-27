@@ -11,8 +11,8 @@ export const firebaseConfig = {
   appId: "1:624341432764:web:de8efee583c2cd3be513b9"
 };
 
-export const GEMINI_API_KEY = "AIzaSyDCjYfjAthcGahp1J8COLX9BLG1piQJMNc"
-export const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+export const GEMINI_PROXY_URL = "https://dark-hat-46a2.nguyenk3558.workers.dev";
 
 export const APP_CONFIG = {
   name: "KDLearnSpace",
