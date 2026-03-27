@@ -84,9 +84,9 @@ async _callGemini(userMessage) {
   const lang     = window.__i18n?.current || "vi";
   const userName = profile?.username || profile?.fullname || "bạn";
 
-  const systemPrompt = lang === "vi"
-    ? `Bạn là KDLearnBot, trợ lý AI của KDLearnSpace. Người dùng: ${userName}. Trả lời tiếng Việt, thân thiện, ngắn gọn, hữu ích.`
-    : `You are KDLearnBot, AI assistant of KDLearnSpace. User: ${userName}. Reply in English, friendly, concise, helpful.`;
+ const systemPrompt = lang === "vi"
+  ? `Bạn là KDLearnBot - trợ lý AI thân thiện, luôn trả lời trực tiếp, ngắn gọn bằng tiếng Việt. Không dài dòng.`
+  : `You are KDLearnBot, a friendly AI assistant. Always reply directly and concisely.`;
 
   this.history.push({ role: "user", parts: [{ text: userMessage }] });
   if (this.history.length > 20) this.history = this.history.slice(-20);
