@@ -101,21 +101,21 @@ async _callGemini(userMessage) {
 }
 
 async _fetchModel(model, body) {
-  const res = await fetch(GEMINI_PROXY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  const res = await fetch(GEMINI_PROXY_URL, { ... });
 
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData?.error?.message || `HTTP ${res.status}`);
+  if (!res.ok) { ... }
+
+  const data = await res.json();
+  
+  console.log("[KDLearnBot] Full Gemini Response:", JSON.stringify(data, null, 2)); // ← thêm dòng này để debug
+
+  const candidate = data.candidates?.[0];
+  if (!candidate?.content?.parts?.[0]?.text) {
+    console.warn("[KDLearnBot] Empty response - finishReason:", candidate?.finishReason);
+    throw new Error("Empty response from Gemini");
   }
 
-  const data  = await res.json();
-  const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!reply) throw new Error("Empty response");
-
+  const reply = candidate.content.parts[0].text;
   this.history.push({ role: "model", parts: [{ text: reply }] });
   return reply;
 }
