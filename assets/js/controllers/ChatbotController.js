@@ -101,9 +101,16 @@ async _callGemini(userMessage) {
 }
 
 async _fetchModel(model, body) {
-  const res = await fetch(GEMINI_PROXY_URL, { ... });
+  const res = await fetch(GEMINI_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+  });
 
-  if (!res.ok) { ... }
+  if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData?.error?.message || `HTTP ${res.status}`);
+  }
 
   const data = await res.json();
   
