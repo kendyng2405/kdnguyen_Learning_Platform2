@@ -119,26 +119,25 @@ export class ChatbotController {
     throw lastError || new Error("All models failed");
   }
 
-  async _fetchModel(model, body) {
-    const url = `${GEMINI_BASE}/${model}:generateContent?key=${GEMINI_API_KEY}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+async _fetchModel(model, body) {
+  const res = await fetch(GEMINI_PROXY_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData?.error?.message || `HTTP ${res.status}`);
-    }
-
-    const data  = await res.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!reply) throw new Error("Empty response");
-
-    this.history.push({ role: "model", parts: [{ text: reply }] });
-    return reply;
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData?.error?.message || `HTTP ${res.status}`);
   }
+
+  const data  = await res.json();
+  const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!reply) throw new Error("Empty response");
+
+  this.history.push({ role: "model", parts: [{ text: reply }] });
+  return reply;
+}
 
   _appendMessage(role, text) {
     const messages = document.getElementById("chatbotMessages");
