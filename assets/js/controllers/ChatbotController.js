@@ -94,7 +94,7 @@ async _callGemini(userMessage) {
   const body = {
     system_instruction: { parts: [{ text: systemPrompt }] },
     contents: this.history,
-    generationConfig: { temperature: 0.7, maxOutputTokens: 512 },
+    generationConfig: { temperature: 0.7, maxOutputTokens: 5000 },
   };
 
   return await this._fetchModel(null, body);
