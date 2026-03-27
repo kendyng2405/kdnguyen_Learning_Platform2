@@ -7,7 +7,7 @@ import { GEMINI_API_KEY } from "../config.js";
 
 // Thứ tự ưu tiên: thử từ trên xuống, dùng cái đầu tiên OK
 const GEMINI_MODELS = [
-  "gemini-2.0-flash",
+  "gemini-2.5-flash",
   "gemini-2.0-flash-lite",
   "gemini-1.5-flash-latest",
   "gemini-1.5-pro-latest",
