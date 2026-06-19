@@ -154,14 +154,14 @@ export class CourseController {
         // Tricky way to get YT transcript via allorigins CORS proxy
         let transcript = "";
         try {
-          const videoId = videoUrl.match(/(?:youtube\.com\\/watch\\?v=|youtu\.be\\/)([^&\\s]+)/)?.[1];
+          const videoId = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[1];
           if (videoId) {
-            const res = await fetch(\`https://api.allorigins.win/raw?url=\${encodeURIComponent("https://www.youtube.com/watch?v=" + videoId)}\`);
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent("https://www.youtube.com/watch?v=" + videoId)}`);
             const html = await res.text();
-            const match = html.match(/"captionTracks":\\[\\{"baseUrl":"([^"]+)"/);
+            const match = html.match(/"captionTracks":\[\{"baseUrl":"([^"]+)"/);
             if (match) {
-              const captionUrl = match[1].replace(/\\\\u0026/g, "&");
-              const captionRes = await fetch(\`https://api.allorigins.win/raw?url=\${encodeURIComponent(captionUrl)}\`);
+              const captionUrl = match[1].replace(/\\u0026/g, "&");
+              const captionRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(captionUrl)}`);
               const xml = await captionRes.text();
               const parser = new DOMParser();
               const xmlDoc = parser.parseFromString(xml, "text/xml");
