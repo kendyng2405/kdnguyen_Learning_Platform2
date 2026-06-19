@@ -258,28 +258,40 @@ export class AdminController {
         }
       } catch(e) { console.error("Admin Transcript error", e); }
 
-      let msg = "";
+      let parts = [];
       if (transcript && transcript.length > 50) {
         if (transcript.length > 15000) transcript = transcript.substring(0, 15000) + "...";
-        msg = lang === "vi"
+        const msg = lang === "vi"
           ? `Dựa vào phụ đề của video "${title}" dưới đây, hãy viết nội dung bài học bằng Markdown chi tiết gồm: 1. Tóm tắt ngắn gọn. 2. Timeline sự kiện. 3. Các khái niệm chính. 4. Tạo 3 câu trắc nghiệm. 5. Tạo 3 flashcards.\n\nTranscript: ${transcript}`
           : `Based on the transcript of "${title}", write a detailed Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. 3-question quiz. 5. 3 flashcards.\n\nTranscript: ${transcript}`;
+        parts.push({ text: msg });
       } else {
-        msg = lang === "vi" 
-          ? `Dưới đây là một video bài học từ YouTube. Link video: ${videoUrl}\n\nHãy sử dụng công cụ YouTube Workspace của bạn để xem nội dung video và viết một bài học Markdown chi tiết.\nCẢNH BÁO QUAN TRỌNG: Nếu bạn không thể truy cập, không thể xem nội dung thực tế của video này, hoặc bị chặn, BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP ĐOÁN HAY TỰ TẠO NỘI DUNG DỰA VÀO TIÊU ĐỀ. Nếu không xem được video, hãy chỉ trả lời duy nhất chuỗi này: "ERROR_CANNOT_ACCESS_VIDEO".`
-          : `Here is a YouTube video. Link: ${videoUrl}\n\nPlease use your native YouTube capabilities to analyze the video.\nIMPORTANT WARNING: If you cannot access the actual video content or it is blocked, YOU MUST NOT GUESS OR HALLUCINATE based on the title. If you cannot read the video, reply EXACTLY with this string: "ERROR_CANNOT_ACCESS_VIDEO".`;
+        const msg = lang === "vi" 
+          ? `Hãy xem video YouTube đính kèm và viết một bài học Markdown chi tiết gồm: 1. Tóm tắt ngắn gọn. 2. Timeline. 3. Khái niệm chính. 4. 3 câu hỏi trắc nghiệm. 5. 3 thẻ ghi nhớ.\nNẾU BẠN KHÔNG XEM ĐƯỢC VIDEO NÀY, HÃY TRẢ LỜI: "ERROR_CANNOT_ACCESS_VIDEO".`
+          : `Please watch the attached YouTube video and write a Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. 3-question quiz. 5. 3 flashcards.\nIF YOU CANNOT WATCH THIS VIDEO, REPLY: "ERROR_CANNOT_ACCESS_VIDEO".`;
+        
+        const yUrlMatch = videoUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s?]+)/);
+        if (yUrlMatch) {
+           parts.push({
+              fileData: {
+                fileUri: "https://www.youtube.com/watch?v=" + yUrlMatch[1],
+                mimeType: "video/mp4"
+              }
+           });
+        }
+        parts.push({ text: msg });
       }
       
       try {
         btn.innerHTML = "⏳ AI Đang viết bài...";
         const body = {
-          contents: [{ role: "user", parts: [{ text: msg }] }],
+          contents: [{ role: "user", parts: parts }],
           generationConfig: { temperature: 0.1, maxOutputTokens: 8000 }
         };
         const response = await this.app.chatbotController._fetchModel(null, body);
         
         if (response.includes("ERROR_CANNOT_ACCESS_VIDEO")) {
-          throw new Error(lang === "vi" ? "Bị YouTube chặn lấy phụ đề. Vui lòng dùng video khác hoặc thêm API Key chính chủ!" : "YouTube blocked transcript access. Use another video or a direct API Key.");
+          throw new Error(lang === "vi" ? "AI không thể xem nội dung video này. Vui lòng thêm API Key chính chủ!" : "AI cannot watch this video. Please use a direct API Key.");
         }
         
         document.getElementById("lessonContent").value = response;

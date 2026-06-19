@@ -108,9 +108,30 @@ export class ChatbotController {
     this.history.push({ role: "user", parts: [{ text: userMessage }] });
     if (this.history.length > 20) this.history = this.history.slice(-20);
 
+    let finalHistory = [];
+    for (const msg of this.history) {
+      if (msg.role === "user" && msg.parts[0]?.text) {
+         let text = msg.parts[0].text;
+         let ytMatch = text.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s?"']+)/);
+         if (ytMatch) {
+            finalHistory.push({
+               role: "user",
+               parts: [
+                 { fileData: { fileUri: "https://www.youtube.com/watch?v=" + ytMatch[1], mimeType: "video/mp4" } },
+                 { text: text }
+               ]
+            });
+         } else {
+            finalHistory.push(msg);
+         }
+      } else {
+         finalHistory.push(msg);
+      }
+    }
+
     const body = {
       system_instruction: { parts: [{ text: systemPrompt }] },
-      contents: this.history,
+      contents: finalHistory,
       generationConfig: { temperature: 0.7, maxOutputTokens: 5000 },
     };
 
