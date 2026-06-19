@@ -136,9 +136,32 @@ export class AdminController {
 
       try {
         if (file) {
-          const storageRef = ref(window.__firebaseStorage, `thumbnails/${Date.now()}_${file.name}`);
-          const snapshot = await uploadBytes(storageRef, file);
-          thumbnail = await getDownloadURL(snapshot.ref);
+          thumbnail = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const img = new Image();
+              img.onload = () => {
+                const canvas = document.createElement("canvas");
+                const MAX_WIDTH = 600;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > MAX_WIDTH) {
+                  height = Math.round((height * MAX_WIDTH) / width);
+                  width = MAX_WIDTH;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+                // Return highly compressed Base64 JPEG to save directly into Firestore
+                resolve(canvas.toDataURL("image/jpeg", 0.7));
+              };
+              img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+          });
         }
 
         const data = { title, description, category, level, thumbnail, password };
