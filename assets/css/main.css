@@ -531,11 +531,12 @@ code, pre { font-family: var(--font-mono); }
 .score--pass { background: rgba(6,214,160,0.15); color: #06d6a0; }
 .score--fail { background: rgba(239,35,60,0.1); color: var(--color-error); }
 .quiz-btn { 
-  width: 32px; height: 32px; border-radius: 50%;
+  height: 32px; padding: 0 1rem; border-radius: var(--radius-full);
   display: flex; align-items: center; justify-content: center;
-  background: var(--color-surface-2); color: var(--color-text-3); 
-  font-size: 0.85rem; flex-shrink: 0;
+  background: var(--color-surface-2); color: var(--color-text-2); 
+  font-size: 0.85rem; font-weight: 600; flex-shrink: 0;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 .quiz-item:hover .quiz-btn { background: var(--color-primary); color: #fff; }
 
