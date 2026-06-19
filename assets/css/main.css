@@ -200,6 +200,11 @@ code, pre { font-family: var(--font-mono); }
   padding: calc(var(--nav-h) * 0 + 1.5rem) 1.5rem 2rem;
   max-width: 1200px; margin: 0 auto; width: 100%;
 }
+.page-container.page-login, .page-container.page-register {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
 
 /* ── Buttons ── */
 .btn {
@@ -898,8 +903,11 @@ code, pre { font-family: var(--font-mono); }
 
 @media (max-width: 480px) {
   .page-container { padding: 1rem 1rem 2rem; }
+  .page-container.page-login, .page-container.page-register { padding: 0; }
   .auth-card { padding: 1.75rem 1.25rem; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .stat-card:nth-child(3) { grid-column: span 2; }
   .course-detail-stats { flex-wrap: wrap; gap: 0.5rem; }
 }
+
+
