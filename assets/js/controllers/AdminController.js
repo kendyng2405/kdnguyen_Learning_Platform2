@@ -5,6 +5,7 @@
 import { CourseModel } from "../models/CourseModel.js";
 import { QuizModel }   from "../models/QuizModel.js";
 import { AdminView }   from "../views/AdminView.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 export class AdminController {
   constructor(app) {
@@ -104,20 +105,44 @@ export class AdminController {
     });
     document.getElementById("cancelModal")?.addEventListener("click", () => this._closeModal());
 
+    document.getElementById("courseThumbnailFile")?.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const preview = document.getElementById("courseThumbnailPreview");
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+      }
+    });
+
     document.getElementById("saveCourseBtn")?.addEventListener("click", async () => {
       const title       = document.getElementById("courseTitle").value.trim();
+      const password    = document.getElementById("coursePassword").value.trim();
       const description = document.getElementById("courseDesc").value.trim();
       const category    = document.getElementById("courseCategory").value.trim();
       const level       = document.getElementById("courseLevel").value;
-      const thumbnail   = document.getElementById("courseThumbnail").value.trim();
+      let thumbnail     = document.getElementById("courseThumbnail").value;
+
+      const fileInput   = document.getElementById("courseThumbnailFile");
+      const file        = fileInput?.files[0];
 
       if (!title) {
         window.__toast.error(lang === "vi" ? "Vui lòng nhập tên khóa học." : "Please enter course title.");
         return;
       }
+      
+      const saveBtn = document.getElementById("saveCourseBtn");
+      saveBtn.disabled = true;
+      saveBtn.textContent = lang === "vi" ? "Đang lưu..." : "Saving...";
 
-      const data = { title, description, category, level, thumbnail };
       try {
+        if (file) {
+          const storageRef = ref(window.__firebaseStorage, `thumbnails/${Date.now()}_${file.name}`);
+          const snapshot = await uploadBytes(storageRef, file);
+          thumbnail = await getDownloadURL(snapshot.ref);
+        }
+
+        const data = { title, description, category, level, thumbnail, password };
+
         if (isEdit) {
           await this.courseModel.updateCourse(course.id, data);
           window.__toast.success(lang === "vi" ? "Đã cập nhật khóa học." : "Course updated.");
@@ -129,6 +154,8 @@ export class AdminController {
         this.showAdmin();
       } catch (e) {
         window.__toast.error(e.message);
+        saveBtn.disabled = false;
+        saveBtn.textContent = isEdit ? (lang === "vi" ? "Lưu thay đổi" : "Save Changes") : (lang === "vi" ? "Tạo khóa học" : "Create Course");
       }
     });
   }
@@ -289,6 +316,9 @@ export class AdminController {
       const title         = document.getElementById("quizTitle").value.trim();
       const timeLimit     = parseInt(document.getElementById("quizTimeLimit").value) || 0;
       const passingScore  = parseInt(document.getElementById("quizPassingScore").value) || 60;
+      const openTime      = document.getElementById("quizOpenTime").value;
+      const closeTime     = document.getElementById("quizCloseTime").value;
+      const password      = document.getElementById("quizPassword").value.trim();
       const questions     = this._collectQuestions();
 
       if (!title) {
@@ -300,7 +330,7 @@ export class AdminController {
         return;
       }
 
-      const data = { title, timeLimitMinutes: timeLimit, passingScore, questions };
+      const data = { title, timeLimitMinutes: timeLimit, passingScore, openTime, closeTime, password, questions };
       try {
         if (isEdit) {
           await this.quizModel.updateQuiz(courseId, quiz.id, data);

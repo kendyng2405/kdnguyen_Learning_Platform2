@@ -293,9 +293,10 @@ code, pre { font-family: var(--font-mono); }
 
 /* ── Auth pages ── */
 .auth-page {
-  min-height: calc(100vh - var(--nav-h));
+  position: fixed; inset: 0; z-index: 10;
   display: flex; align-items: center; justify-content: center;
-  padding: 2rem 1rem; position: relative; overflow: hidden;
+  padding: 2rem 1rem; overflow: hidden;
+  background: var(--color-bg);
 }
 .auth-bg {
   position: absolute; inset: 0; overflow: hidden; z-index: 0;

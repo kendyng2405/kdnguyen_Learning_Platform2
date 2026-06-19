@@ -87,7 +87,8 @@ export class AdminView {
       desc: "Mô tả",
       category: "Danh mục",
       level: "Cấp độ",
-      thumbnail: "URL ảnh bìa",
+      thumbnail: "Ảnh bìa",
+      password: "Mật khẩu (Tùy chọn)",
       save: isEdit ? "Lưu thay đổi" : "Tạo khóa học",
       cancel: "Hủy",
       levels: ["beginner", "intermediate", "advanced"],
@@ -98,7 +99,8 @@ export class AdminView {
       desc: "Description",
       category: "Category",
       level: "Level",
-      thumbnail: "Thumbnail URL",
+      thumbnail: "Thumbnail Image",
+      password: "Password (Optional)",
       save: isEdit ? "Save Changes" : "Create Course",
       cancel: "Cancel",
       levels: ["beginner", "intermediate", "advanced"],
@@ -112,6 +114,10 @@ export class AdminView {
           <div class="form-group">
             <label class="form-label">${t.titleField}</label>
             <input type="text" id="courseTitle" class="form-input" value="${course?.title || ""}" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">${t.password}</label>
+            <input type="text" id="coursePassword" class="form-input" placeholder="" value="${course?.password || ""}" />
           </div>
           <div class="form-group">
             <label class="form-label">${t.desc}</label>
@@ -131,7 +137,9 @@ export class AdminView {
           </div>
           <div class="form-group">
             <label class="form-label">${t.thumbnail}</label>
-            <input type="url" id="courseThumbnail" class="form-input" placeholder="https://..." value="${course?.thumbnail || ""}" />
+            <input type="file" id="courseThumbnailFile" class="form-input" accept="image/*" />
+            <input type="hidden" id="courseThumbnail" value="${course?.thumbnail || ""}" />
+            <img src="${course?.thumbnail || ""}" style="max-height: 100px; margin-top: 10px; border-radius: 8px; display: ${course?.thumbnail ? 'block' : 'none'};" id="courseThumbnailPreview" />
           </div>
           <div class="modal-actions">
             <button class="btn btn--ghost" id="cancelModal">${t.cancel}</button>
@@ -305,6 +313,9 @@ export class AdminView {
       titleField: "Tên Quiz *",
       timeLimit: "Giới hạn thời gian (phút, 0 = không giới hạn)",
       passing: "Điểm qua môn (%)",
+      openTime: "Thời gian mở",
+      closeTime: "Thời gian đóng",
+      password: "Mật khẩu (Tùy chọn)",
       questions: "Câu hỏi",
       addQ: "+ Thêm câu hỏi",
       save: isEdit ? "Lưu" : "Tạo Quiz",
@@ -314,6 +325,9 @@ export class AdminView {
       titleField: "Quiz Title *",
       timeLimit: "Time Limit (minutes, 0 = no limit)",
       passing: "Passing Score (%)",
+      openTime: "Open Time",
+      closeTime: "Close Time",
+      password: "Password (Optional)",
       questions: "Questions",
       addQ: "+ Add Question",
       save: isEdit ? "Save" : "Create Quiz",
@@ -337,6 +351,20 @@ export class AdminView {
               <label class="form-label">${t.passing}</label>
               <input type="number" id="quizPassingScore" class="form-input" value="${quiz?.passingScore || 60}" min="0" max="100" />
             </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">${t.openTime}</label>
+              <input type="datetime-local" id="quizOpenTime" class="form-input" value="${quiz?.openTime || ""}" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">${t.closeTime}</label>
+              <input type="datetime-local" id="quizCloseTime" class="form-input" value="${quiz?.closeTime || ""}" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">${t.password}</label>
+            <input type="text" id="quizPassword" class="form-input" placeholder="" value="${quiz?.password || ""}" />
           </div>
           <div class="form-group">
             <label class="form-label">${t.questions}</label>
