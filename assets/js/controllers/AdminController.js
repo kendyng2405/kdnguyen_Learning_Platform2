@@ -322,7 +322,7 @@ export class AdminController {
       btn.disabled = true;
 
       try {
-        const sysPrompt = \`Bạn là một chuyên gia tạo đề thi trắc nghiệm. Dựa vào văn bản dưới đây, hãy tạo ra 3 câu hỏi trắc nghiệm. Output BẮT BUỘC TRẢ VỀ CHỈ MỘT MẢNG JSON, không có code block markdown hay bất cứ chữ gì khác. Định dạng: [{"question":"Câu hỏi 1?","options":["A","B","C","D"],"correctAnswer":0}]\`;
+        const sysPrompt = `Bạn là một chuyên gia tạo đề thi trắc nghiệm. Dựa vào văn bản dưới đây, hãy tạo ra 3 câu hỏi trắc nghiệm. Output BẮT BUỘC TRẢ VỀ CHỈ MỘT MẢNG JSON, không có code block markdown hay bất cứ chữ gì khác. Định dạng: [{"question":"Câu hỏi 1?","options":["A","B","C","D"],"correctAnswer":0}]`;
         
         const body = {
           system_instruction: { parts: [{ text: sysPrompt }] },
