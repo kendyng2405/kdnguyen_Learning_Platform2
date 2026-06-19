@@ -312,6 +312,51 @@ export class AdminController {
       this._renderQuestionForms(questions, lang);
     });
 
+    document.getElementById("aiGenerateQuizBtn")?.addEventListener("click", async () => {
+      const promptText = prompt(lang === "vi" ? "Nhập nội dung bài học để AI tạo câu hỏi:" : "Enter lesson text for AI to generate questions:");
+      if (!promptText) return;
+      
+      const btn = document.getElementById("aiGenerateQuizBtn");
+      const oldText = btn.innerHTML;
+      btn.innerHTML = lang === "vi" ? "⏳ Đang tạo..." : "⏳ Generating...";
+      btn.disabled = true;
+
+      try {
+        const sysPrompt = \`Bạn là một chuyên gia tạo đề thi trắc nghiệm. Dựa vào văn bản dưới đây, hãy tạo ra 3 câu hỏi trắc nghiệm. Output BẮT BUỘC TRẢ VỀ CHỈ MỘT MẢNG JSON, không có code block markdown hay bất cứ chữ gì khác. Định dạng: [{"question":"Câu hỏi 1?","options":["A","B","C","D"],"correctAnswer":0}]\`;
+        
+        const body = {
+          system_instruction: { parts: [{ text: sysPrompt }] },
+          contents: [{ role: "user", parts: [{ text: promptText }] }],
+          generationConfig: { temperature: 0.3 }
+        };
+        
+        let url = window.APP_CONFIG?.geminiKey 
+          ? "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + window.APP_CONFIG.geminiKey
+          : "https://kdnguyen-learning-platform2-t1cm.vercel.app/api/chat";
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        
+        if (!res.ok) throw new Error("API failed");
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("Empty response");
+        const cleanText = text.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+        const questions = JSON.parse(cleanText);
+        this._renderQuestionForms(questions, lang);
+        
+        window.__toast.success(lang === "vi" ? "Đã tạo câu hỏi bằng AI!" : "AI Questions generated!");
+      } catch(e) {
+        window.__toast.error(lang === "vi" ? "Lỗi tạo câu hỏi AI: " + e.message : "AI Error: " + e.message);
+      } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+      }
+    });
+
     document.getElementById("saveQuizBtn")?.addEventListener("click", async () => {
       const title         = document.getElementById("quizTitle").value.trim();
       const timeLimit     = parseInt(document.getElementById("quizTimeLimit").value) || 0;

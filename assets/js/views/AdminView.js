@@ -369,7 +369,10 @@ export class AdminView {
           <div class="form-group">
             <label class="form-label">${t.questions}</label>
             <div id="questionsContainer"></div>
-            <button type="button" class="btn btn--ghost btn--sm" id="addQuestionBtn" style="margin-top:0.5rem">${t.addQ}</button>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+              <button type="button" class="btn btn--ghost btn--sm" id="addQuestionBtn">${t.addQ}</button>
+              <button type="button" class="btn btn--outline btn--sm" id="aiGenerateQuizBtn">🤖 ${lang === 'vi' ? 'AI Tạo Nhanh Từ Văn Bản' : 'AI Generate from Text'}</button>
+            </div>
           </div>
           <div class="modal-actions">
             <button class="btn btn--ghost" id="cancelModal">${t.cancel}</button>

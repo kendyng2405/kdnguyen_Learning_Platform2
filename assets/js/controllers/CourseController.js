@@ -71,6 +71,31 @@ export class CourseController {
     this._bindQuizItems(courseId);
     document.getElementById("backToCourses")?.addEventListener("click", () => this.app.navigate("courses"));
     document.getElementById("enrollBtn")?.addEventListener("click", () => this._enroll(courseId));
+    
+    // AI Study Plan
+    document.getElementById("btnStudyPlan")?.addEventListener("click", (e) => {
+      const btn = e.target;
+      const title = btn.dataset.course;
+      const days = prompt(lang === "vi" ? "Bạn muốn học khóa này trong bao nhiêu ngày?" : "How many days do you want to finish this course?");
+      if (!days) return;
+      
+      const msg = lang === "vi"
+        ? `Lập cho tôi kế hoạch học khóa "${title}" trong vòng ${days} ngày. Bao gồm các mục tiêu từng ngày.`
+        : `Generate a study plan for the course "${title}" over ${days} days. Include daily goals.`;
+        
+      const chatInput = document.getElementById("chatbotInput");
+      const fab = document.getElementById("chatbotFab");
+      const chatSend = document.getElementById("chatbotSend");
+      
+      if (!this.app.chatbotController.isOpen) {
+        fab?.click();
+      }
+      
+      if (chatInput && chatSend) {
+        chatInput.value = msg;
+        chatSend.click();
+      }
+    });
   }
 
   async showLesson(courseId, lessonId) {
@@ -102,6 +127,33 @@ export class CourseController {
     });
 
     document.getElementById("backToCourse")?.addEventListener("click", () => this.app.navigate("course", courseId));
+    
+    // AI Summarize
+    document.getElementById("btnSummarizeLesson")?.addEventListener("click", (e) => {
+      const btn = e.target;
+      const title = btn.dataset.title;
+      let text = btn.dataset.content;
+      
+      // limit text size just in case
+      if (text.length > 3000) text = text.substring(0, 3000) + "...";
+      
+      const msg = lang === "vi" 
+        ? `Tóm tắt giúp tôi những ý chính của bài học "${title}" sau đây:\n\n${text}`
+        : `Please summarize the key points of the lesson "${title}":\n\n${text}`;
+        
+      const chatInput = document.getElementById("chatbotInput");
+      const fab = document.getElementById("chatbotFab");
+      const chatSend = document.getElementById("chatbotSend");
+      
+      if (!this.app.chatbotController.isOpen) {
+        fab?.click();
+      }
+      
+      if (chatInput && chatSend) {
+        chatInput.value = msg;
+        chatSend.click();
+      }
+    });
   }
 
   async _enroll(courseId) {

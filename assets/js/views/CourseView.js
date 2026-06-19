@@ -186,7 +186,8 @@ export class CourseView {
               ? `<div class="progress-wrap">
                   <div class="progress-label">${t.progress}: ${pct}% ${t.completed}</div>
                   <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
-                </div>`
+                </div>
+                <button class="btn btn--outline btn--sm" id="btnStudyPlan" data-course="${course.title}" style="margin-top: 1rem;">📅 ${lang==='vi'?'AI Kế hoạch học tập':'AI Study Plan'}</button>`
               : `<button class="btn btn--primary" id="enrollBtn">${t.enroll}</button>`
             }
           </div>
@@ -274,6 +275,7 @@ export class CourseView {
           <div class="lesson-meta-row">
             <span>${this._lessonTypeIcon(lesson.type)} ${lesson.type || 'lesson'}</span>
             ${lesson.duration ? `<span>⏱ ${lesson.duration}</span>` : ""}
+            <button class="btn btn--outline btn--xs" id="btnSummarizeLesson" style="margin-left:auto" data-title="${lesson.title}" data-content="${lesson.content || ''}">🤖 ${lang === 'vi' ? 'AI Tóm Tắt' : 'AI Summary'}</button>
           </div>
 
           ${lesson.videoUrl ? `
