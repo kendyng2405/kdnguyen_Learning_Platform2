@@ -156,13 +156,21 @@ export class CourseController {
         try {
           const videoId = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[1];
           if (videoId) {
-            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent("https://www.youtube.com/watch?v=" + videoId)}`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent("https://www.youtube.com/watch?v=" + videoId)}`, { signal: controller.signal });
             const html = await res.text();
+            clearTimeout(timeoutId);
+
             const match = html.match(/"captionTracks":\[\{"baseUrl":"([^"]+)"/);
             if (match) {
-              const captionUrl = match[1].replace(/\\u0026/g, "&");
-              const captionRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(captionUrl)}`);
+              const captionUrl = match[1].replace(/\\u0026/g, "&").replace(/\\\//g, "/");
+              const cController = new AbortController();
+              const cTimeoutId = setTimeout(() => cController.abort(), 8000);
+              const captionRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(captionUrl)}`, { signal: cController.signal });
               const xml = await captionRes.text();
+              clearTimeout(cTimeoutId);
+
               const parser = new DOMParser();
               const xmlDoc = parser.parseFromString(xml, "text/xml");
               const textNodes = xmlDoc.getElementsByTagName("text");
