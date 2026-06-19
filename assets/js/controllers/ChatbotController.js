@@ -99,12 +99,31 @@ export class ChatbotController {
 
     let contextStr = "";
     const currentPath = this.app.currentPath || "";
-    if (currentPath.startsWith("/lesson/")) {
-      const parts = currentPath.split("/");
-      contextStr = `\nContext: Học viên đang ở bài học ID ${parts[3]} thuộc khóa học ID ${parts[2]}. Dùng Socratic method để dạy, không nói thẳng đáp án.`;
-    } else if (currentPath.startsWith("/quiz/")) {
-      const parts = currentPath.split("/");
-      contextStr = `\nContext: Học viên đang làm bài quiz ID ${parts[3]} của khóa học ID ${parts[2]}. Không đưa đáp án trực tiếp cho quiz.`;
+    
+    try {
+      if (currentPath.startsWith("/lesson/")) {
+        const parts = currentPath.split("/");
+        const courseId = parts[2];
+        const lessonId = parts[3];
+        const lesson = await this.courseModel.getLessonById(courseId, lessonId);
+        if (lesson) {
+          // Limit context size to avoid exceeding tokens, just in case
+          let content = lesson.content || "";
+          if (content.length > 8000) content = content.substring(0, 8000) + "...";
+          contextStr = `\nContext: Học viên đang ở bài học "${lesson.title}" thuộc khóa học ID ${courseId}. Nội dung chính của bài học:\n${content}\n\nHãy hỗ trợ học viên dựa trên nội dung bài học này. Dùng Socratic method để dạy, không nói thẳng đáp án nếu học viên hỏi bài.`;
+        }
+      } else if (currentPath.startsWith("/quiz/")) {
+        const parts = currentPath.split("/");
+        const courseId = parts[2];
+        const quizId = parts[3];
+        const quiz = await this.quizModel.getQuizById(courseId, quizId);
+        if (quiz) {
+          const questions = quiz.questions.map((q, i) => `Câu ${i+1}: ${q.q}\nCác lựa chọn: ${q.options.join(" | ")}`).join("\n");
+          contextStr = `\nContext: Học viên đang làm bài quiz "${quiz.title}".\nNội dung các câu hỏi trong quiz:\n${questions}\n\nHãy dùng Socratic method để gợi ý, KHÔNG BAO GIỜ đưa đáp án trực tiếp cho quiz. Khuyến khích học viên tự tìm ra câu trả lời.`;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch context data for chatbot", e);
     }
 
    const systemPrompt = lang === "vi"
