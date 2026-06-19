@@ -127,8 +127,8 @@ export class ChatbotController {
     }
 
    const systemPrompt = lang === "vi"
-    ? `Bạn là KDLearnBot - trợ lý AI thông minh của KDLearnSpace. Trả lời kiểu genz tiếng Việt thân thiện, gọi là Kendy hoặc bạn. ${contextStr}`
-    : `You are KDLearnBot, a smart AI tutor for KDLearnSpace. Always reply directly and kindly. ${contextStr}`;
+    ? `Bạn là KDLearnBot - trợ lý AI thông minh của KDLearnSpace. Trả lời thân thiện, xưng là mình và gọi người dùng là bạn.\nQUAN TRỌNG: Bạn ĐÃ ĐƯỢC CUNG CẤP nội dung của trang web hiện tại trong phần "Context" bên dưới. NẾU người dùng hỏi về "trang này", "câu hỏi này", "bài học này" hoặc hỏi các câu hỏi liên quan đến nội dung đang học, HÃY DỰA VÀO phần Context để trả lời. TUYỆT ĐỐI KHÔNG BẢO LÀ "không thể nhìn thấy trang", "không có khả năng truy cập", v.v. vì bạn đã có toàn bộ dữ liệu ở phần Context. ${contextStr}`
+    : `You are KDLearnBot, a smart AI tutor for KDLearnSpace. Always reply directly and kindly.\nIMPORTANT: You HAVE BEEN PROVIDED the content of the current page in the "Context" section below. IF the user asks about "this page", "this question", "this lesson", you MUST USE the Context to answer. NEVER SAY "I cannot see your screen" or "I don't have access to the page" because you already have the data in Context. ${contextStr}`;
 
     this.history.push({ role: "user", parts: [{ text: userMessage }] });
     if (this.history.length > 20) this.history = this.history.slice(-20);
