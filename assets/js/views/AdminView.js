@@ -252,7 +252,12 @@ export class AdminView {
             <input type="url" id="lessonDocUrl" class="form-input" placeholder="https://..." value="${lesson?.docUrl || ""}" />
           </div>
           <div class="form-group">
-            <label class="form-label">${t.content}</label>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 5px;">
+              <label class="form-label" style="margin-bottom:0;">${t.content}</label>
+              <button class="btn btn--outline btn--xs" id="btnAdminAIGenerateLesson" style="border-radius:12px; font-weight:500;">
+                <span class="emoji">✨</span> ${lang === "vi" ? "AI Viết nội dung từ Video" : "AI Generate from Video"}
+              </button>
+            </div>
             <textarea id="lessonContent" class="form-input form-textarea form-textarea--tall">${lesson?.content || ""}</textarea>
           </div>
           <div class="modal-actions">

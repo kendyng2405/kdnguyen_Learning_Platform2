@@ -215,6 +215,74 @@ export class AdminController {
     });
     document.getElementById("cancelModal")?.addEventListener("click", () => this._closeModal());
 
+    document.getElementById("btnAdminAIGenerateLesson")?.addEventListener("click", async () => {
+      const videoUrl = document.getElementById("lessonVideoUrl").value.trim();
+      const title = document.getElementById("lessonTitle").value.trim() || "Bài học mới";
+      if (!videoUrl) {
+        window.__toast.error(lang === "vi" ? "Vui lòng nhập URL Video trước." : "Please enter Video URL first.");
+        return;
+      }
+      
+      const btn = document.getElementById("btnAdminAIGenerateLesson");
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "⏳ Đang trích xuất video...";
+      btn.disabled = true;
+
+      let transcript = "";
+      try {
+        const videoId = videoUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s?]+)/)?.[1];
+        if (videoId) {
+          const fetchHtml = async (proxyUrl) => {
+             const controller = new AbortController();
+             const timeoutId = setTimeout(() => controller.abort(), 6000);
+             const res = await fetch(proxyUrl, { signal: controller.signal });
+             const html = await res.text();
+             clearTimeout(timeoutId);
+             return html;
+          };
+          let html = "";
+          try { html = await fetchHtml(`https://api.allorigins.win/raw?url=${encodeURIComponent("https://www.youtube.com/watch?v=" + videoId)}`); }
+          catch (e1) { try { html = await fetchHtml(`https://corsproxy.io/?${encodeURIComponent("https://www.youtube.com/watch?v=" + videoId)}`); } catch (e2) {} }
+
+          const match = html.match(/"captionTracks":\[\{"baseUrl":"([^"]+)"/);
+          if (match) {
+            const captionUrl = match[1].replace(/\\u0026/g, "&").replace(/\\\//g, "/");
+            let xml = "";
+            try { xml = await fetchHtml(`https://api.allorigins.win/raw?url=${encodeURIComponent(captionUrl)}`); }
+            catch(e3) { xml = await fetchHtml(`https://corsproxy.io/?${encodeURIComponent(captionUrl)}`); }
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xml, "text/xml");
+            const textNodes = xmlDoc.getElementsByTagName("text");
+            for (let i = 0; i < textNodes.length; i++) transcript += textNodes[i].textContent + " ";
+          }
+        }
+      } catch(e) { console.error("Admin Transcript error", e); }
+
+      let msg = "";
+      if (transcript && transcript.length > 50) {
+        if (transcript.length > 15000) transcript = transcript.substring(0, 15000) + "...";
+        msg = lang === "vi"
+          ? `Dựa vào phụ đề của video "${title}" dưới đây, hãy viết nội dung bài học bằng Markdown chi tiết gồm: 1. Tóm tắt ngắn gọn. 2. Timeline sự kiện. 3. Các khái niệm chính. 4. Tạo 3 câu trắc nghiệm. 5. Tạo 3 flashcards.\n\nTranscript: ${transcript}`
+          : `Based on the transcript of "${title}", write a detailed Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. 3-question quiz. 5. 3 flashcards.\n\nTranscript: ${transcript}`;
+      } else {
+        msg = lang === "vi" 
+          ? `Dưới đây là một video bài học từ YouTube có tựa đề "${title}". Link video: ${videoUrl}\n\nHãy sử dụng khả năng phân tích YouTube của bạn để xem nội dung video và viết một bài học Markdown chi tiết gồm:\n1. Tóm tắt ngắn gọn.\n2. Lập Timeline.\n3. Khái niệm chính.\n4. 3 câu hỏi trắc nghiệm.\n5. 3 thẻ ghi nhớ.`
+          : `Here is a YouTube video "${title}". Link: ${videoUrl}\n\nPlease use your native YouTube capabilities to analyze the video and write a Markdown lesson including:\n1. Summary.\n2. Timeline.\n3. Key concepts.\n4. 3-question quiz.\n5. 3 flashcards.`;
+      }
+      
+      try {
+        btn.innerHTML = "⏳ AI Đang viết bài...";
+        const response = await this.app.chatbotController._fetchModel(msg);
+        document.getElementById("lessonContent").value = response;
+        window.__toast.success(lang === "vi" ? "Đã tạo nội dung bài học!" : "Lesson content generated!");
+      } catch (e) {
+        window.__toast.error("AI Error: " + e.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    });
+
     document.getElementById("saveLessonBtn")?.addEventListener("click", async () => {
       const title    = document.getElementById("lessonTitle").value.trim();
       const type     = document.getElementById("lessonType").value;
