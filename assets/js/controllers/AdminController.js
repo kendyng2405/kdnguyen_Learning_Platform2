@@ -272,7 +272,11 @@ export class AdminController {
       
       try {
         btn.innerHTML = "⏳ AI Đang viết bài...";
-        const response = await this.app.chatbotController._fetchModel(msg);
+        const body = {
+          contents: [{ role: "user", parts: [{ text: msg }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 8000 }
+        };
+        const response = await this.app.chatbotController._fetchModel(null, body);
         document.getElementById("lessonContent").value = response;
         window.__toast.success(lang === "vi" ? "Đã tạo nội dung bài học!" : "Lesson content generated!");
       } catch (e) {
