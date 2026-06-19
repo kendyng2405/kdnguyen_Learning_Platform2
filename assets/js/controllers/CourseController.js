@@ -136,6 +136,7 @@ export class CourseController {
       const btn = e.target;
       const title = btn.dataset.title;
       let text = btn.dataset.content;
+      const videoUrl = btn.dataset.videourl;
       
       // limit text size just in case
       if (text.length > 3000) text = text.substring(0, 3000) + "...";
@@ -145,10 +146,14 @@ export class CourseController {
         msg = lang === "vi" 
           ? `Tóm tắt giúp tôi những ý chính của bài học "${title}" sau đây:\n\n${text}`
           : `Please summarize the key points of the lesson "${title}":\n\n${text}`;
+      } else if (videoUrl) {
+        msg = lang === "vi"
+          ? `Dựa vào đường link video này: ${videoUrl}, hãy cố gắng tóm tắt chi tiết những nội dung chính được dạy trong bài học "${title}". (Nếu không đọc được video, hãy giải thích chi tiết khái niệm này)`
+          : `Based on this video link: ${videoUrl}, please summarize the main topics taught in the lesson "${title}". (If you can't read the video, explain the concept in detail)`;
       } else {
         msg = lang === "vi"
-          ? `Bài học này là video có tựa đề "${title}". Vì bạn không xem được video, hãy giải thích khái quát khái niệm "${title}" là gì giúp tôi nhé.`
-          : `This is a video lesson titled "${title}". Since you cannot watch the video, please explain the general concept of "${title}".`;
+          ? `Hãy giải thích chi tiết khái niệm "${title}" là gì giúp tôi nhé.`
+          : `Please explain the concept of "${title}" in detail.`;
       }
         
       const chatInput = document.getElementById("chatbotInput");
