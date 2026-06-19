@@ -237,12 +237,35 @@ export class CourseController {
   }
 
   async _enroll(courseId) {
-    const uid = this.app.getUser().uid;
+    const uid = this.app.getUser()?.uid;
+    if (!uid) return;
     const lang = window.__i18n.current;
+
     try {
-      await this.quizModel.enrollCourse(uid, courseId);
-      window.__toast.success(lang === "vi" ? "Đăng ký khóa học thành công!" : "Enrolled successfully!");
-      this.showCourseDetail(courseId);
+      const course = await this.courseModel.getCourseById(courseId);
+      
+      const doEnroll = async () => {
+        await this.quizModel.enrollCourse(uid, courseId);
+        window.__toast.success(lang === "vi" ? "Đăng ký khóa học thành công!" : "Enrolled successfully!");
+        this.showCourseDetail(courseId);
+      };
+
+      if (course?.password) {
+        window.__prompt(
+          lang === "vi" ? "Khóa học này yêu cầu mật khẩu" : "This course requires a password",
+          lang === "vi" ? "Nhập mật khẩu..." : "Enter password...",
+          (val) => {
+            if (val === course.password) {
+              doEnroll();
+            } else {
+              window.__toast.error(lang === "vi" ? "Mật khẩu không đúng!" : "Incorrect password!");
+            }
+          },
+          true // isPassword = true
+        );
+      } else {
+        await doEnroll();
+      }
     } catch (e) {
       window.__toast.error(e.message);
     }

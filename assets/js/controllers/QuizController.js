@@ -31,24 +31,47 @@ export class QuizController {
       return;
     }
 
-    this.currentQuiz = quiz;
-    this.currentCourseId = courseId;
-    this.answers = {};
-
     const lang = window.__i18n.current;
-    const html = this.view.renderQuiz(course, quiz, lang);
-    this._renderPage(html, "quiz");
 
-    this._bindAnswerOptions();
-    this._bindSubmit(courseId, quizId);
-    document.getElementById("backToCourse")?.addEventListener("click", () => {
-      clearInterval(this.timer);
-      this.app.navigate("course", courseId);
-    });
+    const renderActualQuiz = () => {
+      this.currentQuiz = quiz;
+      this.currentCourseId = courseId;
+      this.answers = {};
 
-    // Start timer if quiz has time limit
-    if (quiz.timeLimitMinutes) {
-      this._startTimer(quiz.timeLimitMinutes * 60, courseId, quizId);
+      const html = this.view.renderQuiz(course, quiz, lang);
+      this._renderPage(html, "quiz");
+
+      this._bindAnswerOptions();
+      this._bindSubmit(courseId, quizId);
+      document.getElementById("backToCourse")?.addEventListener("click", () => {
+        clearInterval(this.timer);
+        this.app.navigate("course", courseId);
+      });
+
+      if (quiz.timeLimitMinutes) {
+        this._startTimer(quiz.timeLimitMinutes * 60, courseId, quizId);
+      }
+    };
+
+    if (quiz.password) {
+      window.__prompt(
+        lang === "vi" ? "Bài kiểm tra này yêu cầu mật khẩu" : "This quiz requires a password",
+        lang === "vi" ? "Nhập mật khẩu..." : "Enter password...",
+        (val) => {
+          if (val === quiz.password) {
+            renderActualQuiz();
+          } else {
+            window.__toast.error(lang === "vi" ? "Mật khẩu không đúng!" : "Incorrect password!");
+            this.app.navigate("course", courseId);
+          }
+        },
+        true, // isPassword = true
+        () => {
+          this.app.navigate("course", courseId);
+        }
+      );
+    } else {
+      renderActualQuiz();
     }
   }
 

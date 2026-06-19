@@ -46,14 +46,14 @@ export class App {
     window.__router = this;
     
     // Custom Prompt UI
-    window.__prompt = (title, placeholder, callback) => {
+    window.__prompt = (title, placeholder, callback, isPassword = false, onCancel = null) => {
       const lang = this.i18n.current;
       const overlay = document.createElement("div");
       overlay.className = "modal-overlay";
       overlay.innerHTML = `
         <div class="modal animate-slide-up" style="max-width: 400px; padding: 1.5rem">
           <h3 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600">${title}</h3>
-          <input type="text" id="aiPromptInput" class="form-input" placeholder="${placeholder}" />
+          <input type="${isPassword ? 'password' : 'text'}" id="aiPromptInput" class="form-input" placeholder="${placeholder}" />
           <div class="modal-actions" style="margin-top: 1.5rem">
             <button class="btn btn--ghost" id="aiPromptCancel">${lang === 'vi' ? 'Hủy' : 'Cancel'}</button>
             <button class="btn btn--primary" id="aiPromptOk">OK</button>
@@ -66,22 +66,23 @@ export class App {
       const btnOk = overlay.querySelector("#aiPromptOk");
       const btnCancel = overlay.querySelector("#aiPromptCancel");
 
-      const close = () => {
+      const close = (isCancel = false) => {
         overlay.style.opacity = "0";
         setTimeout(() => overlay.remove(), 200);
+        if (isCancel && typeof onCancel === 'function') onCancel();
       };
 
       btnOk.addEventListener("click", () => {
         const val = input.value.trim();
         if (val) {
           callback(val);
-          close();
+          close(false);
         }
       });
 
-      btnCancel.addEventListener("click", close);
+      btnCancel.addEventListener("click", () => close(true));
       overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) close();
+        if (e.target === overlay) close(true);
       });
       input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") btnOk.click();
