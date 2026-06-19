@@ -154,7 +154,7 @@ export class CourseController {
         // Tricky way to get YT transcript via allorigins CORS proxy
         let transcript = "";
         try {
-          const videoId = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[1];
+          const videoId = videoUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s?]+)/)?.[1];
           if (videoId) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 8000);
