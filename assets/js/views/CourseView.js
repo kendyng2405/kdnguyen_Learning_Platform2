@@ -275,7 +275,7 @@ export class CourseView {
           <div class="lesson-meta-row">
             <span>${this._lessonTypeIcon(lesson.type)} ${lesson.type || 'lesson'}</span>
             ${lesson.duration ? `<span>⏱ ${lesson.duration}</span>` : ""}
-            <button class="btn btn--outline btn--xs" id="btnSummarizeLesson" style="margin-left:auto" data-title="${lesson.title}" data-content="${lesson.content || ''}" data-videourl="${lesson.videoUrl || ''}">🤖 ${lang === 'vi' ? 'AI Tóm Tắt' : 'AI Summary'}</button>
+            <button class="btn btn--outline btn--xs" id="btnSummarizeLesson" style="margin-left:auto" data-title="${lesson.title}" data-content="${lesson.content || ''}" data-videourl="${lesson.videoUrl || ''}">🤖 ${lang === 'vi' ? 'AI Trợ lý Video' : 'AI Video Assistant'}</button>
           </div>
 
           ${lesson.videoUrl ? `

@@ -187,8 +187,8 @@ export class CourseController {
         if (transcript.length > 50) {
           if (transcript.length > 15000) transcript = transcript.substring(0, 15000) + "...";
           msg = lang === "vi"
-            ? `Dựa vào toàn bộ phụ đề (transcript) của video bài học "${title}" dưới đây, hãy tóm tắt chi tiết những kiến thức được dạy:\n\n${transcript}`
-            : `Based on the video transcript of the lesson "${title}" below, summarize the knowledge taught:\n\n${transcript}`;
+            ? `Dựa vào toàn bộ phụ đề (transcript) của video bài học "${title}" dưới đây, hãy làm các việc sau:\n1. Tóm tắt ngắn gọn.\n2. Lập Timeline theo nội dung.\n3. Trích xuất các Khái niệm chính (Key concepts).\n4. Tạo 3 câu hỏi trắc nghiệm (Quiz).\n5. Tạo 3 thẻ ghi nhớ (Flashcard).\n\nTranscript:\n${transcript}`
+            : `Based on the video transcript of the lesson "${title}" below, please provide:\n1. A short summary.\n2. A timeline of events/topics.\n3. Key concepts.\n4. A 3-question quiz.\n5. 3 study flashcards.\n\nTranscript:\n${transcript}`;
         } else {
           msg = lang === "vi"
             ? `Dựa vào đường link video này: ${videoUrl}, hãy cố gắng tóm tắt chi tiết những nội dung chính được dạy trong bài học "${title}". (Nếu không đọc được video, hãy giải thích chi tiết khái niệm này)`
