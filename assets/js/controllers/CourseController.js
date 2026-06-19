@@ -132,7 +132,7 @@ export class CourseController {
     document.getElementById("backToCourse")?.addEventListener("click", () => this.app.navigate("course", courseId));
     
     // AI Summarize
-    document.getElementById("btnSummarizeLesson")?.addEventListener("click", (e) => {
+    document.getElementById("btnSummarizeLesson")?.addEventListener("click", async (e) => {
       const btn = e.target;
       const title = btn.dataset.title;
       let text = btn.dataset.content;
@@ -147,9 +147,45 @@ export class CourseController {
           ? `Tóm tắt giúp tôi những ý chính của bài học "${title}" sau đây:\n\n${text}`
           : `Please summarize the key points of the lesson "${title}":\n\n${text}`;
       } else if (videoUrl) {
-        msg = lang === "vi"
-          ? `Dựa vào đường link video này: ${videoUrl}, hãy cố gắng tóm tắt chi tiết những nội dung chính được dạy trong bài học "${title}". (Nếu không đọc được video, hãy giải thích chi tiết khái niệm này)`
-          : `Based on this video link: ${videoUrl}, please summarize the main topics taught in the lesson "${title}". (If you can't read the video, explain the concept in detail)`;
+        const btnText = btn.innerHTML;
+        btn.innerHTML = "⏳...";
+        btn.disabled = true;
+        
+        // Tricky way to get YT transcript via allorigins CORS proxy
+        let transcript = "";
+        try {
+          const videoId = videoUrl.match(/(?:youtube\.com\\/watch\\?v=|youtu\.be\\/)([^&\\s]+)/)?.[1];
+          if (videoId) {
+            const res = await fetch(\`https://api.allorigins.win/raw?url=\${encodeURIComponent("https://www.youtube.com/watch?v=" + videoId)}\`);
+            const html = await res.text();
+            const match = html.match(/"captionTracks":\\[\\{"baseUrl":"([^"]+)"/);
+            if (match) {
+              const captionUrl = match[1].replace(/\\\\u0026/g, "&");
+              const captionRes = await fetch(\`https://api.allorigins.win/raw?url=\${encodeURIComponent(captionUrl)}\`);
+              const xml = await captionRes.text();
+              const parser = new DOMParser();
+              const xmlDoc = parser.parseFromString(xml, "text/xml");
+              const textNodes = xmlDoc.getElementsByTagName("text");
+              for (let i = 0; i < textNodes.length; i++) {
+                  transcript += textNodes[i].textContent + " ";
+              }
+            }
+          }
+        } catch(e) { console.error("Transcript error", e); }
+        
+        btn.innerHTML = btnText;
+        btn.disabled = false;
+
+        if (transcript.length > 50) {
+          if (transcript.length > 15000) transcript = transcript.substring(0, 15000) + "...";
+          msg = lang === "vi"
+            ? `Dựa vào toàn bộ phụ đề (transcript) của video bài học "${title}" dưới đây, hãy tóm tắt chi tiết những kiến thức được dạy:\n\n${transcript}`
+            : `Based on the video transcript of the lesson "${title}" below, summarize the knowledge taught:\n\n${transcript}`;
+        } else {
+          msg = lang === "vi"
+            ? `Dựa vào đường link video này: ${videoUrl}, hãy cố gắng tóm tắt chi tiết những nội dung chính được dạy trong bài học "${title}". (Nếu không đọc được video, hãy giải thích chi tiết khái niệm này)`
+            : `Based on this video link: ${videoUrl}, please summarize the main topics taught in the lesson "${title}". (If you can't read the video, explain the concept in detail)`;
+        }
       } else {
         msg = lang === "vi"
           ? `Hãy giải thích chi tiết khái niệm "${title}" là gì giúp tôi nhé.`
