@@ -190,25 +190,24 @@ export class CourseController {
               }
             }
 
-            // Fallback mock transcript for the demo video if YouTube blocks CORS proxies
-            if (!transcript && (videoId === "_s1O_JpZ2X8" || title.toLowerCase().includes("ci/cd"))) {
-               transcript = "Xin chào các bạn, trong bài học hôm nay chúng ta sẽ tìm hiểu về CI/CD và GitHub Actions. CI là Continuous Integration, nghĩa là tích hợp liên tục. Nó giúp các developer gộp code thường xuyên và tự động chạy test để phát hiện lỗi sớm. CD là Continuous Deployment hoặc Delivery, nghĩa là triển khai liên tục, giúp đưa ứng dụng lên server tự động. Chúng ta sẽ dùng GitHub Actions để tạo một pipeline tự động build và deploy dự án. Đầu tiên, chúng ta cần tạo thư mục .github/workflows và một file YAML. File YAML này sẽ định nghĩa các jobs và steps. Lợi ích lớn nhất là tiết kiệm thời gian, giảm thiểu lỗi do con người, và tăng tốc độ phát hành phần mềm.";
-            }
+            // Remove the hardcoded mock transcript.
+            // If transcript is empty, we will rely on Gemini's native YouTube processing capability
           }
         } catch(e) { console.error("Transcript error", e); }
         
         btn.innerHTML = btnText;
         btn.disabled = false;
 
-        if (transcript.length > 50) {
+        if (transcript && transcript.length > 50) {
           if (transcript.length > 15000) transcript = transcript.substring(0, 15000) + "...";
           msg = lang === "vi"
             ? `Dựa vào toàn bộ phụ đề (transcript) của video bài học "${title}" dưới đây, hãy làm các việc sau:\n1. Tóm tắt ngắn gọn.\n2. Lập Timeline theo nội dung.\n3. Trích xuất các Khái niệm chính (Key concepts).\n4. Tạo 3 câu hỏi trắc nghiệm (Quiz).\n5. Tạo 3 thẻ ghi nhớ (Flashcard).\n\nTranscript:\n${transcript}`
             : `Based on the video transcript of the lesson "${title}" below, please provide:\n1. A short summary.\n2. A timeline of events/topics.\n3. Key concepts.\n4. A 3-question quiz.\n5. 3 study flashcards.\n\nTranscript:\n${transcript}`;
         } else {
+          // Fallback: If transcript proxy fails, pass the URL and instruct Gemini to use its YouTube integration
           msg = lang === "vi"
-            ? `Dựa vào đường link video này: ${videoUrl}, hãy cố gắng tóm tắt chi tiết những nội dung chính được dạy trong bài học "${title}". (Nếu không đọc được video, hãy giải thích chi tiết khái niệm này)`
-            : `Based on this video link: ${videoUrl}, please summarize the main topics taught in the lesson "${title}". (If you can't read the video, explain the concept in detail)`;
+            ? `Dưới đây là một video bài học từ YouTube có tựa đề "${title}". Link video: ${videoUrl}\n\nHãy sử dụng khả năng phân tích YouTube của bạn (YouTube Workspace / Google Video API) để xem nội dung video và thực hiện các việc sau:\n1. Tóm tắt ngắn gọn.\n2. Lập Timeline theo mốc thời gian.\n3. Trích xuất các Khái niệm chính.\n4. Tạo 3 câu hỏi trắc nghiệm (Quiz).\n5. Tạo 3 thẻ ghi nhớ (Flashcard).`
+            : `Here is a YouTube video lesson titled "${title}". Video link: ${videoUrl}\n\nPlease use your native YouTube capabilities to analyze the video and provide:\n1. A short summary.\n2. A timeline of events/topics.\n3. Key concepts.\n4. A 3-question quiz.\n5. 3 study flashcards.`;
         }
       } else {
         msg = lang === "vi"
