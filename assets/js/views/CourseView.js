@@ -206,7 +206,7 @@ export class CourseView {
                       <span class="lesson-num">${i + 1}</span>
                       <div class="lesson-info">
                         <span class="lesson-title">${l.title}</span>
-                        <span class="lesson-meta">${this._lessonTypeIcon(l.type)} ${l.duration || ''}</span>
+                        <span class="lesson-meta"><span class="lesson-meta-icon">${this._lessonTypeIcon(l.type)}</span> ${l.duration || 'N/A'}</span>
                       </div>
                       <span class="lesson-status">${done ? '✓' : locked ? '🔒' : '▶'}</span>
                     </li>`;
