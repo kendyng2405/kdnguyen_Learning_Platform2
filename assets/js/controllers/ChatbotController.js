@@ -111,7 +111,12 @@ export class ChatbotController {
   }
 
 async _fetchModel(model, body) {
-  const res = await fetch(GEMINI_PROXY_URL, {
+  let url = GEMINI_PROXY_URL;
+  if (window.APP_CONFIG?.geminiKey) {
+     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + window.APP_CONFIG.geminiKey;
+  }
+
+  const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -124,7 +129,7 @@ async _fetchModel(model, body) {
 
   const data = await res.json();
   
-  console.log("[KDLearnBot] Full Gemini Response:", JSON.stringify(data, null, 2)); // ← thêm dòng này để debug
+  console.log("[KDLearnBot] Full Gemini Response:", JSON.stringify(data, null, 2));
 
   const candidate = data.candidates?.[0];
   if (!candidate?.content?.parts?.[0]?.text) {
