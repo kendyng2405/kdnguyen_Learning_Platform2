@@ -115,6 +115,38 @@ export class QuizController {
 
     document.getElementById("retakeQuiz")?.addEventListener("click", () => this.showQuiz(courseId, quizId));
     document.getElementById("backToCourse")?.addEventListener("click", () => this.app.navigate("course", courseId));
+    
+    // Bind Ask AI buttons
+    document.querySelectorAll(".btn-explain-ai").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const question = btn.dataset.question;
+        const correct = btn.dataset.correct;
+        const wrong = btn.dataset.wrong;
+        
+        let msg = "";
+        if (lang === "vi") {
+          msg = `Giải thích giúp tôi tại sao câu hỏi "${question}" lại có đáp án đúng là "${correct}"`;
+          if (wrong) msg += ` chứ không phải là "${wrong}"?`;
+        } else {
+          msg = `Explain to me why for the question "${question}", the correct answer is "${correct}"`;
+          if (wrong) msg += ` instead of "${wrong}"?`;
+        }
+        
+        // Open chatbot and put text in input
+        const chatInput = document.getElementById("chatbotInput");
+        const fab = document.getElementById("chatbotFab");
+        const chatSend = document.getElementById("chatbotSend");
+        
+        if (!this.app.chatbotController.isOpen) {
+          fab?.click();
+        }
+        
+        if (chatInput && chatSend) {
+          chatInput.value = msg;
+          chatSend.click();
+        }
+      });
+    });
   }
 
   _startTimer(totalSeconds, courseId, quizId) {

@@ -236,6 +236,11 @@ export class App {
         ? `Chào, ${username} 👋`
         : `Welcome, ${username} 👋`;
 
+      const streakBadge = document.getElementById("navStreak");
+      if (streakBadge) {
+        streakBadge.textContent = `🔥 ${profile?.streak || 0}`;
+      }
+
       // Avatar initials
       if (avatar) {
         const initials = (profile?.fullname || username || "?").charAt(0).toUpperCase();

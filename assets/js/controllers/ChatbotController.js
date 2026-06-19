@@ -79,26 +79,36 @@ export class ChatbotController {
     }
   }
 
-async _callGemini(userMessage) {
-  const profile  = this.app.getUserProfile();
-  const lang     = window.__i18n?.current || "vi";
-  const userName = profile?.username || profile?.fullname || "bạn";
+  async _callGemini(userMessage) {
+    const profile  = this.app.getUserProfile();
+    const lang     = window.__i18n?.current || "vi";
+    const userName = profile?.username || profile?.fullname || "bạn";
 
- const systemPrompt = lang === "vi"
-  ? `Bạn là KDLearnBot - trợ lý AI thân thiện, luôn trả lời trực tiếp, trả lời kiểu genz tiếng Việt. Không hỗn với khách hàng, nói nhớ có chủ ngữ, xưng hô Kendy - bạn.`
-  : `You are KDLearnBot, a friendly AI assistant. Always reply directly and kindly.`;
+    let contextStr = "";
+    const currentPath = this.app.currentPath || "";
+    if (currentPath.startsWith("/lesson/")) {
+      const parts = currentPath.split("/");
+      contextStr = `\nContext: Học viên đang ở bài học ID ${parts[3]} thuộc khóa học ID ${parts[2]}. Dùng Socratic method để dạy, không nói thẳng đáp án.`;
+    } else if (currentPath.startsWith("/quiz/")) {
+      const parts = currentPath.split("/");
+      contextStr = `\nContext: Học viên đang làm bài quiz ID ${parts[3]} của khóa học ID ${parts[2]}. Không đưa đáp án trực tiếp cho quiz.`;
+    }
 
-  this.history.push({ role: "user", parts: [{ text: userMessage }] });
-  if (this.history.length > 20) this.history = this.history.slice(-20);
+   const systemPrompt = lang === "vi"
+    ? `Bạn là KDLearnBot - trợ lý AI thông minh của KDLearnSpace. Trả lời kiểu genz tiếng Việt thân thiện, gọi là Kendy hoặc bạn. ${contextStr}`
+    : `You are KDLearnBot, a smart AI tutor for KDLearnSpace. Always reply directly and kindly. ${contextStr}`;
 
-  const body = {
-    system_instruction: { parts: [{ text: systemPrompt }] },
-    contents: this.history,
-    generationConfig: { temperature: 0.7, maxOutputTokens: 5000 },
-  };
+    this.history.push({ role: "user", parts: [{ text: userMessage }] });
+    if (this.history.length > 20) this.history = this.history.slice(-20);
 
-  return await this._fetchModel(null, body);
-}
+    const body = {
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents: this.history,
+      generationConfig: { temperature: 0.7, maxOutputTokens: 5000 },
+    };
+
+    return await this._fetchModel(null, body);
+  }
 
 async _fetchModel(model, body) {
   const res = await fetch(GEMINI_PROXY_URL, {

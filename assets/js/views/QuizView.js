@@ -134,6 +134,9 @@ export class QuizView {
                 <div class="review-answers">
                   <span class="your-ans">❌ ${t.yourAnswer}: ${r.userAnswer !== null ? r.options[parseInt(r.userAnswer)] : (lang === "vi" ? "Chưa trả lời" : "Not answered")}</span>
                   <span class="correct-ans">✅ ${t.correctAnswer}: ${r.options[parseInt(r.correct)]}</span>
+                  <div style="margin-top: 0.5rem">
+                    <button class="btn btn--outline btn--xs btn-explain-ai" data-question="${r.question}" data-correct="${r.options[parseInt(r.correct)]}" data-wrong="${r.userAnswer !== null ? r.options[parseInt(r.userAnswer)] : ''}">🤖 ${lang === 'vi' ? 'Hỏi AI giải thích' : 'Ask AI to Explain'}</button>
+                  </div>
                 </div>` : ""
               }
             </div>

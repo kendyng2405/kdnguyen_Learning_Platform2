@@ -83,6 +83,9 @@ export class AuthModel {
       dob: null,
       progress: {},
       enrolledCourses: [],
+      streak: 0,
+      xp: 0,
+      lastLoginDate: null,
     });
 
     await this.loadUserProfile(user.uid);
@@ -98,10 +101,42 @@ export class AuthModel {
     const snap = await getDoc(doc(this.db, "users", uid));
     if (snap.exists()) {
       this.userProfile = snap.data();
+      await this.updateLoginStreak(uid, this.userProfile);
     } else {
       this.userProfile = null;
     }
     return this.userProfile;
+  }
+
+  async updateLoginStreak(uid, profile) {
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const lastLogin = profile.lastLoginDate;
+    
+    if (lastLogin === today) return; // Already logged in today
+    
+    let newStreak = profile.streak || 0;
+    if (lastLogin) {
+      const lastDate = new Date(lastLogin);
+      const todayDate = new Date(today);
+      const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        newStreak += 1; // Consecutive day
+      } else if (diffDays > 1) {
+        newStreak = 1; // Streak broken
+      }
+    } else {
+      newStreak = 1; // First login
+    }
+    
+    // Add 10 XP for daily login
+    const newXP = (profile.xp || 0) + 10;
+    
+    await this.updateProfile(uid, {
+      streak: newStreak,
+      xp: newXP,
+      lastLoginDate: today
+    });
   }
 
   async updateProfile(uid, data) {
