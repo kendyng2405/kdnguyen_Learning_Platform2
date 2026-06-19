@@ -76,25 +76,28 @@ export class CourseController {
     document.getElementById("btnStudyPlan")?.addEventListener("click", (e) => {
       const btn = e.target;
       const title = btn.dataset.course;
-      const days = prompt(lang === "vi" ? "Bạn muốn học khóa này trong bao nhiêu ngày?" : "How many days do you want to finish this course?");
-      if (!days) return;
-      
-      const msg = lang === "vi"
-        ? `Lập cho tôi kế hoạch học khóa "${title}" trong vòng ${days} ngày. Bao gồm các mục tiêu từng ngày.`
-        : `Generate a study plan for the course "${title}" over ${days} days. Include daily goals.`;
-        
-      const chatInput = document.getElementById("chatbotInput");
-      const fab = document.getElementById("chatbotFab");
-      const chatSend = document.getElementById("chatbotSend");
-      
-      if (!this.app.chatbotController.isOpen) {
-        fab?.click();
-      }
-      
-      if (chatInput && chatSend) {
-        chatInput.value = msg;
-        chatSend.click();
-      }
+      window.__prompt(
+        lang === "vi" ? "Lên kế hoạch học tập (AI)" : "AI Study Plan",
+        lang === "vi" ? "Bạn muốn học khóa này trong bao lâu? (VD: 7 ngày)" : "How long to finish? (e.g. 7 days)",
+        (days) => {
+          const msg = lang === "vi"
+            ? `Lập cho tôi kế hoạch học khóa "${title}" trong vòng ${days}. Bao gồm các mục tiêu từng ngày.`
+            : `Generate a study plan for the course "${title}" over ${days}. Include daily goals.`;
+            
+          const chatInput = document.getElementById("chatbotInput");
+          const fab = document.getElementById("chatbotFab");
+          const chatSend = document.getElementById("chatbotSend");
+          
+          if (!this.app.chatbotController.isOpen) {
+            fab?.click();
+          }
+          
+          if (chatInput && chatSend) {
+            chatInput.value = msg;
+            chatSend.click();
+          }
+        }
+      );
     });
   }
 
@@ -137,9 +140,16 @@ export class CourseController {
       // limit text size just in case
       if (text.length > 3000) text = text.substring(0, 3000) + "...";
       
-      const msg = lang === "vi" 
-        ? `Tóm tắt giúp tôi những ý chính của bài học "${title}" sau đây:\n\n${text}`
-        : `Please summarize the key points of the lesson "${title}":\n\n${text}`;
+      let msg = "";
+      if (text && text.trim().length > 0) {
+        msg = lang === "vi" 
+          ? `Tóm tắt giúp tôi những ý chính của bài học "${title}" sau đây:\n\n${text}`
+          : `Please summarize the key points of the lesson "${title}":\n\n${text}`;
+      } else {
+        msg = lang === "vi"
+          ? `Bài học này là video có tựa đề "${title}". Vì bạn không xem được video, hãy giải thích khái quát khái niệm "${title}" là gì giúp tôi nhé.`
+          : `This is a video lesson titled "${title}". Since you cannot watch the video, please explain the general concept of "${title}".`;
+      }
         
       const chatInput = document.getElementById("chatbotInput");
       const fab = document.getElementById("chatbotFab");

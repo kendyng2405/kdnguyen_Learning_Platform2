@@ -44,6 +44,50 @@ export class App {
     window.__theme  = this.theme;
     window.__toast  = this.toast;
     window.__router = this;
+    
+    // Custom Prompt UI
+    window.__prompt = (title, placeholder, callback) => {
+      const lang = this.i18n.current;
+      const overlay = document.createElement("div");
+      overlay.className = "modal-overlay";
+      overlay.innerHTML = `
+        <div class="modal animate-slide-up" style="max-width: 400px; padding: 1.5rem">
+          <h3 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600">${title}</h3>
+          <input type="text" id="aiPromptInput" class="form-input" placeholder="${placeholder}" />
+          <div class="modal-actions" style="margin-top: 1.5rem">
+            <button class="btn btn--ghost" id="aiPromptCancel">${lang === 'vi' ? 'Hủy' : 'Cancel'}</button>
+            <button class="btn btn--primary" id="aiPromptOk">OK</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      const input = overlay.querySelector("#aiPromptInput");
+      const btnOk = overlay.querySelector("#aiPromptOk");
+      const btnCancel = overlay.querySelector("#aiPromptCancel");
+
+      const close = () => {
+        overlay.style.opacity = "0";
+        setTimeout(() => overlay.remove(), 200);
+      };
+
+      btnOk.addEventListener("click", () => {
+        const val = input.value.trim();
+        if (val) {
+          callback(val);
+          close();
+        }
+      });
+
+      btnCancel.addEventListener("click", close);
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) close();
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") btnOk.click();
+      });
+      setTimeout(() => input.focus(), 100);
+    };
 
     this.authModel          = new AuthModel();
     this.authController     = new AuthController(this);
