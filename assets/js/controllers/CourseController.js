@@ -206,8 +206,8 @@ export class CourseController {
         } else {
           // Fallback: If transcript proxy fails, pass the URL and instruct Gemini to use its YouTube integration
           msg = lang === "vi"
-            ? `Dưới đây là một video bài học từ YouTube có tựa đề "${title}". Link video: ${videoUrl}\n\nHãy sử dụng khả năng phân tích YouTube của bạn (YouTube Workspace / Google Video API) để xem nội dung video và thực hiện các việc sau:\n1. Tóm tắt ngắn gọn.\n2. Lập Timeline theo mốc thời gian.\n3. Trích xuất các Khái niệm chính.\n4. Tạo 3 câu hỏi trắc nghiệm (Quiz).\n5. Tạo 3 thẻ ghi nhớ (Flashcard).`
-            : `Here is a YouTube video lesson titled "${title}". Video link: ${videoUrl}\n\nPlease use your native YouTube capabilities to analyze the video and provide:\n1. A short summary.\n2. A timeline of events/topics.\n3. Key concepts.\n4. A 3-question quiz.\n5. 3 study flashcards.`;
+            ? `Dưới đây là một video bài học từ YouTube. Link video: ${videoUrl}\n\nHãy sử dụng công cụ YouTube Workspace của bạn để xem nội dung video và thực hiện các việc sau: 1. Tóm tắt. 2. Timeline. 3. Các khái niệm chính. 4. 3 câu hỏi Quiz. 5. 3 Flashcards.\nCẢNH BÁO QUAN TRỌNG: Nếu bạn không thể truy cập, không thể xem nội dung thực tế của video này, hoặc bị chặn, BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP ĐOÁN HAY TỰ TẠO NỘI DUNG DỰA VÀO TIÊU ĐỀ. Nếu không xem được video, hãy chỉ trả lời duy nhất chuỗi này: "ERROR_CANNOT_ACCESS_VIDEO".`
+            : `Here is a YouTube video. Link: ${videoUrl}\n\nPlease use your native YouTube capabilities to analyze the video and provide: 1. Summary. 2. Timeline. 3. Key concepts. 4. Quiz. 5. Flashcards.\nIMPORTANT WARNING: If you cannot access the actual video content or it is blocked, YOU MUST NOT GUESS OR HALLUCINATE based on the title. If you cannot read the video, reply EXACTLY with this string: "ERROR_CANNOT_ACCESS_VIDEO".`;
         }
       } else {
         msg = lang === "vi"
@@ -224,7 +224,13 @@ export class CourseController {
       }
       
       if (chatInput && chatSend) {
+        // Intercept sending to check for error response
         chatInput.value = msg;
+        
+        // Let the normal chatbot send flow happen, but we can hook into ChatbotController 
+        // to filter "ERROR_CANNOT_ACCESS_VIDEO". Actually, the chatbot UI will show the user 
+        // the error if Gemini returns it, which is fine! 
+        // Or we can just let it type it out, or we can add a filter in ChatbotController.
         chatSend.click();
       }
     });

@@ -68,6 +68,13 @@ export class ChatbotController {
     try {
       const reply = await this._callGemini(msg);
       this._hideTyping();
+      if (reply.includes("ERROR_CANNOT_ACCESS_VIDEO")) {
+        const lang = window.__i18n?.current || "vi";
+        this._appendMessage("bot", lang === "vi" 
+          ? "🚫 Lỗi: YouTube đã chặn hệ thống lấy phụ đề của video này. Bạn hãy thử nhập API Key của riêng bạn vào mục Admin, hoặc tự copy nội dung video vào đây nhé!" 
+          : "🚫 Error: YouTube blocked transcript access. Please use your own API Key in the Admin panel, or copy the transcript manually.");
+        return;
+      }
       this._appendMessage("bot", reply);
     } catch (e) {
       this._hideTyping();

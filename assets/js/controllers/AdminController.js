@@ -266,17 +266,22 @@ export class AdminController {
           : `Based on the transcript of "${title}", write a detailed Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. 3-question quiz. 5. 3 flashcards.\n\nTranscript: ${transcript}`;
       } else {
         msg = lang === "vi" 
-          ? `Dưới đây là một video bài học từ YouTube có tựa đề "${title}". Link video: ${videoUrl}\n\nHãy sử dụng khả năng phân tích YouTube của bạn để xem nội dung video và viết một bài học Markdown chi tiết gồm:\n1. Tóm tắt ngắn gọn.\n2. Lập Timeline.\n3. Khái niệm chính.\n4. 3 câu hỏi trắc nghiệm.\n5. 3 thẻ ghi nhớ.`
-          : `Here is a YouTube video "${title}". Link: ${videoUrl}\n\nPlease use your native YouTube capabilities to analyze the video and write a Markdown lesson including:\n1. Summary.\n2. Timeline.\n3. Key concepts.\n4. 3-question quiz.\n5. 3 flashcards.`;
+          ? `Dưới đây là một video bài học từ YouTube. Link video: ${videoUrl}\n\nHãy sử dụng công cụ YouTube Workspace của bạn để xem nội dung video và viết một bài học Markdown chi tiết.\nCẢNH BÁO QUAN TRỌNG: Nếu bạn không thể truy cập, không thể xem nội dung thực tế của video này, hoặc bị chặn, BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP ĐOÁN HAY TỰ TẠO NỘI DUNG DỰA VÀO TIÊU ĐỀ. Nếu không xem được video, hãy chỉ trả lời duy nhất chuỗi này: "ERROR_CANNOT_ACCESS_VIDEO".`
+          : `Here is a YouTube video. Link: ${videoUrl}\n\nPlease use your native YouTube capabilities to analyze the video.\nIMPORTANT WARNING: If you cannot access the actual video content or it is blocked, YOU MUST NOT GUESS OR HALLUCINATE based on the title. If you cannot read the video, reply EXACTLY with this string: "ERROR_CANNOT_ACCESS_VIDEO".`;
       }
       
       try {
         btn.innerHTML = "⏳ AI Đang viết bài...";
         const body = {
           contents: [{ role: "user", parts: [{ text: msg }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 8000 }
+          generationConfig: { temperature: 0.1, maxOutputTokens: 8000 }
         };
         const response = await this.app.chatbotController._fetchModel(null, body);
+        
+        if (response.includes("ERROR_CANNOT_ACCESS_VIDEO")) {
+          throw new Error(lang === "vi" ? "Bị YouTube chặn lấy phụ đề. Vui lòng dùng video khác hoặc thêm API Key chính chủ!" : "YouTube blocked transcript access. Use another video or a direct API Key.");
+        }
+        
         document.getElementById("lessonContent").value = response;
         window.__toast.success(lang === "vi" ? "Đã tạo nội dung bài học!" : "Lesson content generated!");
       } catch (e) {
