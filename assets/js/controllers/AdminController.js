@@ -283,7 +283,7 @@ export class AdminController {
       }
       
       try {
-        btn.innerHTML = "⏳ AI Đang viết bài...";
+        btn.innerHTML = "⏳ AI Đang xem video...";
         const body = {
           contents: [{ role: "user", parts: parts }],
           generationConfig: { temperature: 0.1, maxOutputTokens: 8000 }
@@ -297,7 +297,11 @@ export class AdminController {
         document.getElementById("lessonContent").value = response;
         window.__toast.success(lang === "vi" ? "Đã tạo nội dung bài học!" : "Lesson content generated!");
       } catch (e) {
-        window.__toast.error("AI Error: " + e.message);
+        if (e.message.includes("1048576") || e.message.includes("exceeds the maximum number of tokens")) {
+          window.__toast.error(lang === "vi" ? "Video quá dài! AI chỉ có thể xem video ngắn hơn (giới hạn 1 triệu token)." : "Video too long! Exceeds 1 million token limit.");
+        } else {
+          window.__toast.error("AI Error: " + e.message);
+        }
       } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;

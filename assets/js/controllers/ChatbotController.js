@@ -80,9 +80,15 @@ export class ChatbotController {
       this._hideTyping();
       console.error("[KDLearnBot] Error:", e.message);
       const lang = window.__i18n?.current || "vi";
-      this._appendMessage("bot", lang === "vi"
-        ? "Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau!"
-        : "Sorry, I'm having issues. Please try again later!");
+      if (e.message.includes("1048576") || e.message.includes("exceeds the maximum number of tokens")) {
+        this._appendMessage("bot", lang === "vi"
+          ? "🚫 Lỗi: Video này quá dài (vượt quá giới hạn 1 triệu token). AI không thể phân tích hết được, bạn có thể chọn video ngắn hơn nha!"
+          : "🚫 Error: This video is too long (exceeds 1 million token limit). Please choose a shorter video!");
+      } else {
+        this._appendMessage("bot", lang === "vi"
+          ? "Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau!"
+          : "Sorry, I'm having issues. Please try again later!");
+      }
     }
   }
 
