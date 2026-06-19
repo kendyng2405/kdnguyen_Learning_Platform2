@@ -105,7 +105,7 @@ export class ChatbotController {
         const parts = currentPath.split("/");
         const courseId = parts[2];
         const lessonId = parts[3];
-        const lesson = await this.courseModel.getLessonById(courseId, lessonId);
+        const lesson = await this.app.courseModel.getLessonById(courseId, lessonId);
         if (lesson) {
           // Limit context size to avoid exceeding tokens, just in case
           let content = lesson.content || "";
@@ -116,7 +116,7 @@ export class ChatbotController {
         const parts = currentPath.split("/");
         const courseId = parts[2];
         const quizId = parts[3];
-        const quiz = await this.quizModel.getQuizById(courseId, quizId);
+        const quiz = await this.app.quizModel.getQuizById(courseId, quizId);
         if (quiz) {
           const questions = quiz.questions.map((q, i) => `Câu ${i+1}: ${q.q}\nCác lựa chọn: ${q.options.join(" | ")}`).join("\n");
           contextStr = `\nContext: Học viên đang làm bài quiz "${quiz.title}".\nNội dung các câu hỏi trong quiz:\n${questions}\n\nHãy dùng Socratic method để gợi ý, KHÔNG BAO GIỜ đưa đáp án trực tiếp cho quiz. Khuyến khích học viên tự tìm ra câu trả lời.`;
