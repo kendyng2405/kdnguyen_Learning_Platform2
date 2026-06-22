@@ -66,13 +66,17 @@
 /* ── Lesson / quiz locked tooltip ── */
 .lesson--locked:hover::after,
 .quiz--locked:hover::after {
-  content: "Đăng ký khóa học để mở khoá";
+  content: attr(data-lock-msg);
   position: absolute;
   background: rgba(0,0,0,0.75); color: #fff;
   font-size: 0.75rem; padding: 0.3rem 0.6rem;
   border-radius: var(--radius-sm); white-space: nowrap;
   pointer-events: none; z-index: 10;
   transform: translateY(-2rem);
+}
+.lesson--locked:not([data-lock-msg]):hover::after,
+.quiz--locked:not([data-lock-msg]):hover::after {
+  content: "Đăng ký khóa học để mở khoá";
 }
 .lesson-item, .quiz-item { position: relative; }
 

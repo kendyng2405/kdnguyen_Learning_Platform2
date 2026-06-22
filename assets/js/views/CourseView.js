@@ -202,7 +202,8 @@ export class CourseView {
                   ${lessons.map((l, i) => {
                     const done = completedLess.includes(l.id);
                     const locked = !isEnrolled;
-                    return `<li class="lesson-item ${done ? 'lesson--done' : ''} ${locked ? 'lesson--locked' : ''}" data-lesson-id="${locked ? '' : l.id}">
+                    const lockMsg = lang === 'vi' ? 'Đăng ký khóa học để mở khoá' : 'Enroll course to unlock';
+                    return `<li class="lesson-item ${done ? 'lesson--done' : ''} ${locked ? 'lesson--locked' : ''}" data-lesson-id="${locked ? '' : l.id}" ${locked ? `data-lock-msg="${lockMsg}"` : ''}>
                       <span class="lesson-num">${i + 1}</span>
                       <div class="lesson-info">
                         <span class="lesson-title">${l.title}</span>
@@ -245,8 +246,15 @@ export class CourseView {
                     
                     const timeRestricted = quizStatus === 'not_open' || quizStatus === 'closed';
                     const locked  = !isEnrolled || timeRestricted;
+                    
+                    let lockMsg = "";
+                    if (locked) {
+                       if (!isEnrolled) lockMsg = lang === "vi" ? "Đăng ký khóa học để mở khoá" : "Enroll course to unlock";
+                       else if (quizStatus === "not_open") lockMsg = lang === "vi" ? "Chưa đến thời gian mở" : "Not open yet";
+                       else if (quizStatus === "closed") lockMsg = lang === "vi" ? "Đã hết hạn làm bài" : "Quiz closed";
+                    }
 
-                    return `<li class="quiz-item ${locked ? 'quiz--locked' : ''}" data-quiz-id="${locked ? '' : q.id}">
+                    return `<li class="quiz-item ${locked ? 'quiz--locked' : ''}" data-quiz-id="${locked ? '' : q.id}" ${locked ? `data-lock-msg="${lockMsg}"` : ''}>
                       <span class="quiz-icon">📝</span>
                       <div class="quiz-info">
                         <span class="quiz-title">${q.title}</span>
