@@ -1,100 +1,261 @@
 /* ============================================================
-   animations.css — KDLearnSpace Transitions & Keyframes
+   animations.css — KDLearnSpace Brilliant-Inspired Animations
+   Rich, lively, interactive micro-animations
    ============================================================ */
 
 /* ── Page enter ── */
 .page-container { opacity: 1; }
-.page-enter { animation: pageSlideIn 0.32s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.page-enter { animation: pageSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 @keyframes pageSlideIn {
-  from { opacity: 0; transform: translateY(18px); }
+  from { opacity: 0; transform: translateY(28px) scale(0.98); }
   to   { opacity: 1; transform: none; }
 }
 
-/* ── Slide up ── */
-.animate-slide-up { animation: slideUp 0.38s cubic-bezier(0.4, 0, 0.2, 1) both; }
-.animate-fade     { animation: fadeIn  0.4s  ease both; }
+/* ── Slide up with spring ── */
+.animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade     { animation: fadeIn  0.5s ease both; }
+.animate-scale-in { animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(24px); }
+  from { opacity: 0; transform: translateY(32px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
 
-/* ── Stagger delays ── */
-.delay-1 { animation-delay: 0.07s; }
-.delay-2 { animation-delay: 0.14s; }
-.delay-3 { animation-delay: 0.21s; }
-.delay-4 { animation-delay: 0.28s; }
+/* ── Slide from left / right ── */
+.animate-slide-left  { animation: slideFromLeft  0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-slide-right { animation: slideFromRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes slideFromLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideFromRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Stagger delays (more steps for complex layouts) ── */
+.delay-1 { animation-delay: 0.08s; }
+.delay-2 { animation-delay: 0.16s; }
+.delay-3 { animation-delay: 0.24s; }
+.delay-4 { animation-delay: 0.32s; }
+.delay-5 { animation-delay: 0.40s; }
+.delay-6 { animation-delay: 0.48s; }
 
 /* ── Spinner ── */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* ── Blob background ── */
+/* ── Blob background with morphing ── */
 @keyframes blobMove {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(30px, -20px) scale(1.05); }
-  66%       { transform: translate(-20px, 15px) scale(0.96); }
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  25%      { transform: translate(40px, -30px) scale(1.08) rotate(5deg); }
+  50%      { transform: translate(-20px, 25px) scale(0.94) rotate(-3deg); }
+  75%      { transform: translate(30px, 10px) scale(1.04) rotate(4deg); }
+}
+
+/* ── Floating animation for hero elements ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%      { transform: translateY(-12px) rotate(1deg); }
+  50%      { transform: translateY(-6px) rotate(-1deg); }
+  75%      { transform: translateY(-14px) rotate(0.5deg); }
+}
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+/* ── Gentle pulse for icons/badges ── */
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+.animate-pulse { animation: gentlePulse 2.5s ease-in-out infinite; }
+
+/* ── Shimmer / skeleton loading ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer-loading {
+  background: linear-gradient(90deg, 
+    var(--color-surface-2) 25%, 
+    var(--color-surface-3) 50%, 
+    var(--color-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease infinite;
 }
 
 /* ── Typing dots ── */
 @keyframes typingDot {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30%            { transform: translateY(-5px); opacity: 1; }
+  30%           { transform: translateY(-6px); opacity: 1; }
 }
 
 /* ── Timer pulse ── */
 @keyframes timerPulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.45; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(1.05); }
 }
 
 /* ── Toast ── */
 .toast-enter  { opacity: 0; transform: translateX(60px) scale(0.9); }
 .toast-visible { opacity: 1; transform: translateX(0) scale(1);
-  transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .toast-exit { opacity: 0; transform: translateX(60px) scale(0.9);
   transition: opacity 0.3s ease, transform 0.3s ease; }
 
 /* ── Chatbot open ── */
 .chatbot-widget.open {
-  animation: chatOpen 0.3s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+  animation: chatOpen 0.35s cubic-bezier(0.34, 1.3, 0.64, 1) both;
 }
 @keyframes chatOpen {
-  from { opacity: 0; transform: scale(0.88) translateY(16px); transform-origin: bottom right; }
-  to   { opacity: 1; transform: scale(1)    translateY(0);    transform-origin: bottom right; }
+  from { opacity: 0; transform: scale(0.85) translateY(20px); transform-origin: bottom right; }
+  to   { opacity: 1; transform: scale(1) translateY(0); transform-origin: bottom right; }
 }
 
 /* ── Chat message appear ── */
 .animate-in {
-  animation: chatMsgIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: chatMsgIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes chatMsgIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ── Result ring fill ── */
 .ring-fill {
-  animation: ringFill 1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+  animation: ringFill 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
 }
 @keyframes ringFill {
   from { stroke-dashoffset: 339.3; }
 }
 
-/* ── Hover bounce ── */
+/* ── Bounce in ── */
 @keyframes bounceIn {
-  0%   { transform: scale(0.8); opacity: 0; }
-  60%  { transform: scale(1.05); }
+  0%   { transform: scale(0.7); opacity: 0; }
+  50%  { transform: scale(1.08); }
+  70%  { transform: scale(0.96); }
   100% { transform: scale(1); opacity: 1; }
 }
-.bounce-in { animation: bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.bounce-in { animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* ── Card hover lift (applied via JS or hover) ── */
+@keyframes cardLift {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(-6px) scale(1.02); }
+}
+
+/* ── Gradient background animation ── */
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* ── Rotating glow ring ── */
+@keyframes glowRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Wiggle for attention ── */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  15%      { transform: rotate(-3deg); }
+  30%      { transform: rotate(3deg); }
+  45%      { transform: rotate(-2deg); }
+  60%      { transform: rotate(2deg); }
+  75%      { transform: rotate(-1deg); }
+}
+.animate-wiggle { animation: wiggle 0.6s ease; }
+
+/* ── Counter / number animation (clip-based) ── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-count { animation: countUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 /* ── Theme transition ── */
-html { transition: color-scheme 0.25s ease; }
-[data-theme] * { transition: background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease; }
+html { transition: color-scheme 0.3s ease; }
+[data-theme] * { transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease; }
+
+/* ── Particles / decorative dots (CSS only) ── */
+@keyframes particleDrift {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  50%  { transform: translate(20px, -30px) scale(1.3); opacity: 0.3; }
+  100% { transform: translate(-10px, -60px) scale(0.8); opacity: 0; }
+}
+
+/* ── Elastic pop for interactive elements ── */
+@keyframes elasticPop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(0.92); }
+  60%  { transform: scale(1.06); }
+  80%  { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+.animate-pop:active { animation: elasticPop 0.3s ease; }
+
+/* ── Ripple effect for buttons ── */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  width: 0; height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
+  opacity: 0;
+}
+.btn-ripple:active::after {
+  width: 300px; height: 300px;
+  opacity: 1;
+  transition: 0s;
+}
+
+/* ── Staggered list items (for lesson/quiz lists) ── */
+.lesson-item, .quiz-item, .course-card, .stat-card, .progress-card {
+  animation: slideUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.lesson-item:nth-child(1), .quiz-item:nth-child(1), .course-card:nth-child(1), .stat-card:nth-child(1) { animation-delay: 0.05s; }
+.lesson-item:nth-child(2), .quiz-item:nth-child(2), .course-card:nth-child(2), .stat-card:nth-child(2) { animation-delay: 0.10s; }
+.lesson-item:nth-child(3), .quiz-item:nth-child(3), .course-card:nth-child(3), .stat-card:nth-child(3) { animation-delay: 0.15s; }
+.lesson-item:nth-child(4), .quiz-item:nth-child(4), .course-card:nth-child(4) { animation-delay: 0.20s; }
+.lesson-item:nth-child(5), .quiz-item:nth-child(5) { animation-delay: 0.25s; }
+.lesson-item:nth-child(6), .quiz-item:nth-child(6) { animation-delay: 0.30s; }
+
+/* ── Hero decoration particles ── */
+.hero-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float 8s ease-in-out infinite;
+}
+.hero-particle:nth-child(1) { width: 8px; height: 8px; background: rgba(255,255,255,0.3); top: 15%; left: 10%; animation-delay: 0s; }
+.hero-particle:nth-child(2) { width: 12px; height: 12px; background: rgba(255,255,255,0.2); top: 40%; right: 15%; animation-delay: -2s; }
+.hero-particle:nth-child(3) { width: 6px; height: 6px; background: rgba(255,255,255,0.4); bottom: 20%; left: 30%; animation-delay: -4s; }
+.hero-particle:nth-child(4) { width: 10px; height: 10px; background: rgba(255,255,255,0.15); top: 60%; right: 25%; animation-delay: -6s; }
+
+/* ── Confetti burst for passing quiz ── */
+@keyframes confetti {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translate(var(--x, 50px), var(--y, -200px)) rotate(720deg) scale(0); opacity: 0; }
+}
