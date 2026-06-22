@@ -33,6 +33,18 @@ export class QuizController {
 
     const lang = window.__i18n.current;
 
+    const now = new Date();
+    if (quiz.openTime && now < new Date(quiz.openTime)) {
+      window.__toast.error(lang === "vi" ? "Bài kiểm tra chưa mở!" : "Quiz is not open yet!");
+      this.app.navigate("course", courseId);
+      return;
+    }
+    if (quiz.closeTime && now > new Date(quiz.closeTime)) {
+      window.__toast.error(lang === "vi" ? "Bài kiểm tra đã đóng!" : "Quiz has closed!");
+      this.app.navigate("course", courseId);
+      return;
+    }
+
     const renderActualQuiz = () => {
       this.currentQuiz = quiz;
       this.currentCourseId = courseId;

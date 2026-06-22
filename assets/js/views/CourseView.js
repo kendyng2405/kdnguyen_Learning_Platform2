@@ -222,16 +222,44 @@ export class CourseView {
               : `<ul class="quiz-list">
                   ${quizzes.map(q => {
                     const score   = progress?.quizScores?.[q.id];
-                    const locked  = !isEnrolled;
+                    
+                    const now = new Date();
+                    let quizStatus = 'open';
+                    let quizStatusText = lang === 'vi' ? 'Đang mở' : 'Open';
+                    let statusColor = 'var(--color-success)';
+
+                    const openDate = q.openTime ? new Date(q.openTime) : null;
+                    const closeDate = q.closeTime ? new Date(q.closeTime) : null;
+
+                    if (openDate && now < openDate) {
+                      quizStatus = 'not_open';
+                      quizStatusText = lang === 'vi' ? `Mở lúc: ${openDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}` : `Opens at: ${openDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}`;
+                      statusColor = 'var(--color-warning)';
+                    } else if (closeDate && now > closeDate) {
+                      quizStatus = 'closed';
+                      quizStatusText = lang === 'vi' ? `Đã đóng (${closeDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')})` : `Closed (${closeDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')})`;
+                      statusColor = 'var(--color-error)';
+                    } else if (closeDate) {
+                      quizStatusText = lang === 'vi' ? `Đóng lúc: ${closeDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}` : `Closes at: ${closeDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}`;
+                    }
+                    
+                    const timeRestricted = quizStatus === 'not_open' || quizStatus === 'closed';
+                    const locked  = !isEnrolled || timeRestricted;
+
                     return `<li class="quiz-item ${locked ? 'quiz--locked' : ''}" data-quiz-id="${locked ? '' : q.id}">
                       <span class="quiz-icon">📝</span>
                       <div class="quiz-info">
                         <span class="quiz-title">${q.title}</span>
-                        <span class="quiz-meta">${q.questions?.length || 0} ${lang === "vi" ? "câu" : "questions"} ${q.timeLimitMinutes ? `• ${q.timeLimitMinutes}${lang === "vi" ? " phút" : " min"}` : ""}</span>
+                        <span class="quiz-meta">
+                          ${q.questions?.length || 0} ${lang === "vi" ? "câu" : "questions"} ${q.timeLimitMinutes ? `• ${q.timeLimitMinutes}${lang === "vi" ? " phút" : " min"}` : ""}
+                        </span>
+                        <div class="quiz-status" style="font-size: 0.75rem; color: ${statusColor}; margin-top: 0.2rem; font-weight: 500;">
+                          ${(q.openTime || q.closeTime) ? `⏰ ${quizStatusText}` : ""}
+                        </div>
                       </div>
                       ${score
                         ? `<span class="quiz-score ${score.percentage >= (q.passingScore || 60) ? 'score--pass' : 'score--fail'}">${score.percentage}%</span>`
-                        : `<span class="quiz-btn">${locked ? '🔒' : t.take}</span>`
+                        : `<span class="quiz-btn">${timeRestricted && isEnrolled ? '⛔' : locked ? '🔒' : t.take}</span>`
                       }
                     </li>`;
                   }).join("")}
