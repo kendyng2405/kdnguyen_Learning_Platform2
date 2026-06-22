@@ -254,7 +254,7 @@ export class CourseView {
                           ${q.questions?.length || 0} ${lang === "vi" ? "câu" : "questions"} ${q.timeLimitMinutes ? `• ${q.timeLimitMinutes}${lang === "vi" ? " phút" : " min"}` : ""}
                         </span>
                         <div class="quiz-status" style="font-size: 0.75rem; color: ${statusColor}; margin-top: 0.2rem; font-weight: 500;">
-                          ${(q.openTime || q.closeTime) ? `⏰ ${quizStatusText}` : ""}
+                          ⏰ ${quizStatusText}
                         </div>
                       </div>
                       ${score
