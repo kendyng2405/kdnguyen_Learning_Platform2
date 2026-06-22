@@ -62,6 +62,9 @@ export class QuizController {
 
       if (quiz.timeLimitMinutes) {
         this._startTimer(quiz.timeLimitMinutes * 60, courseId, quizId);
+      } else {
+        // If no time limit, we still need to check for closeTime
+        this._startCloseTimeChecker(courseId, quizId);
       }
     };
 
@@ -189,6 +192,16 @@ export class QuizController {
     const timerEl = document.getElementById("quizTimer");
 
     this.timer = setInterval(() => {
+      // Check if closeTime reached
+      if (this.currentQuiz.closeTime && new Date() >= new Date(this.currentQuiz.closeTime)) {
+        clearInterval(this.timer);
+        window.__toast.warning(
+          window.__i18n.current === "vi" ? "Đã đến giờ đóng bài kiểm tra!" : "Quiz close time reached!"
+        );
+        this._submitQuiz(courseId, quizId);
+        return;
+      }
+
       this.timeLeft--;
       if (timerEl) {
         const m = String(Math.floor(this.timeLeft / 60)).padStart(2, "0");
@@ -201,6 +214,18 @@ export class QuizController {
         clearInterval(this.timer);
         window.__toast.warning(
           window.__i18n.current === "vi" ? "Hết giờ!" : "Time's up!"
+        );
+        this._submitQuiz(courseId, quizId);
+      }
+    }, 1000);
+  }
+
+  _startCloseTimeChecker(courseId, quizId) {
+    this.timer = setInterval(() => {
+      if (this.currentQuiz.closeTime && new Date() >= new Date(this.currentQuiz.closeTime)) {
+        clearInterval(this.timer);
+        window.__toast.warning(
+          window.__i18n.current === "vi" ? "Đã đến giờ đóng bài kiểm tra!" : "Quiz close time reached!"
         );
         this._submitQuiz(courseId, quizId);
       }
