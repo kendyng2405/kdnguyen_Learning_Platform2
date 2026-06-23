@@ -97,7 +97,7 @@ export class QuizView {
     `;
   }
 
-  renderQuizResult(quiz, results, score, lang) {
+  _renderQuizResultLegacy(quiz, results, score, lang) {
     const total = results.length || 1;
     const pct = Math.round((score / total) * 100);
     const passing = quiz.passingScore || 60;
@@ -167,6 +167,99 @@ export class QuizView {
             `).join("")}
           </div>
         </div>
+      </div>
+    `;
+  }
+
+  renderQuizResult(quiz, results, score, lang) {
+    const total = results.length || 1;
+    const pct = Math.round((score / total) * 100);
+    const passing = quiz.passingScore || 60;
+    const passed = pct >= passing;
+    const wrong = results.length - score;
+    const ringStyle = `--score:${pct}; --score-color:${passed ? "#2dce89" : "#fb6340"}`;
+
+    const t = lang === "vi" ? {
+      title: passed ? "Chúc mừng, bạn đã vượt qua!" : "Chưa đạt, thử lại một lượt nhé",
+      sub: passed ? "Bạn đã nắm được phần chính của bài. Xem lại từng câu để nhớ lâu hơn." : "Mình đã gom lại các câu sai để bạn ôn đúng trọng tâm.",
+      score: "Điểm số",
+      correct: "Đúng",
+      wrong: "Sai",
+      passing: "Điểm qua môn",
+      retake: "Làm lại",
+      back: "Quay lại",
+      review: "Xem lại câu trả lời",
+      yourAnswer: "Bạn chọn",
+      correctAnswer: "Đáp án đúng",
+      unanswered: "Chưa trả lời",
+      ask: "AI giải thích",
+    } : {
+      title: passed ? "Congratulations! You passed!" : "Not passed. Keep trying!",
+      sub: passed ? "You have the main ideas. Review each answer to lock it in." : "The missed questions are grouped below so you can focus your review.",
+      score: "Score",
+      correct: "Correct",
+      wrong: "Wrong",
+      passing: "Passing score",
+      retake: "Retake",
+      back: "Back",
+      review: "Review Answers",
+      yourAnswer: "Your answer",
+      correctAnswer: "Correct answer",
+      unanswered: "Not answered",
+      ask: "Ask AI to explain",
+    };
+
+    return `
+      <div class="quiz-result-page ${passed ? "is-passed" : "is-failed"}">
+        <section class="quiz-result-hero">
+          <div class="quiz-result-copy">
+            <span class="quiz-result-kicker">${this._escape(quiz.title || "")}</span>
+            <h1>${t.title}</h1>
+            <p>${t.sub}</p>
+            <div class="quiz-result-actions">
+              <button class="btn btn-neutral" id="retakeQuiz"><i class="fas fa-rotate-right mr-2"></i>${t.retake}</button>
+              <button class="btn btn-outline-white" id="backToCourse"><i class="fas fa-arrow-left mr-2"></i>${t.back}</button>
+            </div>
+          </div>
+          <div class="quiz-score-panel">
+            <div class="quiz-score-ring" style="${ringStyle}">
+              <span>${pct}%</span>
+              <small>${t.score}</small>
+            </div>
+            <div class="quiz-result-stats">
+              <span><strong>${score}</strong>${t.correct}</span>
+              <span><strong>${wrong}</strong>${t.wrong}</span>
+              <span><strong>${passing}%</strong>${t.passing}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="quiz-review-modern">
+          <div class="quiz-review-modern-head">
+            <div>
+              <span>${t.review}</span>
+              <h2>${score}/${results.length} ${t.correct}</h2>
+            </div>
+          </div>
+          <div class="quiz-review-grid">
+            ${results.map((r, i) => `
+              <article class="quiz-review-card-modern ${r.isCorrect ? "is-correct" : "is-wrong"}">
+                <div class="quiz-review-card-top">
+                  <span class="quiz-review-number">${i + 1}</span>
+                  <span class="quiz-review-status"><i class="fas ${r.isCorrect ? "fa-check" : "fa-xmark"}"></i>${r.isCorrect ? t.correct : t.wrong}</span>
+                </div>
+                <h3>${this._escape(r.question)}</h3>
+                <div class="quiz-review-answer-stack">
+                  <p class="quiz-user-answer ${r.isCorrect ? "is-correct" : "is-wrong"}"><span>${t.yourAnswer}</span>${this._escape(r.userAnswerLabel || t.unanswered)}</p>
+                  <p class="quiz-correct-answer"><span>${t.correctAnswer}</span>${this._escape(r.correctAnswerLabel || "")}</p>
+                </div>
+                <button class="btn btn-sm btn-outline-primary btn-explain-ai" data-question="${this._attr(r.question)}" data-correct="${this._attr(r.correctAnswerLabel || "")}" data-wrong="${this._attr(r.userAnswerLabel || "")}">
+                  <i class="fas fa-robot mr-1"></i>${t.ask}
+                </button>
+              </article>
+            `).join("")}
+          </div>
+        </section>
       </div>
     `;
   }

@@ -2,9 +2,9 @@
 //  QuizController.js - Quiz Business Logic
 // ============================================================
 
-import { QuizModel } from "../models/QuizModel.js?v=8";
-import { CourseModel } from "../models/CourseModel.js?v=8";
-import { QuizView } from "../views/QuizView.js?v=8";
+import { QuizModel } from "../models/QuizModel.js?v=9";
+import { CourseModel } from "../models/CourseModel.js?v=9";
+import { QuizView } from "../views/QuizView.js?v=9";
 
 export class QuizController {
   constructor(app) {

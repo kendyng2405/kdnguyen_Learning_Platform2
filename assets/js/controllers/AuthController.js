@@ -2,8 +2,8 @@
 //  AuthController.js — Authentication Business Logic (MVC2)
 // ============================================================
 
-import { AuthModel } from "../models/AuthModel.js?v=8";
-import { AuthView }  from "../views/AuthView.js?v=8";
+import { AuthModel } from "../models/AuthModel.js?v=9";
+import { AuthView }  from "../views/AuthView.js?v=9";
 
 export class AuthController {
   constructor(app) {

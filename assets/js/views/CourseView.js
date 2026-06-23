@@ -165,6 +165,7 @@ export class CourseView {
     const completedLess = progress?.completedLessons || [];
     const totalLessons  = lessons.length;
     const totalExercises = quizzes.length;
+    const courseCompleted = isEnrolled && totalLessons > 0 && completedLess.length >= totalLessons;
     
     // Determine active lesson
     let activeLessonIdx = lessons.findIndex(l => !completedLess.includes(l.id));
@@ -174,11 +175,11 @@ export class CourseView {
     const t = lang === "vi" ? {
       lessons: "Bài học", exercises: "Bài tập", start: "Bắt đầu",
       enroll: "Đăng ký để học", locked: "Khóa", level: "CẤP ĐỘ",
-      intro: "Giới thiệu", plan: "Kế hoạch AI"
+      intro: "Giới thiệu", plan: "Kế hoạch AI", certificate: "Nhận chứng chỉ"
     } : {
       lessons: "Lessons", exercises: "Exercises", start: "Start",
       enroll: "Enroll to Learn", locked: "Locked", level: "LEVEL",
-      intro: "Introduction", plan: "AI Study Plan"
+      intro: "Introduction", plan: "AI Study Plan", certificate: "Get certificate"
     };
 
     return `
@@ -206,6 +207,11 @@ export class CourseView {
                 <button class="btn btn-outline-info btn-block mt-4 font-weight-bold" id="btnStudyPlan" data-course="${course.title}">
                   <i class="fas fa-magic mr-2"></i> ${t.plan}
                 </button>
+                ${courseCompleted ? `
+                  <button class="btn btn-outline-success btn-block mt-3 font-weight-bold" onclick="window.__router.navigate('certificate', '${course.id}')">
+                    <i class="fas fa-award mr-2"></i> ${t.certificate}
+                  </button>
+                ` : ""}
               `}
             </div>
           </div>

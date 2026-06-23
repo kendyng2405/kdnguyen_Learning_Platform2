@@ -2,9 +2,9 @@
 //  MissionsController.js - Daily learning missions
 // ============================================================
 
-import { CourseModel } from "../models/CourseModel.js?v=8";
-import { QuizModel } from "../models/QuizModel.js?v=8";
-import { MissionsView } from "../views/MissionsView.js?v=8";
+import { CourseModel } from "../models/CourseModel.js?v=9";
+import { QuizModel } from "../models/QuizModel.js?v=9";
+import { MissionsView } from "../views/MissionsView.js?v=9";
 
 export class MissionsController {
   constructor(app) {

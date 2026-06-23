@@ -35,7 +35,7 @@ export class ProfileView {
           <div class="row">
             <div class="col-lg-12">
               <h1 class="display-2 text-white">${profile?.fullname || profile?.username || "—"}</h1>
-              <p class="text-white mt-0 mb-3">@${profile?.username || "—"} · <span class="badge badge-${profile?.role === 'admin' ? 'warning' : 'info'}">${roleLabel}</span></p>
+              <p class="text-white mt-0 mb-3">@${profile?.username || "—"} · <span class="profile-role-badge profile-role-badge--${profile?.role === 'admin' ? 'admin' : 'student'}">${roleLabel}</span></p>
             </div>
           </div>
         </div>

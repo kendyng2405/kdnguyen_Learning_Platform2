@@ -18,7 +18,7 @@
   <!-- Argon Dashboard CSS -->
   <link rel="stylesheet" href="assets/css/argon-dashboard.css" />
   <!-- LMS Custom Overrides -->
-  <link rel="stylesheet" href="assets/css/lms-overrides.css?v=9" />
+  <link rel="stylesheet" href="assets/css/lms-overrides.css?v=10" />
 </head>
 <body>
 
@@ -61,6 +61,11 @@
             </a>
           </li>
           <li class="nav-item">
+            <a class="nav-link" href="/calendar" data-page="calendar">
+              <i class="fas fa-calendar-days text-info"></i> <span data-vi="Lịch học" data-en="Calendar">Lịch học</span>
+            </a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link" href="/missions" data-page="missions">
               <i class="fas fa-list-check text-success"></i> <span data-vi="Nhiệm vụ" data-en="Missions">Nhiệm vụ</span>
             </a>
@@ -93,7 +98,7 @@
         <!-- Brand text (current page) -->
         <span class="h4 mb-0 text-dark text-uppercase d-none d-lg-inline-block" id="navBrandText" style="font-weight: 800; letter-spacing: 1px;">Dashboard</span>
         <!-- Search -->
-        <form class="navbar-search navbar-search-light form-inline mr-3 d-none d-md-flex ml-lg-auto">
+        <form class="navbar-search navbar-search-light form-inline mr-3 d-none d-md-flex ml-lg-auto" id="navSearchForm">
           <div class="form-group mb-0">
             <div class="input-group input-group-alternative">
               <div class="input-group-prepend">
@@ -227,7 +232,7 @@
     window.__firebaseDB      = getFirestore(app);
     window.__firebaseStorage = getStorage(app);
 
-    const { App } = await import("./assets/js/app.js?v=8");
+    const { App } = await import("./assets/js/app.js?v=9");
     window.__app = new App();
     window.__app.init();
   </script>

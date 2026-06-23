@@ -2,9 +2,9 @@
 //  AdminController.js — Admin Panel (CRUD for courses/lessons/quizzes)
 // ============================================================
 
-import { CourseModel } from "../models/CourseModel.js?v=8";
-import { QuizModel }   from "../models/QuizModel.js?v=8";
-import { AdminView }   from "../views/AdminView.js?v=8";
+import { CourseModel } from "../models/CourseModel.js?v=9";
+import { QuizModel }   from "../models/QuizModel.js?v=9";
+import { AdminView }   from "../views/AdminView.js?v=9";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 export class AdminController {
@@ -750,22 +750,23 @@ export class AdminController {
       contents: [{ role: "user", parts: [{ text: source }] }],
       generationConfig: { temperature: 0.35 },
     };
-    const url = window.APP_CONFIG?.geminiKey
-      ? "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + window.APP_CONFIG.geminiKey
-      : "https://kdnguyen-learning-platform2-t1cm.vercel.app/api/chat";
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) throw new Error("API failed");
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error("Empty response");
-    const parsed = this._parseAIQuestions(text);
-    return parsed.slice(0, count).map(q => this._normalizeGeneratedQuestion(q, lang));
+    try {
+      const chatbot = this.app.chatbotController;
+      if (!chatbot?._fetchModel) throw new Error("AI service unavailable");
+      const previousHistory = [...chatbot.history];
+      let text = "";
+      try {
+        text = await chatbot._fetchModel(null, body);
+      } finally {
+        chatbot.history = previousHistory;
+      }
+      if (!text) throw new Error("Empty response");
+      const parsed = this._parseAIQuestions(text);
+      return parsed.slice(0, count).map(q => this._normalizeGeneratedQuestion(q, lang));
+    } catch (error) {
+      console.warn("[Admin AI Quiz] Falling back to local generator:", error);
+      return this._fallbackGeneratedQuestions(source, count, types, lang);
+    }
   }
 
   _parseAIQuestions(text) {
@@ -801,6 +802,86 @@ export class AdminController {
       correctAnswer: this._normalizeCorrectAnswer(q.correctAnswer, "multiple_choice"),
       explanation: q.explanation || "",
     };
+  }
+
+  _fallbackGeneratedQuestions(source, count, types, lang) {
+    const sentences = this._sourceSentences(source);
+    const fallbackTypes = types.length ? types : ["multiple_choice"];
+    return Array.from({ length: count }).map((_, index) => {
+      const type = fallbackTypes[index % fallbackTypes.length];
+      const sentence = sentences[index % sentences.length] || source.slice(0, 180);
+      const keyword = this._keywordFrom(sentence, lang);
+      if (type === "true_false") {
+        return {
+          type,
+          question: lang === "vi"
+            ? `Đúng hay sai: ${sentence}`
+            : `True or false: ${sentence}`,
+          options: lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"],
+          correctAnswer: 0,
+          explanation: lang === "vi"
+            ? "Mệnh đề này được tạo trực tiếp từ nội dung bài học đã cung cấp."
+            : "This statement is generated directly from the provided lesson content.",
+        };
+      }
+      if (type === "short_answer") {
+        return {
+          type,
+          question: lang === "vi"
+            ? `Từ khóa hoặc ý chính nào nổi bật trong nội dung sau: "${sentence}"?`
+            : `What key term or main idea appears in this content: "${sentence}"?`,
+          options: [],
+          correctAnswer: keyword,
+          explanation: lang === "vi"
+            ? `Từ khóa "${keyword}" là trọng tâm được rút ra từ câu trong bài học.`
+            : `"${keyword}" is the focus extracted from the lesson sentence.`,
+        };
+      }
+      const distractors = this._distractors(keyword, sentences, lang);
+      return {
+        type: "multiple_choice",
+        question: lang === "vi"
+          ? `Ý nào phù hợp nhất với nội dung: "${sentence}"?`
+          : `Which idea best matches this content: "${sentence}"?`,
+        options: [keyword, ...distractors].slice(0, 4),
+        correctAnswer: 0,
+        explanation: lang === "vi"
+          ? `Đáp án đúng bám sát câu gốc trong nội dung bài học.`
+          : "The correct answer follows the original lesson sentence.",
+      };
+    });
+  }
+
+  _sourceSentences(source) {
+    const sentences = String(source || "")
+      .replace(/[#*_`>-]/g, " ")
+      .split(/[\n.!?]+/)
+      .map(s => s.replace(/\s+/g, " ").trim())
+      .filter(s => s.length >= 24)
+      .slice(0, 30);
+    return sentences.length ? sentences : [String(source || "").replace(/\s+/g, " ").trim() || "Lesson content"];
+  }
+
+  _keywordFrom(sentence, lang) {
+    const stopWords = new Set((lang === "vi"
+      ? "và hoặc là của có các những một trong với được cho khi từ này đó như để về"
+      : "the and or is are of to in with for from this that as by on a an"
+    ).split(" "));
+    const words = String(sentence)
+      .split(/\s+/)
+      .map(word => word.replace(/[^\p{L}\p{N}/-]/gu, ""))
+      .filter(word => word.length >= 3 && !stopWords.has(word.toLowerCase()));
+    return words.slice(0, 4).join(" ") || String(sentence).slice(0, 40);
+  }
+
+  _distractors(keyword, sentences, lang) {
+    const pool = sentences
+      .map(sentence => this._keywordFrom(sentence, lang))
+      .filter(item => item && item !== keyword);
+    const defaults = lang === "vi"
+      ? ["Khái niệm phụ", "Ví dụ minh họa", "Thông tin ngoài bài"]
+      : ["Secondary concept", "Example detail", "External information"];
+    return [...new Set([...pool, ...defaults])].slice(0, 3);
   }
 
   _escape(value) {

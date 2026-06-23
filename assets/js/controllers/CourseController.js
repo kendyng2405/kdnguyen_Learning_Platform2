@@ -2,9 +2,9 @@
 //  CourseController.js — Course & Lesson Business Logic
 // ============================================================
 
-import { CourseModel } from "../models/CourseModel.js?v=8";
-import { QuizModel }   from "../models/QuizModel.js?v=8";
-import { CourseView }  from "../views/CourseView.js?v=8";
+import { CourseModel } from "../models/CourseModel.js?v=9";
+import { QuizModel }   from "../models/QuizModel.js?v=9";
+import { CourseView }  from "../views/CourseView.js?v=9";
 
 export class CourseController {
   constructor(app) {

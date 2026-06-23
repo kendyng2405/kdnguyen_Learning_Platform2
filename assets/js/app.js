@@ -3,19 +3,21 @@
 //  Argon Dashboard layout with sidebar + top navbar
 // ============================================================
 
-import { AuthController }         from "./controllers/AuthController.js?v=8";
-import { CourseController }       from "./controllers/CourseController.js?v=8";
-import { QuizController }         from "./controllers/QuizController.js?v=8";
-import { ProgressController }     from "./controllers/ProgressController.js?v=8";
-import { AdminController }        from "./controllers/AdminController.js?v=8";
-import { ChatbotController }      from "./controllers/ChatbotController.js?v=8";
-import { ProfileController }      from "./controllers/ProfileController.js?v=8";
-import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=8";
-import { MissionsController }     from "./controllers/MissionsController.js?v=8";
-import { AuthModel }              from "./models/AuthModel.js?v=8";
-import { I18nService }            from "./services/I18nService.js?v=8";
-import { ThemeService }           from "./services/ThemeService.js?v=8";
-import { ToastService }           from "./services/ToastService.js?v=8";
+import { AuthController }         from "./controllers/AuthController.js?v=9";
+import { CourseController }       from "./controllers/CourseController.js?v=9";
+import { QuizController }         from "./controllers/QuizController.js?v=9";
+import { ProgressController }     from "./controllers/ProgressController.js?v=9";
+import { AdminController }        from "./controllers/AdminController.js?v=9";
+import { ChatbotController }      from "./controllers/ChatbotController.js?v=9";
+import { ProfileController }      from "./controllers/ProfileController.js?v=9";
+import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=9";
+import { MissionsController }     from "./controllers/MissionsController.js?v=9";
+import { CalendarController }     from "./controllers/CalendarController.js?v=9";
+import { CertificateController }  from "./controllers/CertificateController.js?v=9";
+import { AuthModel }              from "./models/AuthModel.js?v=9";
+import { I18nService }            from "./services/I18nService.js?v=9";
+import { ThemeService }           from "./services/ThemeService.js?v=9";
+import { ToastService }           from "./services/ToastService.js?v=9";
 
 export class App {
   constructor() {
@@ -25,6 +27,7 @@ export class App {
       "/courses":   () => this.courseController.showCourseList(),
       "/progress":  () => this.progressController.showProgress(),
       "/leaderboard": () => this.leaderboardController.showLeaderboard(),
+      "/calendar":  () => this.calendarController.showCalendar(),
       "/missions":  () => this.missionsController.showMissions(),
       "/admin":     () => this.adminController.showAdmin(),
       "/login":     () => this.authController.showLoginPage(),
@@ -126,8 +129,11 @@ export class App {
     this.profileController  = new ProfileController(this);
     this.leaderboardController = new LeaderboardController(this);
     this.missionsController = new MissionsController(this);
+    this.calendarController = new CalendarController(this);
+    this.certificateController = new CertificateController(this);
 
     this._bindNavEvents();
+    this._bindCourseSearch();
     this._bindThemeToggle();
     this._bindLangToggle();
     this._bindSidebarToggle();
@@ -158,7 +164,7 @@ export class App {
         this._showAppChrome(false);
         document.getElementById("chatbotWidget")?.classList.add("hidden");
         document.getElementById("chatbotFab")?.classList.add("hidden");
-        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quiz", "/progress", "/leaderboard", "/missions", "/admin", "/profile"];
+        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quiz", "/progress", "/leaderboard", "/calendar", "/missions", "/certificate", "/admin", "/profile"];
         const cur = this._getCurrentPath();
         if (protectedPaths.some(p => cur.startsWith(p))) {
           this._dispatchRoute("/login", false);
@@ -198,6 +204,7 @@ export class App {
       courses:   "/courses",
       progress:  "/progress",
       leaderboard: "/leaderboard",
+      calendar:  "/calendar",
       missions:  "/missions",
       admin:     "/admin",
       login:     "/login",
@@ -206,6 +213,7 @@ export class App {
       course:    args[0] ? `/course/${args[0]}`   : "/courses",
       lesson:    args[1] ? `/lesson/${args[0]}/${args[1]}` : "/courses",
       quiz:      args[1] ? `/quiz/${args[0]}/${args[1]}`   : "/courses",
+      certificate: args[0] ? `/certificate/${args[0]}` : "/courses",
     };
 
     const path = pathMap[page] || "/home";
@@ -226,7 +234,7 @@ export class App {
     // Update top navbar brand text
     const pageNames = {
       "/home": "Dashboard", "/courses": "Courses", "/progress": "Progress",
-      "/leaderboard": "Leaderboard", "/missions": "Missions", "/admin": "Admin", "/profile": "Profile",
+      "/leaderboard": "Leaderboard", "/calendar": "Calendar", "/missions": "Missions", "/admin": "Admin", "/profile": "Profile",
     };
     const brandText = document.getElementById("navBrandText");
     if (brandText) {
@@ -241,10 +249,12 @@ export class App {
     const courseMatch = path.match(/^\/course\/(.+)$/);
     const lessonMatch = path.match(/^\/lesson\/([^/]+)\/(.+)$/);
     const quizMatch   = path.match(/^\/quiz\/([^/]+)\/(.+)$/);
+    const certificateMatch = path.match(/^\/certificate\/(.+)$/);
 
     if (courseMatch)  return this.courseController.showCourseDetail(courseMatch[1]);
     if (lessonMatch)  return this.courseController.showLesson(lessonMatch[1], lessonMatch[2]);
     if (quizMatch)    return this.quizController.showQuiz(quizMatch[1], quizMatch[2]);
+    if (certificateMatch) return this.certificateController.showCertificate(certificateMatch[1]);
 
     const handler = this.routes[path];
     if (handler) {
@@ -326,6 +336,78 @@ export class App {
       if (!toggle?.contains(e.target) && !menu?.contains(e.target)) {
         menu?.classList.remove("show");
       }
+    });
+  }
+
+  _bindCourseSearch() {
+    const form = document.getElementById("navSearchForm");
+    const input = document.getElementById("navSearchInput");
+    if (!form || !input) return;
+
+    const panel = document.createElement("div");
+    panel.id = "globalCourseSearchPanel";
+    panel.className = "global-search-panel hidden";
+    form.appendChild(panel);
+
+    let coursesCache = null;
+    let debounce = null;
+
+    const close = () => panel.classList.add("hidden");
+    const render = (courses, query) => {
+      const lang = this.i18n?.current || "vi";
+      const safeQuery = query.trim().toLowerCase();
+      if (!safeQuery) {
+        close();
+        return;
+      }
+
+      const results = courses
+        .filter(course => `${course.title || ""} ${course.category || ""}`.toLowerCase().includes(safeQuery))
+        .slice(0, 6);
+
+      panel.innerHTML = results.length
+        ? results.map(course => `
+          <button type="button" class="global-search-item" data-course-id="${course.id}">
+            <span class="global-search-icon"><i class="fas fa-book-open"></i></span>
+            <span>
+              <strong>${this._escapeHtml(course.title || "")}</strong>
+              <small>${this._escapeHtml(course.category || (lang === "vi" ? "Khóa học" : "Course"))}</small>
+            </span>
+          </button>
+        `).join("")
+        : `<div class="global-search-empty">${lang === "vi" ? "Không tìm thấy khóa học." : "No courses found."}</div>`;
+      panel.classList.remove("hidden");
+    };
+
+    input.addEventListener("input", () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(async () => {
+        const query = input.value.trim();
+        if (!query) {
+          close();
+          return;
+        }
+        coursesCache = coursesCache || await this.courseController.courseModel.getAllCourses();
+        render(coursesCache, query);
+      }, 160);
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const first = panel.querySelector("[data-course-id]");
+      if (first) first.click();
+    });
+
+    panel.addEventListener("click", (e) => {
+      const item = e.target.closest("[data-course-id]");
+      if (!item) return;
+      input.value = "";
+      close();
+      this.navigate("course", item.dataset.courseId);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!form.contains(e.target)) close();
     });
   }
 
@@ -414,4 +496,11 @@ export class App {
   isAdmin()        { return this.authModel.userProfile?.role === "admin"; }
   getUser()        { return this.currentUser; }
   getUserProfile() { return this.authModel.userProfile; }
+
+  _escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
 }
