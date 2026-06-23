@@ -233,45 +233,46 @@
   position: relative;
   overflow: hidden;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 18% 18%, rgba(17,205,239,0.22), transparent 28%),
-    radial-gradient(circle at 82% 14%, rgba(94,114,228,0.2), transparent 30%),
-    linear-gradient(135deg, #f8fbff 0%, #f4f7ff 48%, #f8fbff 100%);
+  background: linear-gradient(180deg, #edf6ff 0%, #f7f9ff 54%, #f8fbff 100%);
 }
 .page-login .auth-page-wrapper::before,
 .page-register .auth-page-wrapper::before {
   content: "";
   position: absolute;
-  inset: 0;
+  left: -6vw;
+  right: -6vw;
+  top: -8vh;
+  height: 52vh;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(94,114,228,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(17,205,239,0.05) 1px, transparent 1px);
-  background-size: 72px 72px;
-  mask-image: linear-gradient(180deg, rgba(0,0,0,0.65), transparent 76%);
+  border-bottom-left-radius: 48px;
+  border-bottom-right-radius: 48px;
+  background:
+    radial-gradient(circle at 18% 30%, rgba(255,255,255,0.22), transparent 24%),
+    radial-gradient(circle at 82% 28%, rgba(155,81,224,0.35), transparent 28%),
+    linear-gradient(135deg, #11cdef 0%, #5e72e4 55%, #6f42c1 100%);
+  box-shadow: 0 26px 80px rgba(94,114,228,0.24);
 }
 .page-login .auth-page-wrapper::after,
 .page-register .auth-page-wrapper::after {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 130px;
-  width: min(980px, 82vw);
-  height: 250px;
-  transform: translateX(-50%);
-  border-radius: 999px;
+  inset: 0;
   pointer-events: none;
-  background: linear-gradient(90deg, rgba(17,205,239,0.18), rgba(94,114,228,0.18));
-  filter: blur(34px);
-  opacity: 0.8;
+  background:
+    linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+    radial-gradient(circle at 16% 74%, rgba(17,205,239,0.2), transparent 28%),
+    radial-gradient(circle at 88% 72%, rgba(94,114,228,0.18), transparent 30%);
+  background-size: 72px 72px, 72px 72px, auto, auto;
+  opacity: 0.9;
 }
 .page-login .header.bg-gradient-info,
 .page-register .header.bg-gradient-info {
   position: relative;
   z-index: 2;
   background: transparent !important;
-  padding-top: 4.5rem !important;
-  padding-bottom: 7rem !important;
+  padding-top: 4.25rem !important;
+  padding-bottom: 7.25rem !important;
 }
 .page-login .header .header-body,
 .page-register .header .header-body {
@@ -291,10 +292,10 @@
 .page-register .card {
   position: relative;
   z-index: 2;
-  border: 1px solid rgba(255,255,255,0.78);
-  border-radius: 22px;
-  background: rgba(255,255,255,0.9) !important;
-  box-shadow: 0 28px 80px rgba(50,50,93,0.12);
+  border: 1px solid rgba(255,255,255,0.86);
+  border-radius: 24px;
+  background: rgba(255,255,255,0.96) !important;
+  box-shadow: 0 30px 90px rgba(31,41,85,0.18);
   backdrop-filter: blur(18px);
 }
 .page-login .row.mt-3 a,
