@@ -336,14 +336,14 @@ export class CourseView {
     const pct = this._calcProgress(course, progress);
     return `
       <div class="col-xl-3 col-lg-6 mb-4">
-        <div class="card shadow" data-course-id="${course.id}" style="cursor:pointer;">
+        <div class="card shadow h-100" data-course-id="${course.id}" style="cursor:pointer;">
           <div class="course-thumb">
             ${course.thumbnail ? `<img src="${course.thumbnail}" alt="${course.title}" />` : `<span>📚</span>`}
           </div>
-          <div class="card-body">
+          <div class="card-body d-flex flex-column">
             <h5 class="card-title mb-1">${course.title}</h5>
             <p class="text-muted small mb-2">${(course.description || "").slice(0, 80)}${course.description?.length > 80 ? "…" : ""}</p>
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center mt-auto">
               <small class="text-muted">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"}</small>
               ${pct > 0 ? `<div class="progress" style="width:60px;height:6px;"><div class="progress-bar bg-success" style="width:${pct}%"></div></div>` : ""}
             </div>
@@ -360,22 +360,24 @@ export class CourseView {
 
     return `
       <div class="col-xl-3 col-lg-6 mb-4">
-        <div class="card shadow" data-course-id="${course.id}" style="cursor:pointer;">
+        <div class="card shadow h-100" data-course-id="${course.id}" style="cursor:pointer;">
           <div class="course-thumb">
             ${course.thumbnail ? `<img src="${course.thumbnail}" alt="${course.title}" />` : `<span>📚</span>`}
           </div>
-          <div class="card-body">
-            ${course.category ? `<span class="badge badge-primary badge-sm mb-2">${course.category}</span>` : ""}
+          <div class="card-body d-flex flex-column">
+            ${course.category ? `<span class="badge badge-primary badge-sm mb-2 align-self-start">${course.category}</span>` : ""}
             <h5 class="card-title mb-1">${course.title}</h5>
             <p class="text-muted small mb-2">${(course.description || "").slice(0, 100)}${(course.description || "").length > 100 ? "…" : ""}</p>
-            <div class="d-flex justify-content-between align-items-center">
-              <small class="text-muted">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"}</small>
-              <span class="badge badge-${levelColor}">${course.level || "—"}</span>
+            <div class="mt-auto">
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"}</small>
+                <span class="badge badge-${levelColor}">${course.level || "—"}</span>
+              </div>
+              ${isEnrolled
+                ? `<div class="mt-2"><div class="progress" style="height:6px;"><div class="progress-bar bg-success" style="width:${pct}%"></div></div><small class="text-muted">${pct}%</small></div>`
+                : `<button class="btn btn-sm btn-primary mt-2 btn-enroll" data-course-id="${course.id}">${t.enroll}</button>`
+              }
             </div>
-            ${isEnrolled
-              ? `<div class="mt-2"><div class="progress" style="height:6px;"><div class="progress-bar bg-success" style="width:${pct}%"></div></div><small class="text-muted">${pct}%</small></div>`
-              : `<button class="btn btn-sm btn-primary mt-2 btn-enroll" data-course-id="${course.id}">${t.enroll}</button>`
-            }
           </div>
         </div>
       </div>

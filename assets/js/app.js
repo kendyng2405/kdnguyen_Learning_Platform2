@@ -375,7 +375,7 @@ export class App {
     const overlay = document.getElementById("loadingOverlay");
     if (!overlay) return;
     overlay.classList.add("fade-out");
-    setTimeout(() => overlay.remove(), 600);
+    setTimeout(() => overlay.remove(), 150);
   }
 
   // ── Public helpers ────────────────────────────────────────

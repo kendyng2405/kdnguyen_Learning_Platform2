@@ -58,7 +58,7 @@ export class AuthView {
                     <div class="form-group mb-3">
                       <div class="input-group input-group-alternative">
                         <div class="input-group-prepend">
-                          <span class="input-group-text"><i class="ni ni-email-83"></i></span>
+                          <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                         </div>
                         <input class="form-control" placeholder="${t.identifierPh}" type="text" id="loginIdentifier" required autocomplete="username" />
                       </div>
@@ -66,7 +66,7 @@ export class AuthView {
                     <div class="form-group">
                       <div class="input-group input-group-alternative">
                         <div class="input-group-prepend">
-                          <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                          <span class="input-group-text"><i class="fas fa-lock"></i></span>
                         </div>
                         <input class="form-control" placeholder="${t.passPh}" type="password" id="loginPassword" required autocomplete="current-password" />
                       </div>
@@ -160,7 +160,7 @@ export class AuthView {
                     <div class="form-group">
                       <div class="input-group input-group-alternative mb-3">
                         <div class="input-group-prepend">
-                          <span class="input-group-text"><i class="ni ni-hat-3"></i></span>
+                          <span class="input-group-text"><i class="fas fa-graduation-cap"></i></span>
                         </div>
                         <input class="form-control" placeholder="${t.usernamePh}" type="text" id="registerUsername" required autocomplete="username" pattern="[a-z0-9_]+" />
                       </div>
@@ -169,7 +169,7 @@ export class AuthView {
                     <div class="form-group">
                       <div class="input-group input-group-alternative mb-3">
                         <div class="input-group-prepend">
-                          <span class="input-group-text"><i class="ni ni-single-02"></i></span>
+                          <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
                         <input class="form-control" placeholder="${t.fullnamePh}" type="text" id="registerFullname" required />
                       </div>
@@ -177,7 +177,7 @@ export class AuthView {
                     <div class="form-group">
                       <div class="input-group input-group-alternative mb-3">
                         <div class="input-group-prepend">
-                          <span class="input-group-text"><i class="ni ni-email-83"></i></span>
+                          <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                         </div>
                         <input class="form-control" placeholder="${t.emailPh}" type="email" id="registerEmail" required autocomplete="email" />
                       </div>
@@ -185,7 +185,7 @@ export class AuthView {
                     <div class="form-group">
                       <div class="input-group input-group-alternative">
                         <div class="input-group-prepend">
-                          <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                          <span class="input-group-text"><i class="fas fa-lock"></i></span>
                         </div>
                         <input class="form-control" placeholder="${t.passPh}" type="password" id="registerPassword" required autocomplete="new-password" />
                       </div>
@@ -194,7 +194,7 @@ export class AuthView {
                     <div class="form-group">
                       <div class="input-group input-group-alternative">
                         <div class="input-group-prepend">
-                          <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                          <span class="input-group-text"><i class="fas fa-lock"></i></span>
                         </div>
                         <input class="form-control" placeholder="${t.confirmPh}" type="password" id="registerConfirm" required autocomplete="new-password" />
                       </div>

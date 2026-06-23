@@ -41,22 +41,22 @@
         <ul class="navbar-nav">
           <li class="nav-item">
             <a class="nav-link" href="/home" data-page="dashboard">
-              <i class="fas fa-home text-primary"></i> <span data-vi="Trang chủ" data-en="Dashboard">Trang chủ</span>
+              <i class="ni ni-tv-2 text-primary"></i> <span data-vi="Trang chủ" data-en="Dashboard">Trang chủ</span>
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="/courses" data-page="courses">
-              <i class="fas fa-book-open text-orange"></i> <span data-vi="Khóa học" data-en="Courses">Khóa học</span>
+              <i class="ni ni-books text-orange"></i> <span data-vi="Khóa học" data-en="Courses">Khóa học</span>
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="/progress" data-page="progress">
-              <i class="fas fa-chart-line text-info"></i> <span data-vi="Tiến độ" data-en="Progress">Tiến độ</span>
+              <i class="ni ni-chart-bar-32 text-info"></i> <span data-vi="Tiến độ" data-en="Progress">Tiến độ</span>
             </a>
           </li>
           <li class="nav-item nav-item--admin" style="display:none;">
             <a class="nav-link" href="/admin" data-page="admin">
-              <i class="fas fa-cogs text-red"></i> <span data-vi="Quản trị" data-en="Admin">Quản trị</span>
+              <i class="ni ni-settings-gear-65 text-red"></i> <span data-vi="Quản trị" data-en="Admin">Quản trị</span>
             </a>
           </li>
         </ul>
@@ -64,7 +64,7 @@
         <ul class="navbar-nav mb-md-3">
           <li class="nav-item">
             <a class="nav-link" href="/profile" data-page="profile">
-              <i class="fas fa-user-circle text-yellow"></i> <span data-vi="Hồ sơ" data-en="Profile">Hồ sơ</span>
+              <i class="ni ni-single-02 text-yellow"></i> <span data-vi="Hồ sơ" data-en="Profile">Hồ sơ</span>
             </a>
           </li>
         </ul>
@@ -125,12 +125,12 @@
                 <h6 class="text-overflow m-0" id="dropdownWelcome">Welcome!</h6>
               </div>
               <a href="#" class="dropdown-item" id="dropdownProfile">
-                <i class="fas fa-user"></i>
+                <i class="ni ni-single-02"></i>
                 <span data-vi="Hồ sơ" data-en="My profile">Hồ sơ</span>
               </a>
               <div class="dropdown-divider"></div>
               <a href="#" class="dropdown-item" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i>
+                <i class="ni ni-user-run"></i>
                 <span data-vi="Đăng xuất" data-en="Logout">Đăng xuất</span>
               </a>
             </div>
