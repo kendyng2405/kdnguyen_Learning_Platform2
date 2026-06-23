@@ -35,21 +35,23 @@ export class QuizController {
 
     const now = new Date();
     if (quiz.openTime && now < new Date(quiz.openTime)) {
-      window.__alert(
-        lang === "vi" ? "Chưa mở!" : "Not Open Yet!",
-        lang === "vi" ? `Bài kiểm tra này sẽ mở vào lúc ${new Date(quiz.openTime).toLocaleString('vi-VN')}.` : `This quiz will open at ${new Date(quiz.openTime).toLocaleString('en-US')}.`,
-        "warning",
-        () => this.app.navigate("course", courseId)
-      );
+      const msg = lang === "vi" ? `Bài kiểm tra này sẽ mở vào lúc ${new Date(quiz.openTime).toLocaleString('vi-VN')}.` : `This quiz will open at ${new Date(quiz.openTime).toLocaleString('en-US')}.`;
+      if (typeof window.__alert === "function") {
+        window.__alert(lang === "vi" ? "Chưa mở!" : "Not Open Yet!", msg, "warning", () => this.app.navigate("course", courseId));
+      } else {
+        alert(msg);
+        this.app.navigate("course", courseId);
+      }
       return;
     }
     if (quiz.closeTime && now > new Date(quiz.closeTime)) {
-      window.__alert(
-        lang === "vi" ? "Đã Đóng!" : "Quiz Closed!",
-        lang === "vi" ? `Bài kiểm tra này đã đóng lúc ${new Date(quiz.closeTime).toLocaleString('vi-VN')} và không còn nhận bài làm.` : `This quiz closed at ${new Date(quiz.closeTime).toLocaleString('en-US')} and is no longer accepting submissions.`,
-        "error",
-        () => this.app.navigate("course", courseId)
-      );
+      const msg = lang === "vi" ? `Bài kiểm tra này đã đóng lúc ${new Date(quiz.closeTime).toLocaleString('vi-VN')} và không còn nhận bài làm.` : `This quiz closed at ${new Date(quiz.closeTime).toLocaleString('en-US')} and is no longer accepting submissions.`;
+      if (typeof window.__alert === "function") {
+        window.__alert(lang === "vi" ? "Đã Đóng!" : "Quiz Closed!", msg, "error", () => this.app.navigate("course", courseId));
+      } else {
+        alert(msg);
+        this.app.navigate("course", courseId);
+      }
       return;
     }
 

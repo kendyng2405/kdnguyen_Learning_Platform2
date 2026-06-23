@@ -49,7 +49,7 @@ export class App {
       overlay.className = "modal-overlay";
       const icon = type === "error" ? "❌" : type === "warning" ? "⚠️" : type === "success" ? "✅" : "ℹ️";
       overlay.innerHTML = `
-        <div class="modal text-center" style="max-width: 400px; padding: 2rem; border-radius: 20px;">
+        <div class="text-center bg-white" style="max-width: 400px; width: 90%; padding: 2rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; animation: slideDown 0.3s ease-out;">
           <div style="font-size: 3.5rem; margin-bottom: 1rem;">${icon}</div>
           <h3 style="margin-bottom: 0.5rem; font-size: 1.5rem; font-weight: 800; color: #333;">${title}</h3>
           <p class="text-muted mb-4" style="font-size: 1.1rem;">${message}</p>
@@ -73,10 +73,10 @@ export class App {
       const overlay = document.createElement("div");
       overlay.className = "modal-overlay";
       overlay.innerHTML = `
-        <div class="modal" style="max-width: 400px; padding: 1.5rem">
+        <div class="bg-white" style="max-width: 400px; width: 90%; padding: 1.5rem; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; animation: slideDown 0.3s ease-out;">
           <h3 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600">${title}</h3>
           <input type="${isPassword ? 'password' : 'text'}" id="aiPromptInput" class="form-control" placeholder="${placeholder}" />
-          <div class="modal-actions" style="margin-top: 1.5rem">
+          <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
             <button class="btn btn-secondary btn-sm" id="aiPromptCancel">${lang === 'vi' ? 'Hủy' : 'Cancel'}</button>
             <button class="btn btn-primary btn-sm" id="aiPromptOk">OK</button>
           </div>

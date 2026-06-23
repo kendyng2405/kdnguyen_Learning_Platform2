@@ -119,6 +119,11 @@
 .modal { background: #fff; border-radius: 0.5rem; padding: 1.5rem; max-width: 450px; width: 90%; box-shadow: 0 15px 35px rgba(50,50,93,.2); }
 .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
 
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 /* ── Argon Layout Adjustments for Vanilla JS ── */
 @media (min-width: 768px) {
   .navbar-vertical.fixed-left + .main-content { margin-left: 250px; }
