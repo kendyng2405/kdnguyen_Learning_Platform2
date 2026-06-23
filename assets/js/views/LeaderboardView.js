@@ -86,6 +86,43 @@ export class LeaderboardView {
     `;
   }
 
+  renderLocked(completedLessons, goal, lang) {
+    const pct = Math.min(100, Math.round((completedLessons / goal) * 100));
+    const t = lang === "vi" ? {
+      kicker: "Mốc mở khóa",
+      title: "Bảng xếp hạng đang khóa",
+      sub: "Hoàn thành 2 bài học đầu tiên để mở bảng xếp hạng và bắt đầu so tài XP.",
+      progress: `${completedLessons} / ${goal} bài học`,
+      cta: "Học tiếp",
+    } : {
+      kicker: "Unlock milestone",
+      title: "Leaderboard is locked",
+      sub: "Complete your first 2 lessons to unlock rankings and start competing with XP.",
+      progress: `${completedLessons} / ${goal} lessons`,
+      cta: "Keep learning",
+    };
+
+    return `
+      <div class="leaderboard-page">
+        <div class="leaderboard-hero leaderboard-hero--locked">
+          <div>
+            <p class="leaderboard-kicker">${t.kicker}</p>
+            <h1>${t.title}</h1>
+            <p>${t.sub}</p>
+          </div>
+          <button class="btn btn-neutral" onclick="window.__router.navigate('courses')">${t.cta}</button>
+        </div>
+        <div class="leaderboard-locked-card">
+          <div class="leaderboard-locked-icon"><i class="fas fa-lock"></i></div>
+          <div class="leaderboard-locked-copy">
+            <h3>${t.progress}</h3>
+            <div class="leaderboard-unlock-track"><span style="width:${pct}%"></span></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   _podiumCard(user, currentUid, t, idx) {
     const isCurrent = user.uid === currentUid || user.id === currentUid;
     const medals = ["#f7c948", "#cbd5e1", "#d97706"];

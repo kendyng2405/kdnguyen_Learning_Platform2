@@ -3,18 +3,19 @@
 //  Argon Dashboard layout with sidebar + top navbar
 // ============================================================
 
-import { AuthController }         from "./controllers/AuthController.js?v=7";
-import { CourseController }       from "./controllers/CourseController.js?v=7";
-import { QuizController }         from "./controllers/QuizController.js?v=7";
-import { ProgressController }     from "./controllers/ProgressController.js?v=7";
-import { AdminController }        from "./controllers/AdminController.js?v=7";
-import { ChatbotController }      from "./controllers/ChatbotController.js?v=7";
-import { ProfileController }      from "./controllers/ProfileController.js?v=7";
-import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=7";
-import { AuthModel }              from "./models/AuthModel.js?v=7";
-import { I18nService }            from "./services/I18nService.js?v=7";
-import { ThemeService }           from "./services/ThemeService.js?v=7";
-import { ToastService }           from "./services/ToastService.js?v=7";
+import { AuthController }         from "./controllers/AuthController.js?v=8";
+import { CourseController }       from "./controllers/CourseController.js?v=8";
+import { QuizController }         from "./controllers/QuizController.js?v=8";
+import { ProgressController }     from "./controllers/ProgressController.js?v=8";
+import { AdminController }        from "./controllers/AdminController.js?v=8";
+import { ChatbotController }      from "./controllers/ChatbotController.js?v=8";
+import { ProfileController }      from "./controllers/ProfileController.js?v=8";
+import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=8";
+import { MissionsController }     from "./controllers/MissionsController.js?v=8";
+import { AuthModel }              from "./models/AuthModel.js?v=8";
+import { I18nService }            from "./services/I18nService.js?v=8";
+import { ThemeService }           from "./services/ThemeService.js?v=8";
+import { ToastService }           from "./services/ToastService.js?v=8";
 
 export class App {
   constructor() {
@@ -24,6 +25,7 @@ export class App {
       "/courses":   () => this.courseController.showCourseList(),
       "/progress":  () => this.progressController.showProgress(),
       "/leaderboard": () => this.leaderboardController.showLeaderboard(),
+      "/missions":  () => this.missionsController.showMissions(),
       "/admin":     () => this.adminController.showAdmin(),
       "/login":     () => this.authController.showLoginPage(),
       "/register":  () => this.authController.showRegisterPage(),
@@ -123,6 +125,7 @@ export class App {
     this.chatbotController  = new ChatbotController(this);
     this.profileController  = new ProfileController(this);
     this.leaderboardController = new LeaderboardController(this);
+    this.missionsController = new MissionsController(this);
 
     this._bindNavEvents();
     this._bindThemeToggle();
@@ -155,7 +158,7 @@ export class App {
         this._showAppChrome(false);
         document.getElementById("chatbotWidget")?.classList.add("hidden");
         document.getElementById("chatbotFab")?.classList.add("hidden");
-        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quiz", "/progress", "/leaderboard", "/admin", "/profile"];
+        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quiz", "/progress", "/leaderboard", "/missions", "/admin", "/profile"];
         const cur = this._getCurrentPath();
         if (protectedPaths.some(p => cur.startsWith(p))) {
           this._dispatchRoute("/login", false);
@@ -195,6 +198,7 @@ export class App {
       courses:   "/courses",
       progress:  "/progress",
       leaderboard: "/leaderboard",
+      missions:  "/missions",
       admin:     "/admin",
       login:     "/login",
       register:  "/register",
@@ -222,7 +226,7 @@ export class App {
     // Update top navbar brand text
     const pageNames = {
       "/home": "Dashboard", "/courses": "Courses", "/progress": "Progress",
-      "/leaderboard": "Leaderboard", "/admin": "Admin", "/profile": "Profile",
+      "/leaderboard": "Leaderboard", "/missions": "Missions", "/admin": "Admin", "/profile": "Profile",
     };
     const brandText = document.getElementById("navBrandText");
     if (brandText) {

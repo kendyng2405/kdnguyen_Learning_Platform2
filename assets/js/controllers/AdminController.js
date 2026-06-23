@@ -2,9 +2,9 @@
 //  AdminController.js — Admin Panel (CRUD for courses/lessons/quizzes)
 // ============================================================
 
-import { CourseModel } from "../models/CourseModel.js";
-import { QuizModel }   from "../models/QuizModel.js";
-import { AdminView }   from "../views/AdminView.js";
+import { CourseModel } from "../models/CourseModel.js?v=8";
+import { QuizModel }   from "../models/QuizModel.js?v=8";
+import { AdminView }   from "../views/AdminView.js?v=8";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 export class AdminController {
@@ -453,51 +453,7 @@ export class AdminController {
     });
 
     document.getElementById("aiGenerateQuizBtn")?.addEventListener("click", () => {
-      window.__prompt(
-        lang === "vi" ? "AI Tạo Quiz Tự Động" : "AI Quiz Generator",
-        lang === "vi" ? "Dán nội dung bài học vào đây..." : "Paste lesson text here...",
-        async (promptText) => {
-          const btn = document.getElementById("aiGenerateQuizBtn");
-          const oldText = btn.innerHTML;
-          btn.innerHTML = lang === "vi" ? "⏳ Đang tạo..." : "⏳ Generating...";
-          btn.disabled = true;
-
-          try {
-            const sysPrompt = `Bạn là một chuyên gia tạo đề thi trắc nghiệm. Dựa vào văn bản dưới đây, hãy tạo ra 3 câu hỏi trắc nghiệm. Output BẮT BUỘC TRẢ VỀ CHỈ MỘT MẢNG JSON, không có code block markdown hay bất cứ chữ gì khác. Định dạng: [{"question":"Câu hỏi 1?","options":["A","B","C","D"],"correctAnswer":0}]`;
-            
-            const body = {
-              system_instruction: { parts: [{ text: sysPrompt }] },
-              contents: [{ role: "user", parts: [{ text: promptText }] }],
-              generationConfig: { temperature: 0.3 }
-            };
-            
-            let url = window.APP_CONFIG?.geminiKey 
-              ? "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + window.APP_CONFIG.geminiKey
-              : "https://kdnguyen-learning-platform2-t1cm.vercel.app/api/chat";
-
-            const res = await fetch(url, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(body)
-            });
-            
-            if (!res.ok) throw new Error("API failed");
-            const data = await res.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!text) throw new Error("Empty response");
-            const cleanText = text.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
-            const questions = JSON.parse(cleanText);
-            this._renderQuestionForms(questions, lang);
-            
-            window.__toast.success(lang === "vi" ? "Đã tạo câu hỏi bằng AI!" : "AI Questions generated!");
-          } catch(e) {
-            window.__toast.error(lang === "vi" ? "Lỗi tạo câu hỏi AI: " + e.message : "AI Error: " + e.message);
-          } finally {
-            btn.innerHTML = oldText;
-            btn.disabled = false;
-          }
-        }
-      );
+      this._openAIQuizGenerator(lang);
     });
 
     document.getElementById("saveQuizBtn")?.addEventListener("click", async () => {
@@ -539,31 +495,30 @@ export class AdminController {
     const container = document.getElementById("questionsContainer");
     if (!container) return;
 
-    container.innerHTML = questions.map((q, i) => `
-      <div class="question-form-card" data-qidx="${i}">
-        <div class="question-form-header">
-          <span>${lang === "vi" ? "Câu" : "Q"} ${i + 1}</span>
-          ${questions.length > 1 ? `<button class="btn-remove-q" data-idx="${i}">🗑</button>` : ""}
-        </div>
-        <input class="form-input q-text" placeholder="${lang === "vi" ? "Câu hỏi..." : "Question..."}" value="${q.question || ""}" />
-        <div class="options-grid">
-          ${[0,1,2,3].map(j => `
-            <div class="option-row">
-              <input type="radio" name="correct_${i}" value="${j}" ${parseInt(q.correctAnswer) === j ? "checked" : ""} />
-              <input class="form-input q-option" placeholder="${lang === "vi" ? "Đáp án" : "Option"} ${String.fromCharCode(65+j)}" value="${q.options?.[j] || ""}" />
-            </div>
-          `).join("")}
-        </div>
-        <p class="hint-text">${lang === "vi" ? "✓ Chọn đáp án đúng bằng radio button" : "✓ Select correct answer with radio"}</p>
-      </div>
-    `).join("");
+    container.innerHTML = questions.map((q, i) => this._questionFormCard(q, i, questions.length, lang)).join("");
 
-    // Bind remove buttons
     container.querySelectorAll(".btn-remove-q").forEach(btn => {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.dataset.idx);
         const qs  = this._collectQuestions();
         qs.splice(idx, 1);
+        this._renderQuestionForms(qs, lang);
+      });
+    });
+
+    container.querySelectorAll(".q-type").forEach(select => {
+      select.addEventListener("change", () => {
+        const idx = parseInt(select.closest(".question-form-card").dataset.qidx, 10);
+        const qs = this._collectQuestions();
+        qs[idx].type = select.value;
+        if (select.value === "true_false") {
+          qs[idx].options = lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"];
+          qs[idx].correctAnswer = 0;
+        }
+        if (select.value === "short_answer") {
+          qs[idx].options = [];
+          qs[idx].correctAnswer = "";
+        }
         this._renderQuestionForms(qs, lang);
       });
     });
@@ -573,14 +528,290 @@ export class AdminController {
     const cards = document.querySelectorAll(".question-form-card");
     return Array.from(cards).map((card, i) => {
       const question = card.querySelector(".q-text")?.value.trim() || "";
-      const opts     = Array.from(card.querySelectorAll(".q-option")).map(o => o.value.trim());
-      const radio    = card.querySelector(`input[name="correct_${i}"]:checked`);
+      const type = card.querySelector(".q-type")?.value || "multiple_choice";
+      const explanation = card.querySelector(".q-explanation")?.value.trim() || "";
+
+      if (type === "short_answer") {
+        return {
+          type,
+          question,
+          options: [],
+          correctAnswer: card.querySelector(".q-correct-text")?.value.trim() || "",
+          explanation,
+        };
+      }
+
+      const opts = Array.from(card.querySelectorAll(".q-option")).map(o => o.value.trim());
+      const radio = card.querySelector(`input[name="correct_${i}"]:checked`);
       return {
+        type,
         question,
         options: opts,
         correctAnswer: radio ? parseInt(radio.value) : 0,
+        explanation,
       };
     });
+  }
+
+  _questionFormCard(q, i, total, lang) {
+    const type = q.type || ((q.options || []).length === 2 ? "true_false" : "multiple_choice");
+    const correctAnswer = this._normalizeCorrectAnswer(q.correctAnswer, type);
+    const typeLabels = lang === "vi"
+      ? { multiple_choice: "Trắc nghiệm", true_false: "Đúng / Sai", short_answer: "Trả lời ngắn" }
+      : { multiple_choice: "Multiple choice", true_false: "True / False", short_answer: "Short answer" };
+
+    return `
+      <div class="question-form-card admin-question-card" data-qidx="${i}">
+        <div class="question-form-header">
+          <div>
+            <span>${lang === "vi" ? "Câu" : "Q"} ${i + 1}</span>
+            <small>${typeLabels[type]}</small>
+          </div>
+          <div class="admin-question-tools">
+            <select class="form-control q-type">
+              ${Object.keys(typeLabels).map(key => `<option value="${key}" ${type === key ? "selected" : ""}>${typeLabels[key]}</option>`).join("")}
+            </select>
+            ${total > 1 ? `<button type="button" class="btn-remove-q" data-idx="${i}" title="${lang === "vi" ? "Xóa câu hỏi" : "Remove question"}"><i class="fas fa-trash"></i></button>` : ""}
+          </div>
+        </div>
+        <textarea class="form-control q-text" rows="2" placeholder="${lang === "vi" ? "Nhập câu hỏi..." : "Enter question..."}">${this._escape(q.question || "")}</textarea>
+        ${type === "short_answer"
+          ? this._shortAnswerForm(q, lang)
+          : this._choiceAnswerForm(q, i, type, correctAnswer, lang)}
+        <textarea class="form-control q-explanation" rows="2" placeholder="${lang === "vi" ? "Giải thích đáp án để học viên hiểu nhanh hơn..." : "Explain the answer for learners..."}">${this._escape(q.explanation || "")}</textarea>
+      </div>
+    `;
+  }
+
+  _choiceAnswerForm(q, i, type, correctAnswer, lang) {
+    const baseOptions = type === "true_false"
+      ? (q.options?.length >= 2 ? q.options.slice(0, 2) : (lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"]))
+      : [0, 1, 2, 3].map(j => q.options?.[j] || "");
+    return `
+      <div class="options-grid admin-options-grid">
+        ${baseOptions.map((opt, j) => `
+          <label class="option-row admin-option-row">
+            <input type="radio" name="correct_${i}" value="${j}" ${parseInt(correctAnswer) === j ? "checked" : ""} />
+            <span>${String.fromCharCode(65 + j)}</span>
+            <input class="form-control q-option" ${type === "true_false" ? "readonly" : ""} placeholder="${lang === "vi" ? "Đáp án" : "Option"} ${String.fromCharCode(65 + j)}" value="${this._attr(opt)}" />
+          </label>
+        `).join("")}
+      </div>
+      <p class="hint-text">${lang === "vi" ? "Chọn đáp án đúng bằng nút tròn bên trái." : "Select the correct answer with the radio button."}</p>
+    `;
+  }
+
+  _shortAnswerForm(q, lang) {
+    const correct = typeof q.correctAnswer === "string" ? q.correctAnswer : (q.answer || "");
+    return `
+      <div class="admin-short-answer">
+        <label class="form-control-label">${lang === "vi" ? "Đáp án đúng" : "Correct answer"}</label>
+        <input class="form-control q-correct-text" placeholder="${lang === "vi" ? "Ví dụ: Agile" : "Example: Agile"}" value="${this._attr(correct)}" />
+      </div>
+    `;
+  }
+
+  _normalizeCorrectAnswer(answer, type) {
+    if (type === "short_answer") return typeof answer === "string" ? answer : "";
+    if (typeof answer === "boolean") return answer ? 0 : 1;
+    const parsed = parseInt(answer, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  _openAIQuizGenerator(lang) {
+    const t = lang === "vi" ? {
+      title: "AI tạo quiz",
+      source: "Nội dung bài học",
+      sourcePh: "Dán nội dung bài học, transcript hoặc ghi chú vào đây...",
+      count: "Số câu hỏi",
+      types: "Dạng câu hỏi",
+      mc: "Trắc nghiệm",
+      tf: "Đúng / Sai",
+      short: "Trả lời ngắn",
+      cancel: "Hủy",
+      generate: "Tạo câu hỏi",
+      empty: "Vui lòng nhập nội dung bài học.",
+      pickType: "Chọn ít nhất một dạng câu hỏi.",
+      generating: "Đang tạo...",
+      success: "Đã tạo câu hỏi bằng AI.",
+    } : {
+      title: "AI quiz generator",
+      source: "Lesson content",
+      sourcePh: "Paste lesson content, transcript, or notes here...",
+      count: "Number of questions",
+      types: "Question types",
+      mc: "Multiple choice",
+      tf: "True / False",
+      short: "Short answer",
+      cancel: "Cancel",
+      generate: "Generate questions",
+      empty: "Please enter lesson content.",
+      pickType: "Choose at least one question type.",
+      generating: "Generating...",
+      success: "AI questions generated.",
+    };
+
+    document.body.insertAdjacentHTML("beforeend", `
+      <div id="aiQuizOverlay" class="modal-overlay admin-ai-overlay">
+        <div class="modal admin-ai-modal">
+          <div class="admin-ai-header">
+            <div>
+              <span><i class="fas fa-robot mr-2"></i>AI</span>
+              <h3>${t.title}</h3>
+            </div>
+            <button type="button" class="admin-ai-close" id="cancelAIQuiz"><i class="fas fa-xmark"></i></button>
+          </div>
+          <div class="form-group">
+            <label class="form-control-label">${t.source}</label>
+            <textarea id="aiQuizSource" class="form-control" rows="8" placeholder="${t.sourcePh}"></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-control-label">${t.count}</label>
+                <input id="aiQuizCount" class="form-control" type="number" min="1" max="20" value="5" />
+              </div>
+            </div>
+            <div class="col-md-8">
+              <label class="form-control-label">${t.types}</label>
+              <div class="ai-type-grid">
+                <label><input type="checkbox" value="multiple_choice" checked /> <span>${t.mc}</span></label>
+                <label><input type="checkbox" value="true_false" checked /> <span>${t.tf}</span></label>
+                <label><input type="checkbox" value="short_answer" /> <span>${t.short}</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-end" style="gap:0.5rem;">
+            <button class="btn btn-secondary" id="cancelAIQuizBottom">${t.cancel}</button>
+            <button class="btn btn-primary" id="generateAIQuizQuestions"><i class="fas fa-wand-magic-sparkles mr-2"></i>${t.generate}</button>
+          </div>
+        </div>
+      </div>
+    `);
+
+    const close = () => document.getElementById("aiQuizOverlay")?.remove();
+    document.getElementById("cancelAIQuiz")?.addEventListener("click", close);
+    document.getElementById("cancelAIQuizBottom")?.addEventListener("click", close);
+    document.getElementById("aiQuizOverlay")?.addEventListener("click", (e) => {
+      if (e.target.id === "aiQuizOverlay") close();
+    });
+
+    document.getElementById("generateAIQuizQuestions")?.addEventListener("click", async () => {
+      const source = document.getElementById("aiQuizSource")?.value.trim();
+      const count = Math.max(1, Math.min(20, parseInt(document.getElementById("aiQuizCount")?.value, 10) || 5));
+      const types = Array.from(document.querySelectorAll("#aiQuizOverlay input[type='checkbox']:checked")).map(input => input.value);
+
+      if (!source) {
+        window.__toast.error(t.empty);
+        return;
+      }
+      if (!types.length) {
+        window.__toast.error(t.pickType);
+        return;
+      }
+
+      const btn = document.getElementById("generateAIQuizQuestions");
+      const oldText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-sm"></span> ${t.generating}`;
+
+      try {
+        const questions = await this._generateQuestionsWithAI(source, count, types, lang);
+        this._renderQuestionForms(questions, lang);
+        window.__toast.success(t.success);
+        close();
+      } catch (e) {
+        window.__toast.error(lang === "vi" ? "Lỗi tạo câu hỏi AI: " + e.message : "AI Error: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = oldText;
+      }
+    });
+  }
+
+  async _generateQuestionsWithAI(source, count, types, lang) {
+    const typeGuide = {
+      multiple_choice: `{"type":"multiple_choice","question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"..."}`,
+      true_false: `{"type":"true_false","question":"...","options":["Đúng","Sai"],"correctAnswer":0,"explanation":"..."}`,
+      short_answer: `{"type":"short_answer","question":"...","options":[],"correctAnswer":"...","explanation":"..."}`,
+    };
+    const sysPrompt = [
+      "You are an expert LMS quiz author.",
+      `Create exactly ${count} questions from the lesson content.`,
+      `Allowed question types: ${types.join(", ")}.`,
+      "Return ONLY a JSON array. Do not include markdown fences or commentary.",
+      `Each item must match one of these schemas: ${types.map(type => typeGuide[type]).join(" OR ")}.`,
+      "Use clear wording, plausible distractors, and a short explanation for every question.",
+      lang === "vi" ? "Write questions and explanations in Vietnamese when the source is Vietnamese." : "Write questions in English unless the source uses another language.",
+    ].join("\n");
+
+    const body = {
+      system_instruction: { parts: [{ text: sysPrompt }] },
+      contents: [{ role: "user", parts: [{ text: source }] }],
+      generationConfig: { temperature: 0.35 },
+    };
+    const url = window.APP_CONFIG?.geminiKey
+      ? "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + window.APP_CONFIG.geminiKey
+      : "https://kdnguyen-learning-platform2-t1cm.vercel.app/api/chat";
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) throw new Error("API failed");
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error("Empty response");
+    const parsed = this._parseAIQuestions(text);
+    return parsed.slice(0, count).map(q => this._normalizeGeneratedQuestion(q, lang));
+  }
+
+  _parseAIQuestions(text) {
+    const clean = text.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+    const match = clean.match(/\[[\s\S]*\]/);
+    return JSON.parse(match ? match[0] : clean);
+  }
+
+  _normalizeGeneratedQuestion(q, lang) {
+    const type = q.type || ((q.options || []).length === 2 ? "true_false" : "multiple_choice");
+    if (type === "short_answer") {
+      return {
+        type,
+        question: q.question || "",
+        options: [],
+        correctAnswer: String(q.correctAnswer ?? q.answer ?? ""),
+        explanation: q.explanation || "",
+      };
+    }
+    if (type === "true_false") {
+      return {
+        type,
+        question: q.question || "",
+        options: q.options?.length >= 2 ? q.options.slice(0, 2) : (lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"]),
+        correctAnswer: this._normalizeCorrectAnswer(q.correctAnswer, type),
+        explanation: q.explanation || "",
+      };
+    }
+    return {
+      type: "multiple_choice",
+      question: q.question || "",
+      options: [0, 1, 2, 3].map(i => q.options?.[i] || ""),
+      correctAnswer: this._normalizeCorrectAnswer(q.correctAnswer, "multiple_choice"),
+      explanation: q.explanation || "",
+    };
+  }
+
+  _escape(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  _attr(value) {
+    return this._escape(value).replace(/"/g, "&quot;");
   }
 
   _closeModal() {

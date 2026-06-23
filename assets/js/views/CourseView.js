@@ -7,9 +7,12 @@ export class CourseView {
   renderDashboard(courses, allProgress, profile, lang) {
     const name = profile && profile.fullname ? profile.fullname.split(" ")[0] : "Bạn";
     const streak = profile?.streak || 0;
-    const xp = profile?.xp || 0;
-    const leaderboardGoal = 175;
-    const leaderboardPct = Math.min(100, Math.round((xp / leaderboardGoal) * 100));
+    const completedLessons = allProgress.reduce((sum, item) => (
+      sum + (Array.isArray(item.completedLessons) ? item.completedLessons.length : 0)
+    ), 0);
+    const leaderboardGoal = 2;
+    const leaderboardUnlocked = completedLessons >= leaderboardGoal;
+    const leaderboardPct = Math.min(100, Math.round((completedLessons / leaderboardGoal) * 100));
     
     // Find the recommended course (first enrolled or first available)
     const recommended = courses.length > 0 ? courses[0] : null;
@@ -23,8 +26,8 @@ export class CourseView {
       premiumTitle: "Mở khóa toàn bộ tính năng Premium",
       premiumSub: "để học thông minh hơn, nhanh hơn",
       premiumBtn: "Khám phá Premium",
-      leagues: xp >= leaderboardGoal ? "BẢNG XẾP HẠNG" : "MỞ KHÓA BẢNG XẾP HẠNG",
-      leaderboardSub: `${xp} / ${leaderboardGoal} XP`,
+      leagues: leaderboardUnlocked ? "BẢNG XẾP HẠNG" : "MỞ KHÓA BẢNG XẾP HẠNG",
+      leaderboardSub: `${completedLessons} / ${leaderboardGoal} bài học`,
       courseMeta: "Lộ trình học",
       lessons: "bài học",
       recommended: "ĐỀ XUẤT",
@@ -35,8 +38,8 @@ export class CourseView {
       premiumTitle: "Unlock all learning with Premium",
       premiumSub: "to get smarter, faster",
       premiumBtn: "Explore Premium",
-      leagues: xp >= leaderboardGoal ? "LEADERBOARD" : "UNLOCK LEADERBOARD",
-      leaderboardSub: `${xp} / ${leaderboardGoal} XP`,
+      leagues: leaderboardUnlocked ? "LEADERBOARD" : "UNLOCK LEADERBOARD",
+      leaderboardSub: `${completedLessons} / ${leaderboardGoal} lessons`,
       courseMeta: "Learning path",
       lessons: "lessons",
       recommended: "RECOMMENDED",
@@ -82,9 +85,9 @@ export class CourseView {
             </div>
 
             <!-- Leaderboard Card -->
-            <div class="brilliant-card dashboard-leaderboard-card" onclick="window.__router.navigate('leaderboard')">
-              <div class="icon icon-shape ${xp >= leaderboardGoal ? 'bg-success text-white' : 'bg-secondary text-dark'} rounded-circle mr-3" style="width: 50px; height: 50px;">
-                <i class="fas ${xp >= leaderboardGoal ? 'fa-trophy' : 'fa-lock'}"></i>
+            <div class="brilliant-card dashboard-leaderboard-card ${leaderboardUnlocked ? 'is-unlocked' : 'is-locked'}" onclick="${leaderboardUnlocked ? "window.__router.navigate('leaderboard')" : "window.__toast.info(window.__i18n.current === 'vi' ? 'Hoàn thành 2 bài học để mở khóa bảng xếp hạng.' : 'Complete 2 lessons to unlock the leaderboard.')"}">
+              <div class="icon icon-shape ${leaderboardUnlocked ? 'bg-success text-white' : 'bg-secondary text-dark'} rounded-circle mr-3" style="width: 50px; height: 50px;">
+                <i class="fas ${leaderboardUnlocked ? 'fa-trophy' : 'fa-lock'}"></i>
               </div>
               <div class="flex-grow-1">
                 <h5 class="text-muted font-weight-bold mb-1" style="letter-spacing: 0.5px;">${t.leagues}</h5>

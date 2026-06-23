@@ -29,8 +29,8 @@ export class ProfileView {
     const initials  = (profile?.fullname || profile?.username || "?").charAt(0).toUpperCase();
 
     return `
-      <div class="header pb-8 pt-5 pt-lg-8 d-flex align-items-center" style="min-height:350px; background-image:url(assets/img/theme/profile-cover.jpg); background-size:cover; background-position:center top;">
-        <span class="mask bg-gradient-default opacity-8"></span>
+      <div class="header profile-learning-hero pb-8 pt-5 pt-lg-8 d-flex align-items-center" style="min-height:350px;">
+        <span class="profile-learning-pattern"></span>
         <div class="container-fluid d-flex align-items-center">
           <div class="row">
             <div class="col-lg-12">

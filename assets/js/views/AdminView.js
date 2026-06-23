@@ -269,7 +269,7 @@ export class AdminView {
 
     return `
       <div id="modalOverlay" class="modal-overlay">
-        <div class="modal" style="max-width:700px; padding:1.5rem; max-height:90vh; overflow-y:auto;">
+        <div class="modal admin-quiz-modal" style="max-width:860px; padding:1.5rem; max-height:90vh; overflow-y:auto;">
           <h3 class="mb-3">${t.title}</h3>
           <div class="form-group">
             <label class="form-control-label">${t.titleField}</label>
@@ -298,7 +298,7 @@ export class AdminView {
           <div class="form-group">
             <label class="form-control-label">${t.questions}</label>
             <div id="questionsContainer"></div>
-            <div class="d-flex" style="gap:0.5rem; margin-top:0.5rem;">
+            <div class="d-flex admin-quiz-actions" style="gap:0.5rem; margin-top:0.5rem;">
               <button type="button" class="btn btn-sm btn-secondary" id="addQuestionBtn">${t.addQ}</button>
               <button type="button" class="btn btn-sm btn-outline-primary" id="aiGenerateQuizBtn">🤖 ${lang === 'vi' ? 'AI Tạo Nhanh' : 'AI Generate'}</button>
             </div>
