@@ -12,7 +12,7 @@ export class QuizView {
 
     const questions = quiz.questions || [];
     return `
-      <div class="header bg-gradient-default pb-6 pt-5 pt-md-8">
+      <div class="header bg-gradient-default pb-6">
         <div class="container-fluid">
           <div class="d-flex justify-content-between align-items-center">
             <button class="btn btn-sm btn-neutral" id="backToCourse">${t.back}</button>
@@ -79,7 +79,7 @@ export class QuizView {
     };
 
     return `
-      <div class="header ${passed ? 'bg-gradient-success' : 'bg-gradient-danger'} pb-8 pt-5 pt-md-8">
+      <div class="header ${passed ? 'bg-gradient-success' : 'bg-gradient-danger'} pb-8">
         <div class="container-fluid text-center">
           <div class="py-3">
             <h1 class="text-white display-2 font-weight-bold">${pct}%</h1>

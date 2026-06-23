@@ -123,35 +123,35 @@ export class CourseView {
 
   renderCourseList(courses, progressMap, profile, lang) {
     const t = lang === "vi" ? {
-      title: "Khóa học", sub: "Khám phá và học tập",
+      title: "Khám phá khóa học", sub: "Mở rộng kiến thức của bạn với các khóa học chất lượng cao.",
       enroll: "Đăng ký", enrolled: "Đã đăng ký", view: "Xem khóa học",
       noCourses: "Chưa có khóa học nào.", lessons: "bài học",
       level: { beginner: "Cơ bản", intermediate: "Trung cấp", advanced: "Nâng cao" },
     } : {
-      title: "Courses", sub: "Explore and learn",
+      title: "Explore Courses", sub: "Expand your knowledge with high-quality courses.",
       enroll: "Enroll", enrolled: "Enrolled", view: "View Course",
       noCourses: "No courses available.", lessons: "lessons",
       level: { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" },
     };
 
     return `
-      <div class="header bg-gradient-info pb-8 pt-5 pt-md-8">
-        <div class="container-fluid">
-          <h1 class="text-white mb-0">${t.title}</h1>
-          <p class="text-white mt-1" style="opacity:0.8">${t.sub}</p>
+      <div class="container-fluid mt-5 brilliant-bg" style="min-height: 90vh;">
+        <div class="row pt-4 px-lg-4">
+          <div class="col-12 mb-4 text-center">
+            <h1 class="display-3 font-weight-bold text-dark mb-2">${t.title}</h1>
+            <p class="text-muted" style="font-size: 1.2rem;">${t.sub}</p>
+          </div>
         </div>
-      </div>
-      <div class="container-fluid mt--7">
-        ${courses.length === 0
-          ? `<div class="card shadow"><div class="card-body text-center py-5"><p class="text-muted">${t.noCourses}</p></div></div>`
-          : `<div class="row course-card-grid">
-              ${courses.map(c => {
+        <div class="row px-lg-4 pb-5">
+          ${courses.length === 0
+            ? `<div class="col-12"><div class="brilliant-card text-center py-5"><p class="text-muted">${t.noCourses}</p></div></div>`
+            : courses.map(c => {
                 const progress = progressMap[c.id];
                 const isEnrolled = !!progress?.enrolledAt;
                 return this._courseCardFull(c, progress, isEnrolled, t, lang);
-              }).join("")}
-            </div>`
-        }
+              }).join("")
+          }
+        </div>
       </div>
     `;
   }
@@ -326,7 +326,7 @@ export class CourseView {
     };
 
     return `
-      <div class="header bg-gradient-default pb-8 pt-5 pt-md-8">
+      <div class="header bg-gradient-default pb-8">
         <div class="container-fluid">
           <button class="btn btn-sm btn-neutral mb-3" id="backToCourse">${t.back}</button>
           <p class="text-white mb-0" style="opacity:0.7">${course?.title || ""}</p>

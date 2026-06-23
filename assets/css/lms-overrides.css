@@ -160,10 +160,12 @@
   padding: 0.5rem 1rem !important;
   margin: 0 0.25rem;
   display: flex; align-items: center; justify-content: center;
+  color: #525f7f;
 }
 .navbar-top .navbar-nav .nav-link:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.05);
   transform: translateY(-1px);
+  color: #32325d;
 }
 .navbar-top .navbar-nav .nav-link i { font-size: 1.1rem; }
 

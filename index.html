@@ -76,13 +76,13 @@
   <!-- MAIN CONTENT                                                 -->
   <!-- ============================================================ -->
   <div class="main-content" id="mainContent">
-    <!-- Top Navbar (Argon) -->
-    <nav class="navbar navbar-top navbar-expand-md navbar-dark" id="navbar-main" style="display:none;">
+    <!-- Top Navbar (Brilliant Style) -->
+    <nav class="navbar navbar-top navbar-expand-md navbar-light bg-white border-bottom" id="navbar-main" style="display:none; position: sticky; top: 0; z-index: 1050;">
       <div class="container-fluid">
         <!-- Brand text (current page) -->
-        <span class="h4 mb-0 text-white text-uppercase d-none d-lg-inline-block" id="navBrandText">Dashboard</span>
+        <span class="h4 mb-0 text-dark text-uppercase d-none d-lg-inline-block" id="navBrandText" style="font-weight: 800; letter-spacing: 1px;">Dashboard</span>
         <!-- Search -->
-        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto">
+        <form class="navbar-search navbar-search-light form-inline mr-3 d-none d-md-flex ml-lg-auto">
           <div class="form-group mb-0">
             <div class="input-group input-group-alternative">
               <div class="input-group-prepend">
@@ -114,9 +114,11 @@
           <li class="nav-item dropdown">
             <a class="nav-link pr-0" href="#" role="button" data-toggle="dropdown" id="userDropdownToggle">
               <div class="media align-items-center">
-                <span class="avatar avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" id="navAvatar" style="font-weight:700;font-size:0.9rem;">?</span>
-                <div class="media ml-2 d-none d-lg-block">
-                  <span class="mb-0 text-sm font-weight-bold text-white" id="welcomeText"></span>
+                <span class="avatar avatar-sm rounded-circle" id="navAvatar" style="background-color: #4a90e2; color: #fff; font-weight: bold;">
+                  L
+                </span>
+                <div class="media-body ml-2 d-none d-lg-block">
+                  <span class="mb-0 text-sm font-weight-bold text-dark" id="welcomeText">Learner</span>
                 </div>
               </div>
             </a>

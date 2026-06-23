@@ -15,7 +15,7 @@ export class AdminView {
     };
 
     return `
-      <div class="header bg-gradient-danger pb-8 pt-5 pt-md-8">
+      <div class="header bg-gradient-danger pb-8">
         <div class="container-fluid">
           <h1 class="text-white mb-0">${t.title}</h1>
           <p class="text-white mt-1" style="opacity:0.8">${t.sub}</p>
