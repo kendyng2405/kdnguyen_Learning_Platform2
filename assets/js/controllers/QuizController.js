@@ -35,13 +35,21 @@ export class QuizController {
 
     const now = new Date();
     if (quiz.openTime && now < new Date(quiz.openTime)) {
-      window.__toast.error(lang === "vi" ? "Bài kiểm tra chưa mở!" : "Quiz is not open yet!");
-      this.app.navigate("course", courseId);
+      window.__alert(
+        lang === "vi" ? "Chưa mở!" : "Not Open Yet!",
+        lang === "vi" ? `Bài kiểm tra này sẽ mở vào lúc ${new Date(quiz.openTime).toLocaleString('vi-VN')}.` : `This quiz will open at ${new Date(quiz.openTime).toLocaleString('en-US')}.`,
+        "warning",
+        () => this.app.navigate("course", courseId)
+      );
       return;
     }
     if (quiz.closeTime && now > new Date(quiz.closeTime)) {
-      window.__toast.error(lang === "vi" ? "Bài kiểm tra đã đóng!" : "Quiz has closed!");
-      this.app.navigate("course", courseId);
+      window.__alert(
+        lang === "vi" ? "Đã Đóng!" : "Quiz Closed!",
+        lang === "vi" ? `Bài kiểm tra này đã đóng lúc ${new Date(quiz.closeTime).toLocaleString('vi-VN')} và không còn nhận bài làm.` : `This quiz closed at ${new Date(quiz.closeTime).toLocaleString('en-US')} and is no longer accepting submissions.`,
+        "error",
+        () => this.app.navigate("course", courseId)
+      );
       return;
     }
 

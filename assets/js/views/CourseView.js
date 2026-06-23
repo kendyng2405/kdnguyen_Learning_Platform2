@@ -269,10 +269,26 @@ export class CourseView {
                 ${quizzes.map((q, i) => {
                   const score = progress?.quizScores?.[q.id];
                   const isCompleted = score && score.percentage >= (q.passingScore || 60);
-                  const isLocked = !isEnrolled;
+                  
+                  const now = new Date();
+                  const openDate = q.openTime ? new Date(q.openTime) : null;
+                  const closeDate = q.closeTime ? new Date(q.closeTime) : null;
+                  
+                  const notOpenYet = openDate && now < openDate;
+                  const closed = closeDate && now > closeDate;
+                  const timeRestricted = notOpenYet || closed;
+                  
+                  const isLocked = !isEnrolled || timeRestricted;
                   
                   let nodeClass = "locked";
                   let iconHtml = '<i class="fas fa-lock" style="font-size:1.5rem;"></i>';
+                  let subtext = '';
+                  
+                  if (notOpenYet) {
+                     subtext = `<div class="text-warning small mt-1 font-weight-bold" style="font-size:0.75rem;">⏰ ${lang === 'vi' ? 'Mở lúc' : 'Opens'}: ${openDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}</div>`;
+                  } else if (closed) {
+                     subtext = `<div class="text-danger small mt-1 font-weight-bold" style="font-size:0.75rem;">⛔ ${lang === 'vi' ? 'Đã đóng lúc' : 'Closed at'}: ${closeDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}</div>`;
+                  }
                   
                   if (isCompleted) {
                     nodeClass = "completed";
@@ -284,7 +300,7 @@ export class CourseView {
 
                   return `
                     <div class="brilliant-node-wrapper">
-                      <div class="brilliant-node ${nodeClass}" data-quiz-id="${isLocked ? '' : q.id}" style="cursor:${isLocked?'not-allowed':'pointer'}">
+                      <div class="brilliant-node ${nodeClass}" data-quiz-id="${q.id}" style="cursor:pointer" title="${notOpenYet ? 'Chưa mở' : closed ? 'Đã đóng' : ''}">
                         ${iconHtml}
                       </div>
                       
@@ -293,6 +309,7 @@ export class CourseView {
                       ` : `
                         <div class="brilliant-node-title ${isLocked ? 'text-muted' : ''}">${q.title}</div>
                       `}
+                      ${subtext}
                       
                       ${!isLocked && !isCompleted ? `
                         <div class="brilliant-node-active-popover">

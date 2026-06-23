@@ -43,6 +43,30 @@ export class App {
     window.__toast  = this.toast;
     window.__router = this;
 
+    // Custom Alert UI
+    window.__alert = (title, message, type = "info", onClose = null) => {
+      const overlay = document.createElement("div");
+      overlay.className = "modal-overlay";
+      const icon = type === "error" ? "❌" : type === "warning" ? "⚠️" : type === "success" ? "✅" : "ℹ️";
+      overlay.innerHTML = `
+        <div class="modal text-center" style="max-width: 400px; padding: 2rem; border-radius: 20px;">
+          <div style="font-size: 3.5rem; margin-bottom: 1rem;">${icon}</div>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.5rem; font-weight: 800; color: #333;">${title}</h3>
+          <p class="text-muted mb-4" style="font-size: 1.1rem;">${message}</p>
+          <button class="brilliant-btn-gradient btn-block" id="alertOk">OK</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      const btnOk = overlay.querySelector("#alertOk");
+      const close = () => {
+        overlay.style.opacity = "0";
+        setTimeout(() => overlay.remove(), 200);
+        if (typeof onClose === "function") onClose();
+      };
+      btnOk.addEventListener("click", close);
+      overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+    };
+
     // Custom Prompt UI
     window.__prompt = (title, placeholder, callback, isPassword = false, onCancel = null) => {
       const lang = this.i18n.current;
