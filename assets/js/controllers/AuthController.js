@@ -3,13 +3,14 @@
 // ============================================================
 
 import { AuthModel } from "../models/AuthModel.js?v=10";
-import { AuthView }  from "../views/AuthView.js?v=10";
+import { AuthView }  from "../views/AuthView.js?v=11";
 
 export class AuthController {
   constructor(app) {
     this.app   = app;
     this.model = new AuthModel();
     this.view  = new AuthView();
+    this.isCompletingOnboarding = false;
   }
 
   showLandingPage() {
@@ -31,7 +32,6 @@ export class AuthController {
     const lang = window.__i18n.current;
     const html = this.view.renderRegister(lang, role);
     this._renderPage(html, "register");
-    this._bindRegisterOnboarding();
     this._bindRegisterForm();
   }
 
@@ -60,7 +60,7 @@ export class AuthController {
       e.preventDefault();
       const identifier = document.getElementById("loginIdentifier").value.trim();
       const password   = document.getElementById("loginPassword").value;
-      const btn        = form.querySelector(".btn--submit");
+      const btn        = form.querySelector("button[type='submit']");
 
       if (!identifier || !password) {
         window.__toast.error(
@@ -100,8 +100,7 @@ export class AuthController {
       const password = document.getElementById("registerPassword").value;
       const confirm  = document.getElementById("registerConfirm").value;
       const role     = document.getElementById("registerRole")?.value === "teacher" ? "teacher" : "student";
-      const learningPreferences = this._collectLearningPreferences();
-      const btn      = form.querySelector(".btn--submit");
+      const btn      = form.querySelector("button[type='submit']");
       const lang     = window.__i18n.current;
 
       // Validate username format
@@ -135,11 +134,19 @@ export class AuthController {
 
       this._setLoading(btn, true);
       try {
-        await this.model.register(username, fullname, email, password, { role, learningPreferences });
+        this.isCompletingOnboarding = role === "student";
+        const user = await this.model.register(username, fullname, email, password, { role });
+        await this.app.authModel.loadUserProfile(user.uid);
         window.__toast.success(
-          lang === "vi" ? "Đăng ký thành công! Chào mừng bạn! 🎉" : "Registration successful! Welcome! 🎉"
+          lang === "vi" ? "Đăng ký thành công! Cùng chọn lộ trình phù hợp nhé." : "Registration successful! Let's choose your learning path."
         );
+        if (role === "student") {
+          this._showPostRegisterOnboarding(user.uid, lang);
+          return;
+        }
+        this.isCompletingOnboarding = false;
       } catch (err) {
+        this.isCompletingOnboarding = false;
         window.__toast.error(this._friendlyError(err.code));
         this._setLoading(btn, false);
       }
@@ -151,8 +158,7 @@ export class AuthController {
     });
   }
 
-  _bindRegisterOnboarding() {
-    const wizard = document.getElementById("studentOnboardingWizard");
+  _bindRegisterOnboarding(wizard, onFinish = null) {
     if (!wizard) return;
 
     const steps = Array.from(wizard.querySelectorAll(".onboarding-step"));
@@ -160,7 +166,7 @@ export class AuthController {
 
     const showStep = (index) => {
       steps.forEach((step, i) => step.classList.toggle("active", i === index));
-      const progress = document.getElementById("onboardingProgress");
+      const progress = wizard.querySelector(".onboarding-progress span");
       if (progress) progress.style.width = `${Math.round(((index + 1) / steps.length) * 100)}%`;
     };
 
@@ -181,6 +187,11 @@ export class AuthController {
         this._playUiSound(760, 0.08);
       }
 
+      if (e.target.closest("[data-onboarding-finish]")) {
+        this._playUiSound(880, 0.12);
+        onFinish?.();
+      }
+
       if (e.target.closest("[data-onboarding-prev]") && current > 0) {
         current -= 1;
         showStep(current);
@@ -191,11 +202,49 @@ export class AuthController {
     showStep(current);
   }
 
-  _collectLearningPreferences() {
+  _showPostRegisterOnboarding(uid, lang) {
+    const overlay = document.getElementById("postRegisterOnboardingOverlay");
+    const wizard = document.getElementById("postRegisterOnboardingWizard");
+    if (!overlay || !wizard) {
+      this.isCompletingOnboarding = false;
+      this.app.navigate("dashboard");
+      return;
+    }
+
+    overlay.classList.remove("hidden");
+    document.body.classList.add("post-onboarding-active");
+    this._setRegisterFormLocked(true);
+    this._bindRegisterOnboarding(wizard, async () => {
+      const preferences = this._collectLearningPreferences(wizard);
+      if (!preferences) {
+        window.__toast.error(lang === "vi" ? "Vui lòng chọn ít nhất một mục." : "Please choose at least one option.");
+        return;
+      }
+      try {
+        await this.model.updateProfile(uid, { learningPreferences: preferences });
+        await this.app.authModel.loadUserProfile(uid);
+        this.isCompletingOnboarding = false;
+        document.body.classList.remove("post-onboarding-active");
+        window.__toast.success(lang === "vi" ? "AI đã lưu định hướng học tập của bạn." : "AI saved your learning preferences.");
+        this.app.navigate("dashboard");
+      } catch (e) {
+        window.__toast.error(e.message);
+      }
+    });
+  }
+
+  _setRegisterFormLocked(locked) {
+    const form = document.getElementById("registerForm");
+    form?.querySelectorAll("input, button").forEach(el => {
+      el.disabled = locked;
+    });
+  }
+
+  _collectLearningPreferences(root = document) {
     const fields = ["level", "field", "topic", "subject", "goal"];
     const prefs = {};
     fields.forEach(key => {
-      const value = document.querySelector(`[name="pref_${key}"]`)?.value.trim();
+      const value = root.querySelector(`[name="pref_${key}"]`)?.value.trim();
       if (value) prefs[key] = value;
     });
     const keywords = Object.values(prefs).join(" ").toLowerCase();

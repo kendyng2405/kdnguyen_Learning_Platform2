@@ -3,8 +3,8 @@
 // ============================================================
 
 import { CourseModel } from "../models/CourseModel.js?v=10";
-import { QuizModel }   from "../models/QuizModel.js?v=10";
-import { AdminView }   from "../views/AdminView.js?v=10";
+import { QuizModel }   from "../models/QuizModel.js?v=11";
+import { AdminView }   from "../views/AdminView.js?v=11";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 export class AdminController {
@@ -29,12 +29,13 @@ export class AdminController {
     this._renderPage('<div class="page-loading"><div class="spinner-ring"></div></div>', "admin");
     const uid = this.app.getUser()?.uid;
     const isSystemAdmin = this.app.isSystemAdmin();
-    const [courses, users] = await Promise.all([
+    const [courses, users, enrollmentCounts] = await Promise.all([
       isSystemAdmin ? this.courseModel.getAllCourses() : this.courseModel.getCoursesForInstructor(uid, true),
       isSystemAdmin ? this.app.authModel.getAllUsers() : Promise.resolve([]),
+      this.quizModel.getEnrollmentCountsByCourse(),
     ]);
     const lang    = window.__i18n.current;
-    const html    = this.view.renderAdmin(courses, lang, { isSystemAdmin, users });
+    const html    = this.view.renderAdmin(this._withEnrollmentCounts(courses, enrollmentCounts), lang, { isSystemAdmin, users });
     this._renderPage(html, "admin");
     this._bindAdminEvents();
   }
@@ -92,6 +93,18 @@ export class AdminController {
           return;
         }
 
+        const learnersBtn = e.target.closest(".btn-view-learners");
+        if (learnersBtn) {
+          e.stopPropagation();
+          const courseId = learnersBtn.dataset.courseId;
+          try {
+            await this._showLearnersReport(courseId);
+          } catch (err) {
+            window.__toast.error(err.message);
+          }
+          return;
+        }
+
         const saveRoleBtn = e.target.closest(".btn-save-user-role");
         if (saveRoleBtn) {
           e.stopPropagation();
@@ -138,6 +151,64 @@ export class AdminController {
       // Bind only once
       document.body.addEventListener("click", this._adminClickHandler);
     }
+  }
+
+  async _showLearnersReport(courseId) {
+    const [course, lessons, quizzes, progressRows, users] = await Promise.all([
+      this.courseModel.getCourseById(courseId),
+      this.courseModel.getLessons(courseId),
+      this.quizModel.getQuizzesByCourse(courseId),
+      this.quizModel.getProgressForCourse(courseId),
+      this.app.authModel.getAllUsers(300).catch(() => []),
+    ]);
+
+    const usersById = new Map(users.map(user => [user.uid || user.id, user]));
+    const totalLessons = lessons.length;
+    const quizMap = new Map(quizzes.map(quiz => [quiz.id, quiz]));
+    const report = progressRows.map(progress => {
+      const user = usersById.get(progress.uid) || {};
+      const completedLessons = Array.isArray(progress.completedLessons) ? progress.completedLessons.length : 0;
+      const scores = Object.entries(progress.quizScores || {}).map(([quizId, score]) => {
+        const quiz = quizMap.get(quizId);
+        const percentage = Number(score?.percentage ?? (score?.total ? (score.score / score.total) * 100 : 0));
+        return {
+          quizId,
+          title: quiz?.title || "Quiz",
+          score: Number(score?.score || 0),
+          total: Number(score?.total || 0),
+          percentage: Math.round(percentage),
+          passed: percentage >= (quiz?.passingScore || 60),
+          takenAt: score?.takenAt || null,
+        };
+      });
+      const averageScore = scores.length
+        ? Math.round(scores.reduce((sum, item) => sum + item.percentage, 0) / scores.length)
+        : null;
+
+      return {
+        uid: progress.uid,
+        name: user.fullname || user.username || progress.uid || "Learner",
+        username: user.username || "",
+        email: user.email || "",
+        completedLessons,
+        totalLessons,
+        progressPct: totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0,
+        quizTaken: scores.length,
+        quizTotal: quizzes.length,
+        averageScore,
+        passedQuizzes: scores.filter(item => item.passed).length,
+        scores,
+        lastUpdated: progress.lastUpdated || progress.enrolledAt || null,
+      };
+    }).sort((a, b) => b.progressPct - a.progressPct || (b.averageScore || 0) - (a.averageScore || 0));
+
+    const lang = window.__i18n.current;
+    const modal = this.view.renderLearnersReportModal(course, report, { totalLessons, quizzes }, lang);
+    document.body.insertAdjacentHTML("beforeend", modal);
+    document.getElementById("modalOverlay")?.addEventListener("click", (e) => {
+      if (e.target.id === "modalOverlay") this._closeModal();
+    });
+    document.getElementById("cancelModal")?.addEventListener("click", () => this._closeModal());
   }
 
   _showCourseModal(course = null) {
@@ -934,5 +1005,9 @@ export class AdminController {
     container.innerHTML = html;
     container.className = `page-container page-${name}`;
     requestAnimationFrame(() => container.classList.add("page-enter"));
+  }
+
+  _withEnrollmentCounts(courses, counts = {}) {
+    return courses.map(course => ({ ...course, enrolledCount: counts[course.id] || 0 }));
   }
 }

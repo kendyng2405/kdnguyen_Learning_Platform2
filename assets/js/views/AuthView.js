@@ -20,6 +20,14 @@ export class AuthView {
       teacherSub: "Tạo khóa học, bài học, quiz AI và quản lý học viên trong các khóa học của mình.",
       studentTitle: "Dành cho học viên",
       studentSub: "Trả lời vài câu hỏi, nhận đề xuất khóa phù hợp và bắt đầu học ngay.",
+      stats: ["Lộ trình AI", "Quiz tức thì", "Theo dõi học viên"],
+      flow: ["Đăng ký", "AI hỏi mục tiêu", "Đề xuất khóa học", "Học và nhận chứng chỉ"],
+      previewTitle: "Bảng học tập cá nhân",
+      previewSub: "Deadline, nhiệm vụ, tiến độ và gợi ý khóa học nằm cùng một nơi.",
+      analyticsTitle: "Teacher analytics",
+      analyticsSub: "Giảng viên xem được học viên học tới đâu, làm test ra sao và điểm cụ thể.",
+      ctaTitle: "Bắt đầu với Brilliant LMS hôm nay",
+      ctaSub: "Một nền tảng gọn, đẹp và có AI hỗ trợ đúng lúc.",
     } : {
       login: "Sign in",
       badge: "AI-personalized learning platform",
@@ -35,6 +43,14 @@ export class AuthView {
       teacherSub: "Create courses, lessons, AI quizzes, and manage learners in your own courses.",
       studentTitle: "For students",
       studentSub: "Answer a few questions, get matched with suitable courses, and start learning.",
+      stats: ["AI path", "Instant quiz", "Learner tracking"],
+      flow: ["Sign up", "AI asks goals", "Course match", "Learn and certify"],
+      previewTitle: "Personal learning board",
+      previewSub: "Deadlines, missions, progress, and recommendations in one place.",
+      analyticsTitle: "Teacher analytics",
+      analyticsSub: "Teachers can see learner progress, quiz attempts, and detailed scores.",
+      ctaTitle: "Start Brilliant LMS today",
+      ctaSub: "A clean, modern LMS with AI help at the right moment.",
     };
 
     return `
@@ -52,14 +68,25 @@ export class AuthView {
               <button class="btn btn-primary btn-lg" id="landingStudentBtn"><i class="fas fa-user-graduate mr-2"></i>${t.student}</button>
               <button class="btn btn-outline-primary btn-lg" id="landingTeacherBtn"><i class="fas fa-chalkboard-teacher mr-2"></i>${t.teacher}</button>
             </div>
+            <div class="landing-hero-stats">
+              ${t.stats.map((item, index) => `<span><strong>${index === 0 ? "AI" : index === 1 ? "1:1" : "360°"}</strong>${item}</span>`).join("")}
+            </div>
             <small>${t.scroll}</small>
           </div>
           <div class="landing-orbit" aria-hidden="true">
             <span></span><span></span><span></span>
             <div class="landing-orbit-card">
-              <i class="fas fa-robot"></i>
-              <strong>AI Tutor</strong>
-              <small>Quiz • Deadline • Certificate</small>
+              <div class="landing-preview-head">
+                <i class="fas fa-robot"></i>
+                <div><strong>${t.previewTitle}</strong><small>${t.previewSub}</small></div>
+              </div>
+              <div class="landing-preview-progress"><b>68%</b><span></span></div>
+              <div class="landing-preview-grid">
+                <span><i class="fas fa-calendar-check"></i> Deadline</span>
+                <span><i class="fas fa-list-check"></i> Mission</span>
+                <span><i class="fas fa-award"></i> Certificate</span>
+                <span><i class="fas fa-comments"></i> AI Tutor</span>
+              </div>
             </div>
           </div>
         </section>
@@ -68,6 +95,14 @@ export class AuthView {
             <article style="--delay:${index * 0.08}s">
               <i class="fas ${["fa-magic", "fa-check-circle", "fa-calendar-alt", "fa-award"][index]}"></i>
               <strong>${feature}</strong>
+            </article>
+          `).join("")}
+        </section>
+        <section class="landing-flow">
+          ${t.flow.map((item, index) => `
+            <article style="--delay:${index * 0.1}s">
+              <span>${index + 1}</span>
+              <strong>${item}</strong>
             </article>
           `).join("")}
         </section>
@@ -90,6 +125,32 @@ export class AuthView {
               <p>${t.studentSub}</p>
               <button class="btn btn-sm btn-primary" onclick="window.__router.navigate('register','student')">${t.student}</button>
             </article>
+          </div>
+        </section>
+        <section class="landing-analytics">
+          <div class="landing-analytics-panel">
+            <div>
+              <span class="landing-badge">${t.analyticsTitle}</span>
+              <h2>${t.analyticsTitle}</h2>
+              <p>${t.analyticsSub}</p>
+            </div>
+            <div class="landing-analytics-table">
+              ${["Nguyen Dang Khoi", "Kendy Nguyen", "John Pham"].map((name, index) => `
+                <div>
+                  <strong>${name}</strong>
+                  <span>${[92, 76, 58][index]}%</span>
+                  <em style="width:${[92, 76, 58][index]}%"></em>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </section>
+        <section class="landing-cta">
+          <h2>${t.ctaTitle}</h2>
+          <p>${t.ctaSub}</p>
+          <div class="landing-actions">
+            <button class="btn btn-primary btn-lg" onclick="window.__router.navigate('register','student')">${t.student}</button>
+            <button class="btn btn-outline-primary btn-lg" onclick="window.__router.navigate('register','teacher')">${t.teacher}</button>
           </div>
         </section>
       </div>
@@ -251,7 +312,6 @@ export class AuthView {
                   </div>
                   <form id="registerForm" novalidate>
                     <input type="hidden" id="registerRole" value="${isTeacher ? "teacher" : "student"}" />
-                    ${isTeacher ? "" : this._renderStudentOnboarding(lang)}
                     <div class="form-group">
                       <div class="input-group input-group-alternative mb-3">
                         <div class="input-group-prepend">
@@ -309,10 +369,11 @@ export class AuthView {
           </div>
         </div>
       </div>
+      ${isTeacher ? "" : this._renderPostRegisterOnboarding(lang)}
     `;
   }
 
-  _renderStudentOnboarding(lang) {
+  _renderStudentOnboarding(lang, id = "studentOnboardingWizard") {
     const t = lang === "vi" ? {
       next: "Tiếp",
       back: "Quay lại",
@@ -340,7 +401,7 @@ export class AuthView {
     };
 
     return `
-      <div id="studentOnboardingWizard" class="student-onboarding-wizard">
+      <div id="${id}" class="student-onboarding-wizard">
         <div class="onboarding-progress"><span id="onboardingProgress"></span></div>
         <p class="onboarding-hint">${t.progress}</p>
         ${t.steps.map((step, index) => `
@@ -354,10 +415,36 @@ export class AuthView {
               ${index > 0 ? `<button type="button" class="btn btn-sm btn-outline-primary" data-onboarding-prev>${t.back}</button>` : "<span></span>"}
               ${index < t.steps.length - 1
                 ? `<button type="button" class="btn btn-sm btn-primary" data-onboarding-next>${t.next}</button>`
-                : `<button type="button" class="btn btn-sm btn-success" data-onboarding-next>${t.done}</button>`}
+                : `<button type="button" class="btn btn-sm btn-success" data-onboarding-finish>${t.done}</button>`}
             </div>
           </section>
         `).join("")}
+      </div>
+    `;
+  }
+
+  _renderPostRegisterOnboarding(lang) {
+    const t = lang === "vi" ? {
+      title: "Tài khoản đã sẵn sàng",
+      sub: "Trả lời nhanh vài câu để Brilliant LMS đề xuất khóa học hợp với mục tiêu của bạn.",
+      note: "Bạn có thể đổi lựa chọn sau trong hồ sơ.",
+    } : {
+      title: "Your account is ready",
+      sub: "Answer a few quick questions so Brilliant LMS can suggest the right courses.",
+      note: "You can update these choices later in your profile.",
+    };
+
+    return `
+      <div id="postRegisterOnboardingOverlay" class="post-onboarding-overlay hidden">
+        <div class="post-onboarding-shell">
+          <div class="post-onboarding-copy">
+            <span><i class="fas fa-wand-magic-sparkles mr-2"></i>AI Match</span>
+            <h2>${t.title}</h2>
+            <p>${t.sub}</p>
+            <small>${t.note}</small>
+          </div>
+          ${this._renderStudentOnboarding(lang, "postRegisterOnboardingWizard")}
+        </div>
       </div>
     `;
   }

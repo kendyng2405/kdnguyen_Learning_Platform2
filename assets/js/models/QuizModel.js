@@ -95,6 +95,26 @@ export class QuizModel {
       });
   }
 
+  async getAllProgressDocs() {
+    const snap = await getDocs(collection(this.db, "progress"));
+    return snap.docs.map(d => this._parseProgressDoc(d)).filter(Boolean);
+  }
+
+  async getProgressForCourse(courseId) {
+    const allProgress = await this.getAllProgressDocs();
+    return allProgress.filter(item => item.courseId === courseId && this._isEnrollmentProgress(item));
+  }
+
+  async getEnrollmentCountsByCourse() {
+    const counts = {};
+    const allProgress = await this.getAllProgressDocs();
+    allProgress.forEach(item => {
+      if (!item.courseId || !this._isEnrollmentProgress(item)) return;
+      counts[item.courseId] = (counts[item.courseId] || 0) + 1;
+    });
+    return counts;
+  }
+
   async enrollCourse(uid, courseId) {
     const ref = doc(this.db, "progress", `${uid}_${courseId}`);
     const snap = await getDoc(ref);
@@ -125,5 +145,23 @@ export class QuizModel {
         });
       }
     }
+  }
+
+  _parseProgressDoc(docSnap) {
+    const data = docSnap.data() || {};
+    const separatorIndex = docSnap.id.indexOf("_");
+    const uid = data.uid || (separatorIndex >= 0 ? docSnap.id.slice(0, separatorIndex) : "");
+    const courseId = data.courseId || (separatorIndex >= 0 ? docSnap.id.slice(separatorIndex + 1) : "");
+    if (!courseId) return null;
+    return { id: docSnap.id, uid, courseId, ...data };
+  }
+
+  _isEnrollmentProgress(progress) {
+    return !!(
+      progress?.enrolledAt ||
+      progress?.lastUpdated ||
+      progress?.completedLessons?.length ||
+      Object.keys(progress?.quizScores || {}).length
+    );
   }
 }

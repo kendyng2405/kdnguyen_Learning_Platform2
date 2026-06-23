@@ -83,6 +83,7 @@ export class AdminView {
       edit: "Sửa",
       delete: "Xóa",
       enrolled: "Người học",
+      learnersReport: "Theo dõi",
       owner: "Giảng viên",
       role: "Vai trò",
       save: "Lưu",
@@ -99,6 +100,7 @@ export class AdminView {
       edit: "Edit",
       delete: "Delete",
       enrolled: "Learners",
+      learnersReport: "Track",
       owner: "Teacher",
       role: "Role",
       save: "Save",
@@ -154,6 +156,7 @@ export class AdminView {
                           <td>
                             <button class="btn btn-sm btn-outline-primary btn-manage-lessons" data-course-id="${c.id}"><i class="fas fa-book-open mr-1"></i>${t.lessons}</button>
                             <button class="btn btn-sm btn-outline-info btn-manage-quizzes" data-course-id="${c.id}"><i class="fas fa-clipboard-list mr-1"></i>${t.quizzes}</button>
+                            <button class="btn btn-sm btn-outline-success btn-view-learners" data-course-id="${c.id}"><i class="fas fa-chart-line mr-1"></i>${t.learnersReport}</button>
                             <button class="btn btn-sm btn-outline-default btn-edit-course" data-course-id="${c.id}"><i class="fas fa-pen mr-1"></i>${t.edit}</button>
                             <button class="btn btn-sm btn-outline-danger btn-delete-course" data-course-id="${c.id}"><i class="fas fa-trash mr-1"></i>${t.delete}</button>
                           </td>
@@ -165,6 +168,108 @@ export class AdminView {
           </div>
         </section>
         ${isSystemAdmin ? this._renderUsersPanel(users, t, lang) : ""}
+      </div>
+    `;
+  }
+
+  renderLearnersReportModal(course, rows, meta, lang) {
+    const totalLearners = rows.length;
+    const avgProgress = totalLearners
+      ? Math.round(rows.reduce((sum, row) => sum + row.progressPct, 0) / totalLearners)
+      : 0;
+    const scoredRows = rows.filter(row => row.averageScore !== null);
+    const avgScore = scoredRows.length
+      ? Math.round(scoredRows.reduce((sum, row) => sum + row.averageScore, 0) / scoredRows.length)
+      : 0;
+    const completedRows = rows.filter(row => row.totalLessons > 0 && row.completedLessons >= row.totalLessons).length;
+    const t = lang === "vi" ? {
+      title: "Theo dõi học viên",
+      learners: "Học viên",
+      avgProgress: "Tiến độ TB",
+      avgScore: "Điểm quiz TB",
+      completed: "Hoàn thành",
+      learner: "Học viên",
+      progress: "Bài học",
+      quiz: "Quiz / điểm",
+      last: "Cập nhật",
+      noLearners: "Chưa có học viên nào đăng ký khóa học này.",
+      notTaken: "Chưa làm quiz",
+    } : {
+      title: "Learner tracking",
+      learners: "Learners",
+      avgProgress: "Avg progress",
+      avgScore: "Avg quiz score",
+      completed: "Completed",
+      learner: "Learner",
+      progress: "Lessons",
+      quiz: "Quiz / score",
+      last: "Updated",
+      noLearners: "No learners have enrolled in this course yet.",
+      notTaken: "No quiz attempts",
+    };
+
+    return `
+      <div id="modalOverlay" class="modal-overlay">
+        <div class="modal learner-report-modal">
+          <div class="learner-report-head">
+            <div>
+              <span class="learner-report-kicker"><i class="fas fa-chart-line mr-2"></i>${t.title}</span>
+              <h3>${this._escape(course?.title || "Course")}</h3>
+            </div>
+            <button type="button" class="admin-ai-close" id="cancelModal"><i class="fas fa-xmark"></i></button>
+          </div>
+
+          <div class="learner-report-stats">
+            <article><strong>${totalLearners}</strong><span>${t.learners}</span></article>
+            <article><strong>${avgProgress}%</strong><span>${t.avgProgress}</span></article>
+            <article><strong>${avgScore}%</strong><span>${t.avgScore}</span></article>
+            <article><strong>${completedRows}</strong><span>${t.completed}</span></article>
+          </div>
+
+          ${rows.length === 0
+            ? `<div class="learner-report-empty"><i class="fas fa-user-graduate"></i><p>${t.noLearners}</p></div>`
+            : `<div class="learner-report-table-wrap">
+                <table class="table learner-report-table">
+                  <thead>
+                    <tr>
+                      <th>${t.learner}</th>
+                      <th>${t.progress}</th>
+                      <th>${t.quiz}</th>
+                      <th>${t.last}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows.map(row => `
+                      <tr>
+                        <td>
+                          <strong>${this._escape(row.name)}</strong>
+                          <small>${row.email ? this._escape(row.email) : (row.username ? "@" + this._escape(row.username) : this._escape(row.uid || ""))}</small>
+                        </td>
+                        <td>
+                          <div class="learner-progress-line">
+                            <span>${row.completedLessons}/${row.totalLessons || meta.totalLessons} ${lang === "vi" ? "bài" : "lessons"}</span>
+                            <b>${row.progressPct}%</b>
+                          </div>
+                          <div class="learner-progress-track"><span style="width:${row.progressPct}%"></span></div>
+                        </td>
+                        <td>
+                          <div class="learner-quiz-summary">
+                            <strong>${row.averageScore === null ? "—" : row.averageScore + "%"}</strong>
+                            <span>${row.quizTaken}/${row.quizTotal} ${lang === "vi" ? "quiz" : "quizzes"}</span>
+                          </div>
+                          <div class="learner-quiz-chips">
+                            ${row.scores.length
+                              ? row.scores.map(score => `<span class="${score.passed ? "is-pass" : "is-fail"}">${this._escape(score.title)} ${score.percentage}%</span>`).join("")
+                              : `<em>${t.notTaken}</em>`}
+                          </div>
+                        </td>
+                        <td>${this._formatDate(row.lastUpdated, lang)}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>`}
+        </div>
       </div>
     `;
   }

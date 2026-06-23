@@ -3,7 +3,7 @@
 // ============================================================
 
 import { CourseModel } from "../models/CourseModel.js?v=10";
-import { QuizModel }   from "../models/QuizModel.js?v=10";
+import { QuizModel }   from "../models/QuizModel.js?v=11";
 import { CourseView }  from "../views/CourseView.js?v=10";
 
 export class CourseController {
@@ -16,13 +16,14 @@ export class CourseController {
 
   async showDashboard() {
     this._renderPage('<div class="page-loading"><div class="spinner-ring"></div></div>', "dashboard");
-    const [courses, allProgress] = await Promise.all([
+    const [courses, allProgress, enrollmentCounts] = await Promise.all([
       this.courseModel.getAllCourses(),
       this.quizModel.getAllProgressForUser(this.app.getUser().uid),
+      this.quizModel.getEnrollmentCountsByCourse(),
     ]);
     const lang    = window.__i18n.current;
     const profile = this.app.getUserProfile();
-    const html    = this.view.renderDashboard(courses, allProgress, profile, lang);
+    const html    = this.view.renderDashboard(this._withEnrollmentCounts(courses, enrollmentCounts), allProgress, profile, lang);
     this._renderPage(html, "dashboard");
     this._bindCourseCards();
   }
@@ -32,13 +33,14 @@ export class CourseController {
     const uid     = this.app.getUser().uid;
     const profile = this.app.getUserProfile();
     const lang    = window.__i18n.current;
-    const [courses, allProgress] = await Promise.all([
+    const [courses, allProgress, enrollmentCounts] = await Promise.all([
       this.courseModel.getAllCourses(),
       this.quizModel.getAllProgressForUser(uid),
+      this.quizModel.getEnrollmentCountsByCourse(),
     ]);
     const progressMap = Object.fromEntries(allProgress.map(p => [p.courseId, p]));
 
-    const html = this.view.renderCourseList(courses, progressMap, profile, lang);
+    const html = this.view.renderCourseList(this._withEnrollmentCounts(courses, enrollmentCounts), progressMap, profile, lang);
     this._renderPage(html, "courses");
     this._bindCourseCards();
     this._bindEnrollButtons();
@@ -46,10 +48,11 @@ export class CourseController {
 
   async showCourseDetail(courseId) {
     this._renderPage('<div class="page-loading"><div class="spinner-ring"></div></div>', "course-detail");
-    const [course, lessons, quizzes] = await Promise.all([
+    const [course, lessons, quizzes, enrollmentCounts] = await Promise.all([
       this.courseModel.getCourseById(courseId),
       this.courseModel.getLessons(courseId),
       this.quizModel.getQuizzesByCourse(courseId),
+      this.quizModel.getEnrollmentCountsByCourse(),
     ]);
 
     if (!course) {
@@ -63,7 +66,7 @@ export class CourseController {
     const profile  = this.app.getUserProfile();
     const lang     = window.__i18n.current;
 
-    const html = this.view.renderCourseDetail(course, lessons, quizzes, progress, profile, lang);
+    const html = this.view.renderCourseDetail(this._withEnrollmentCount(course, enrollmentCounts), lessons, quizzes, progress, profile, lang);
     this._renderPage(html, "course-detail");
     this._bindLessonItems(courseId);
     this._bindQuizItems(courseId);
@@ -209,5 +212,14 @@ export class CourseController {
     container.innerHTML = html;
     container.className = `page-container page-${name}`;
     requestAnimationFrame(() => container.classList.add("page-enter"));
+  }
+
+  _withEnrollmentCounts(courses, counts = {}) {
+    return courses.map(course => this._withEnrollmentCount(course, counts));
+  }
+
+  _withEnrollmentCount(course, counts = {}) {
+    if (!course) return course;
+    return { ...course, enrolledCount: counts[course.id] || 0 };
   }
 }

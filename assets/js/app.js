@@ -3,11 +3,11 @@
 //  Argon Dashboard layout with sidebar + top navbar
 // ============================================================
 
-import { AuthController }         from "./controllers/AuthController.js?v=10";
-import { CourseController }       from "./controllers/CourseController.js?v=10";
+import { AuthController }         from "./controllers/AuthController.js?v=11";
+import { CourseController }       from "./controllers/CourseController.js?v=11";
 import { QuizController }         from "./controllers/QuizController.js?v=10";
 import { ProgressController }     from "./controllers/ProgressController.js?v=10";
-import { AdminController }        from "./controllers/AdminController.js?v=10";
+import { AdminController }        from "./controllers/AdminController.js?v=11";
 import { ChatbotController }      from "./controllers/ChatbotController.js?v=10";
 import { ProfileController }      from "./controllers/ProfileController.js?v=10";
 import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=10";
@@ -150,6 +150,14 @@ export class App {
       this.currentUser = user;
 
       if (user) {
+        if (this.authController?.isCompletingOnboarding) {
+          this._showAppChrome(false);
+          document.getElementById("chatbotWidget")?.classList.add("hidden");
+          document.getElementById("chatbotFab")?.classList.add("hidden");
+          this._hideLoading();
+          this._authReady = true;
+          return;
+        }
         await this.authModel.loadUserProfile(user.uid);
         this._showAppChrome(true);
         this._updateNavbar(user);
