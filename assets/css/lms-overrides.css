@@ -483,6 +483,245 @@ body.auth-active #appFooter { display: none !important; }
   font-size: 0.9rem;
 }
 
+/* ── Modern shell for legacy Argon pages ── */
+.page-admin,
+.page-progress,
+.page-lesson,
+.page-quiz,
+.page-profile {
+  max-width: none;
+  margin: 0;
+  padding: 2rem 1.5rem 3rem;
+  background: #f7f9fa;
+}
+.page-courses,
+.page-course-detail,
+.page-dashboard {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.page-courses .brilliant-bg,
+.page-course-detail .brilliant-bg,
+.page-dashboard .brilliant-bg {
+  padding: 2rem 1.5rem 3rem;
+}
+.page-admin > .header,
+.page-progress > .header,
+.page-lesson > .header,
+.page-quiz > .header,
+.page-profile > .header {
+  min-height: auto !important;
+  margin-bottom: 1.5rem;
+  padding: 2rem !important;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 45px rgba(23,43,77,0.16);
+}
+.page-profile > .header {
+  min-height: 260px !important;
+}
+.page-admin > .header .container-fluid,
+.page-progress > .header .container-fluid,
+.page-lesson > .header .container-fluid,
+.page-quiz > .header .container-fluid,
+.page-profile > .header .container-fluid {
+  padding-right: 0;
+  padding-left: 0;
+}
+.page-admin > .container-fluid,
+.page-progress > .container-fluid,
+.page-lesson > .container-fluid,
+.page-quiz > .container-fluid,
+.page-profile > .container-fluid {
+  padding-right: 0;
+  padding-left: 0;
+}
+.page-admin > .container-fluid.mt--7,
+.page-progress > .container-fluid.mt--7,
+.page-lesson > .container-fluid.mt--7,
+.page-quiz > .container-fluid.mt--7,
+.page-quiz > .container-fluid.mt--6,
+.page-profile > .container-fluid.mt--7 {
+  margin-top: 0 !important;
+}
+.page-admin .card,
+.page-progress .card,
+.page-lesson .card,
+.page-quiz .card,
+.page-profile .card,
+.page-courses .card,
+.page-course-detail .brilliant-card {
+  border: 1px solid #eef1f3;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.07) !important;
+  overflow: hidden;
+}
+.page-admin .card-header,
+.page-progress .card-header,
+.page-quiz .card-header,
+.page-profile .card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eef1f3 !important;
+  background: #fff !important;
+}
+.page-admin .card-header h3,
+.page-progress .card-header h3,
+.page-quiz .card-header h3,
+.page-profile .card-header h3 {
+  color: #172b4d;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.page-admin .table-responsive,
+.page-progress .table-responsive {
+  overflow: auto;
+}
+.page-admin .table {
+  margin-bottom: 0;
+}
+.page-admin .table th,
+.page-admin .table td {
+  vertical-align: middle;
+  padding: 1rem 1.5rem;
+}
+.page-admin .table th {
+  border-top: 0;
+  color: #8898aa;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+}
+.page-admin .table td {
+  color: #525f7f;
+  font-size: 0.92rem;
+}
+.page-admin .table td:first-child strong {
+  color: #2f3f66;
+  font-weight: 800;
+}
+.page-admin .table td:last-child {
+  min-width: 390px;
+  white-space: nowrap;
+}
+.page-admin .table td:last-child .btn {
+  min-width: 86px;
+  height: 34px;
+  margin: 0.18rem;
+  padding: 0 0.75rem;
+  border-radius: 8px;
+}
+.page-admin #createCourseBtn,
+.page-admin #addLessonBtn,
+.page-admin #addQuizBtn {
+  height: 38px;
+  border-radius: 10px;
+  font-weight: 800;
+}
+.page-progress .row,
+.page-courses .row,
+.page-course-detail .row {
+  row-gap: 1rem;
+}
+.page-progress .card,
+.page-courses .card {
+  height: 100%;
+}
+.page-progress .card-body,
+.page-courses .card-body,
+.page-lesson .card-body,
+.page-quiz .card-body,
+.page-profile .card-body {
+  padding: 1.5rem;
+}
+.page-progress .progress,
+.page-courses .progress,
+.page-quiz .progress {
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9ecef;
+}
+.page-courses .row.pt-4.px-lg-4:first-child {
+  margin: 0 0 1.5rem;
+  padding: 0 !important;
+}
+.page-courses .row.pt-4.px-lg-4:first-child .col-12 {
+  padding: 2rem;
+  border-radius: 18px;
+  text-align: left !important;
+  color: #fff;
+  background: linear-gradient(135deg, #172b4d 0%, #5e72e4 52%, #2dce89 100%);
+  box-shadow: 0 18px 45px rgba(23,43,77,0.16);
+}
+.page-courses .row.pt-4.px-lg-4:first-child h1 {
+  color: #fff !important;
+  font-size: 2rem;
+  line-height: 1.15;
+}
+.page-courses .row.pt-4.px-lg-4:first-child p {
+  max-width: 720px;
+  margin-bottom: 0;
+  color: rgba(255,255,255,0.78) !important;
+  font-size: 1rem !important;
+}
+.page-courses .course-thumb {
+  border-radius: 16px 16px 0 0;
+}
+.page-courses .card-title {
+  color: #172b4d;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.page-lesson .header h1,
+.page-quiz .header h1,
+.page-quiz .header h3,
+.page-admin .header h1,
+.page-progress .header h1 {
+  font-weight: 800;
+  line-height: 1.15;
+}
+.page-lesson .header .badge,
+.page-quiz .header .badge {
+  height: 28px;
+  align-items: center;
+}
+.page-quiz .quiz-option {
+  min-height: 50px;
+  border-radius: 12px !important;
+  padding: 0.8rem 1rem !important;
+}
+.page-quiz .quiz-option span:last-child {
+  line-height: 1.45;
+}
+.page-quiz .card + .card {
+  margin-top: 0.9rem;
+}
+.page-profile .card-profile {
+  overflow: visible;
+}
+.page-profile .form-group {
+  margin-bottom: 1.15rem;
+}
+.page-profile .form-control,
+.page-admin .form-control,
+.modal-overlay .form-control {
+  min-height: 44px;
+  border-radius: 10px;
+}
+.page-profile .form-control-label,
+.page-admin .form-control-label,
+.modal-overlay .form-control-label {
+  color: #525f7f;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.page-profile .heading-small {
+  letter-spacing: 0.08em;
+}
+.page-profile hr {
+  border-color: #eef1f3;
+}
+
 /* ── Leaderboard page ── */
 .leaderboard-page {
   padding: 2rem 1.5rem 3rem;
@@ -681,6 +920,11 @@ html[data-theme="dark"] body {
 }
 html[data-theme="dark"] .main-content,
 html[data-theme="dark"] .brilliant-bg,
+html[data-theme="dark"] .page-admin,
+html[data-theme="dark"] .page-progress,
+html[data-theme="dark"] .page-lesson,
+html[data-theme="dark"] .page-quiz,
+html[data-theme="dark"] .page-profile,
 html[data-theme="dark"] .footer {
   background: #0f172a !important;
 }
@@ -688,6 +932,7 @@ html[data-theme="dark"] .bg-white,
 html[data-theme="dark"] .navbar-light,
 html[data-theme="dark"] .navbar-vertical,
 html[data-theme="dark"] .card,
+html[data-theme="dark"] .card-header,
 html[data-theme="dark"] .brilliant-card,
 html[data-theme="dark"] .dropdown-menu,
 html[data-theme="dark"] .chatbot-widget,
@@ -709,13 +954,23 @@ html[data-theme="dark"] .leaderboard-user div,
 html[data-theme="dark"] .leaderboard-xp strong,
 html[data-theme="dark"] .leaderboard-list-header h3,
 html[data-theme="dark"] .leaderboard-podium-card h3,
-html[data-theme="dark"] .brilliant-node-title {
+html[data-theme="dark"] .brilliant-node-title,
+html[data-theme="dark"] .page-admin .card-header h3,
+html[data-theme="dark"] .page-progress .card-header h3,
+html[data-theme="dark"] .page-quiz .card-header h3,
+html[data-theme="dark"] .page-profile .card-header h3,
+html[data-theme="dark"] .page-courses .card-title,
+html[data-theme="dark"] .page-admin .table td:first-child strong {
   color: #f8fafc !important;
 }
 html[data-theme="dark"] .text-muted,
 html[data-theme="dark"] .leaderboard-user small,
 html[data-theme="dark"] .leaderboard-list-header span,
-html[data-theme="dark"] .leaderboard-podium-card small {
+html[data-theme="dark"] .leaderboard-podium-card small,
+html[data-theme="dark"] .page-admin .table th,
+html[data-theme="dark"] .page-profile .form-control-label,
+html[data-theme="dark"] .page-admin .form-control-label,
+html[data-theme="dark"] .modal-overlay .form-control-label {
   color: #94a3b8 !important;
 }
 html[data-theme="dark"] .navbar-light .navbar-nav .nav-link,
@@ -735,6 +990,9 @@ html[data-theme="dark"] .table td,
 html[data-theme="dark"] .table th {
   color: #e5e7eb;
   border-color: #243044;
+}
+html[data-theme="dark"] .page-admin .table td {
+  color: #cbd5e1;
 }
 html[data-theme="dark"] .thead-light th,
 html[data-theme="dark"] .table .thead-light th {
@@ -756,7 +1014,10 @@ html[data-theme="dark"] .brilliant-streak-day,
 html[data-theme="dark"] .brilliant-node.locked,
 html[data-theme="dark"] .dashboard-course-meta span,
 html[data-theme="dark"] .leaderboard-unlock-track,
-html[data-theme="dark"] .leaderboard-xp-track {
+html[data-theme="dark"] .leaderboard-xp-track,
+html[data-theme="dark"] .page-progress .progress,
+html[data-theme="dark"] .page-courses .progress,
+html[data-theme="dark"] .page-quiz .progress {
   background: #1e293b;
   border-color: #334155;
   color: #cbd5e1;
