@@ -228,40 +228,78 @@
 
 /* ── Auth Page (non-sidebar) ── */
 .auth-page-wrapper { min-height: 100vh; }
+.page-login .auth-page-wrapper,
 .page-register .auth-page-wrapper {
   position: relative;
   overflow: hidden;
+  min-height: 100vh;
   background:
-    linear-gradient(120deg, rgba(94,114,228,0.14) 0 1px, transparent 1px 72px),
-    linear-gradient(30deg, rgba(17,205,239,0.12) 0 1px, transparent 1px 80px),
-    radial-gradient(circle at 12% 18%, rgba(17,205,239,0.34), transparent 26%),
-    radial-gradient(circle at 82% 18%, rgba(94,114,228,0.28), transparent 28%),
-    #f7f9fc;
+    radial-gradient(circle at 18% 18%, rgba(17,205,239,0.22), transparent 28%),
+    radial-gradient(circle at 82% 14%, rgba(94,114,228,0.2), transparent 30%),
+    linear-gradient(135deg, #f8fbff 0%, #f4f7ff 48%, #f8fbff 100%);
 }
+.page-login .auth-page-wrapper::before,
+.page-register .auth-page-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(94,114,228,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17,205,239,0.05) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.65), transparent 76%);
+}
+.page-login .auth-page-wrapper::after,
 .page-register .auth-page-wrapper::after {
   content: "";
   position: absolute;
-  right: -8vw;
-  top: 18vh;
-  width: 42vw;
-  height: 42vw;
-  border-radius: 50%;
-  border: 1px solid rgba(94,114,228,0.18);
-  box-shadow: inset 0 0 0 48px rgba(17,205,239,0.06), 0 30px 90px rgba(94,114,228,0.12);
+  left: 50%;
+  top: 130px;
+  width: min(980px, 82vw);
+  height: 250px;
+  transform: translateX(-50%);
+  border-radius: 999px;
   pointer-events: none;
-  animation: orbitSpin 18s linear infinite;
+  background: linear-gradient(90deg, rgba(17,205,239,0.18), rgba(94,114,228,0.18));
+  filter: blur(34px);
+  opacity: 0.8;
 }
+.page-login .header.bg-gradient-info,
 .page-register .header.bg-gradient-info {
-  background:
-    radial-gradient(circle at 25% 35%, rgba(255,255,255,0.18), transparent 24%),
-    linear-gradient(125deg, #11cdef 0%, #5e72e4 78%) !important;
+  position: relative;
+  z-index: 2;
+  background: transparent !important;
+  padding-top: 4.5rem !important;
+  padding-bottom: 7rem !important;
 }
+.page-login .header .header-body,
+.page-register .header .header-body {
+  margin-bottom: 0 !important;
+}
+.page-login .separator,
+.page-register .separator {
+  display: none !important;
+}
+.page-login .container.mt--8,
+.page-register .container.mt--8 {
+  position: relative;
+  z-index: 3;
+  margin-top: -5.2rem !important;
+}
+.page-login .card,
 .page-register .card {
   position: relative;
   z-index: 2;
-  border: 1px solid rgba(255,255,255,0.68);
+  border: 1px solid rgba(255,255,255,0.78);
+  border-radius: 22px;
   background: rgba(255,255,255,0.9) !important;
+  box-shadow: 0 28px 80px rgba(50,50,93,0.12);
   backdrop-filter: blur(18px);
+}
+.page-login .row.mt-3 a,
+.page-register .row.mt-3 a {
+  color: #5e72e4 !important;
 }
 
 /* ── Progress page bar tweaks ── */
