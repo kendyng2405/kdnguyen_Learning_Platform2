@@ -1,129 +1,118 @@
 // ============================================================
-//  ProfileView.js — User Profile Page Template (MVC2 View)
+//  ProfileView.js — User Profile Page (Argon Style)
 // ============================================================
 
 export class ProfileView {
 
   renderProfile(profile, lang) {
     const t = lang === "vi" ? {
-      title: "Hồ sơ cá nhân",
-      sub: "Quản lý thông tin tài khoản",
-      info: "Thông tin tài khoản",
-      security: "Bảo mật",
-      username: "Tên đăng nhập",
-      email: "Email",
-      fullname: "Họ và tên",
-      dob: "Ngày sinh",
-      readonly: "(Không thể thay đổi)",
-      saveInfo: "Lưu thay đổi",
-      resetPw: "Đặt lại mật khẩu",
+      title: "Hồ sơ cá nhân", sub: "Quản lý thông tin tài khoản",
+      info: "Thông tin tài khoản", security: "Bảo mật",
+      username: "Tên đăng nhập", email: "Email", fullname: "Họ và tên",
+      dob: "Ngày sinh", readonly: "(Không thể thay đổi)",
+      saveInfo: "Lưu thay đổi", resetPw: "Đặt lại mật khẩu",
       resetPwDesc: "Gửi email đặt lại mật khẩu đến địa chỉ email của bạn.",
-      sendReset: "Gửi email đặt lại",
-      dobPh: "dd/mm/yyyy",
-      fullnamePh: "Nhập họ tên đầy đủ",
-      back: "← Quay lại",
-      joinedAt: "Tham gia",
-      role: "Vai trò",
-      roleStudent: "Học viên",
-      roleAdmin: "Quản trị viên",
+      sendReset: "Gửi email đặt lại", fullnamePh: "Nhập họ tên đầy đủ",
+      roleStudent: "Học viên", roleAdmin: "Quản trị viên",
     } : {
-      title: "My Profile",
-      sub: "Manage your account information",
-      info: "Account Information",
-      security: "Security",
-      username: "Username",
-      email: "Email",
-      fullname: "Full Name",
-      dob: "Date of Birth",
-      readonly: "(Cannot be changed)",
-      saveInfo: "Save Changes",
-      resetPw: "Reset Password",
+      title: "My Profile", sub: "Manage your account information",
+      info: "Account Information", security: "Security",
+      username: "Username", email: "Email", fullname: "Full Name",
+      dob: "Date of Birth", readonly: "(Cannot be changed)",
+      saveInfo: "Save Changes", resetPw: "Reset Password",
       resetPwDesc: "Send a password reset email to your email address.",
-      sendReset: "Send Reset Email",
-      dobPh: "dd/mm/yyyy",
-      fullnamePh: "Enter your full name",
-      back: "← Back",
-      joinedAt: "Joined",
-      role: "Role",
-      roleStudent: "Student",
-      roleAdmin: "Administrator",
+      sendReset: "Send Reset Email", fullnamePh: "Enter your full name",
+      roleStudent: "Student", roleAdmin: "Administrator",
     };
 
     const roleLabel = profile?.role === "admin" ? t.roleAdmin : t.roleStudent;
-    const roleBadge = profile?.role === "admin" ? "badge--admin" : "badge--student";
     const initials  = (profile?.fullname || profile?.username || "?").charAt(0).toUpperCase();
 
     return `
-      <div class="profile-page">
-        <div class="profile-hero animate-slide-up">
-          <div class="profile-avatar-lg">${initials}</div>
-          <div class="profile-hero-info">
-            <h1 class="profile-name">${profile?.fullname || profile?.username || "—"}</h1>
-            <p class="profile-username">@${profile?.username || "—"}</p>
-            <span class="badge ${roleBadge}">${roleLabel}</span>
-          </div>
-        </div>
-
-        <div class="profile-tabs animate-slide-up delay-1">
-          <button class="profile-tab active" data-tab="tab-info">
-            👤 ${t.info}
-          </button>
-          <button class="profile-tab" data-tab="tab-security">
-            🔒 ${t.security}
-          </button>
-        </div>
-
-        <!-- Tab: Info -->
-        <div id="tab-info" class="profile-panel active animate-slide-up delay-2">
-          <div class="profile-form-card">
-            <div class="form-group">
-              <label class="form-label">
-                ${t.username}
-                <span class="form-label-readonly">${t.readonly}</span>
-              </label>
-              <input type="text" class="form-input form-input--readonly"
-                value="${profile?.username || ""}" readonly disabled />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">
-                ${t.email}
-                <span class="form-label-readonly">${t.readonly}</span>
-              </label>
-              <input type="email" class="form-input form-input--readonly"
-                value="${profile?.email || ""}" readonly disabled />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">${t.fullname} <span class="label-required">*</span></label>
-              <input type="text" id="profileFullname" class="form-input"
-                value="${profile?.fullname || ""}" placeholder="${t.fullnamePh}" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">${t.dob}</label>
-              <input type="date" id="profileDob" class="form-input"
-                value="${profile?.dob || ""}" />
-              <p class="form-hint">📅 ${lang === "vi" ? "Định dạng: Năm-Tháng-Ngày (YYYY-MM-DD)" : "Format: YYYY-MM-DD"}</p>
-            </div>
-
-            <div class="profile-actions">
-              <button class="btn btn--primary" id="saveProfileBtn">${t.saveInfo}</button>
+      <div class="header pb-8 pt-5 pt-lg-8 d-flex align-items-center" style="min-height:350px; background-image:url(assets/img/theme/profile-cover.jpg); background-size:cover; background-position:center top;">
+        <span class="mask bg-gradient-default opacity-8"></span>
+        <div class="container-fluid d-flex align-items-center">
+          <div class="row">
+            <div class="col-lg-12">
+              <h1 class="display-2 text-white">${profile?.fullname || profile?.username || "—"}</h1>
+              <p class="text-white mt-0 mb-3">@${profile?.username || "—"} · <span class="badge badge-${profile?.role === 'admin' ? 'warning' : 'info'}">${roleLabel}</span></p>
             </div>
           </div>
         </div>
-
-        <!-- Tab: Security -->
-        <div id="tab-security" class="profile-panel animate-slide-up delay-2">
-          <div class="profile-form-card">
-            <div class="security-section">
-              <h3 class="security-title">🔑 ${t.resetPw}</h3>
-              <p class="security-desc">${t.resetPwDesc}</p>
-              <div class="security-email-preview">
-                <span class="security-email-label">${t.email}:</span>
-                <span class="security-email-val">${profile?.email || ""}</span>
+      </div>
+      <div class="container-fluid mt--7">
+        <div class="row">
+          <div class="col-xl-4 order-xl-2 mb-5 mb-xl-0">
+            <div class="card card-profile shadow">
+              <div class="row justify-content-center">
+                <div class="col-lg-3 order-lg-2">
+                  <div class="card-profile-image">
+                    <div class="rounded-circle bg-gradient-primary text-white d-flex align-items-center justify-content-center mx-auto" style="width:120px;height:120px;font-size:3rem;font-weight:700;margin-top:-60px;border:4px solid #fff;">
+                      ${initials}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <button class="btn btn--outline" id="sendResetEmailBtn">${t.sendReset}</button>
+              <div class="card-body pt-0 pt-md-4 text-center" style="margin-top:60px;">
+                <h3>${profile?.fullname || "—"}</h3>
+                <div class="h5 font-weight-300 text-muted">@${profile?.username || "—"}</div>
+                <div class="h5 mt-3">
+                  <span class="mr-3">🔥 ${lang === 'vi' ? 'Chuỗi' : 'Streak'}: ${profile?.streak || 0}</span>
+                  <span>⭐ XP: ${profile?.xp || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-8 order-xl-1">
+            <div class="card shadow">
+              <div class="card-header bg-white border-0">
+                <div class="row align-items-center">
+                  <div class="col-8"><h3 class="mb-0">${t.info}</h3></div>
+                </div>
+              </div>
+              <div class="card-body">
+                <h6 class="heading-small text-muted mb-4">${t.info}</h6>
+                <div class="pl-lg-4">
+                  <div class="row">
+                    <div class="col-lg-6">
+                      <div class="form-group">
+                        <label class="form-control-label">${t.username} <small class="text-muted">${t.readonly}</small></label>
+                        <input type="text" class="form-control form-control-alternative" value="${profile?.username || ""}" readonly disabled />
+                      </div>
+                    </div>
+                    <div class="col-lg-6">
+                      <div class="form-group">
+                        <label class="form-control-label">${t.email} <small class="text-muted">${t.readonly}</small></label>
+                        <input type="email" class="form-control form-control-alternative" value="${profile?.email || ""}" readonly disabled />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-6">
+                      <div class="form-group">
+                        <label class="form-control-label">${t.fullname}</label>
+                        <input type="text" id="profileFullname" class="form-control form-control-alternative" value="${profile?.fullname || ""}" placeholder="${t.fullnamePh}" />
+                      </div>
+                    </div>
+                    <div class="col-lg-6">
+                      <div class="form-group">
+                        <label class="form-control-label">${t.dob}</label>
+                        <input type="date" id="profileDob" class="form-control form-control-alternative" value="${profile?.dob || ""}" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <button class="btn btn-primary" id="saveProfileBtn">${t.saveInfo}</button>
+                </div>
+                <hr class="my-4" />
+                <h6 class="heading-small text-muted mb-4">🔒 ${t.security}</h6>
+                <div class="pl-lg-4">
+                  <p>${t.resetPwDesc}</p>
+                  <p class="text-muted">${t.email}: <strong>${profile?.email || ""}</strong></p>
+                  <button class="btn btn-outline-warning" id="sendResetEmailBtn">${t.sendReset}</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -1,97 +1,88 @@
 // ============================================================
-//  ProgressView.js — Progress Tracking Page Template
+//  ProgressView.js — Progress Page Template (Argon Style)
 // ============================================================
 
 export class ProgressView {
   renderProgress(data, lang) {
     const t = lang === "vi" ? {
-      title: "Tiến độ học tập",
-      sub: "Theo dõi kết quả của bạn",
-      noProgress: "Bạn chưa đăng ký khóa học nào.",
-      lessons: "bài",
-      quizzes: "quiz",
-      completed: "hoàn thành",
-      bestScore: "Điểm cao nhất",
-      viewCourse: "Xem khóa học →",
-      progress: "Tiến độ",
+      title: "Tiến độ học tập", sub: "Theo dõi kết quả của bạn",
+      noProgress: "Bạn chưa đăng ký khóa học nào.", lessons: "bài", quizzes: "quiz",
+      completed: "hoàn thành", bestScore: "Điểm cao nhất",
+      viewCourse: "Xem khóa học →", progress: "Tiến độ", explore: "Khám phá khóa học",
     } : {
-      title: "Learning Progress",
-      sub: "Track your results",
-      noProgress: "You haven't enrolled in any courses yet.",
-      lessons: "lessons",
-      quizzes: "quizzes",
-      completed: "completed",
-      bestScore: "Best Score",
-      viewCourse: "View Course →",
-      progress: "Progress",
+      title: "Learning Progress", sub: "Track your results",
+      noProgress: "You haven't enrolled in any courses yet.", lessons: "lessons", quizzes: "quizzes",
+      completed: "completed", bestScore: "Best Score",
+      viewCourse: "View Course →", progress: "Progress", explore: "Explore Courses",
     };
 
     if (data.length === 0) {
       return `
-        <div class="progress-page">
-          <div class="page-header animate-slide-up">
-            <h1 class="page-title">${t.title}</h1>
-            <p class="page-sub">${t.sub}</p>
+        <div class="header bg-gradient-info pb-8 pt-5 pt-md-8">
+          <div class="container-fluid">
+            <h1 class="text-white mb-0">${t.title}</h1>
+            <p class="text-white mt-1" style="opacity:0.8">${t.sub}</p>
           </div>
-          <div class="empty-state animate-fade">
-            <span>📊</span>
-            <p>${t.noProgress}</p>
-            <button class="btn btn--primary" onclick="window.__router.navigate('courses')">${lang === "vi" ? "Khám phá khóa học" : "Explore Courses"}</button>
+        </div>
+        <div class="container-fluid mt--7">
+          <div class="card shadow">
+            <div class="card-body text-center py-5">
+              <span style="font-size:3rem">📊</span>
+              <p class="text-muted mt-3">${t.noProgress}</p>
+              <button class="btn btn-primary" onclick="window.__router.navigate('courses')">${t.explore}</button>
+            </div>
           </div>
         </div>
       `;
     }
 
     return `
-      <div class="progress-page">
-        <div class="page-header animate-slide-up">
-          <h1 class="page-title">${t.title}</h1>
-          <p class="page-sub">${t.sub}</p>
+      <div class="header bg-gradient-info pb-8 pt-5 pt-md-8">
+        <div class="container-fluid">
+          <h1 class="text-white mb-0">${t.title}</h1>
+          <p class="text-white mt-1" style="opacity:0.8">${t.sub}</p>
         </div>
-
-        <div class="progress-grid animate-slide-up delay-1">
+      </div>
+      <div class="container-fluid mt--7">
+        <div class="row">
           ${data.map(p => {
-            const course   = p.course;
+            const course = p.course;
             if (!course) return "";
-            const total    = p.totalLessons || 0;
-            const done     = p.completedLessons?.length || 0;
-            const pct      = total > 0 ? Math.round((done / total) * 100) : 0;
-            const scores   = Object.values(p.quizScores || {});
+            const total = p.totalLessons || 0;
+            const done = p.completedLessons?.length || 0;
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+            const scores = Object.values(p.quizScores || {});
             const bestScore = scores.length > 0 ? Math.max(...scores.map(s => s.percentage)) : null;
 
             return `
-              <div class="progress-card">
-                <div class="progress-card-header">
-                  <div class="pcourse-thumb" style="background-image:url('${course.thumbnail || ""}')">
-                    ${!course.thumbnail ? '<span>📚</span>' : ""}
-                  </div>
-                  <div class="pcourse-info">
-                    <h3 class="pcourse-title">${course.title}</h3>
-                    <div class="pcourse-meta">
-                      <span>📖 ${done}/${total} ${t.lessons} ${t.completed}</span>
-                      ${scores.length > 0 ? `<span>📝 ${scores.length} ${t.quizzes}</span>` : ""}
+              <div class="col-xl-4 col-lg-6 mb-4">
+                <div class="card shadow">
+                  <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                      <div class="icon icon-shape bg-primary text-white rounded-circle shadow mr-3" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+                        ${course.thumbnail ? `<img src="${course.thumbnail}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : '📚'}
+                      </div>
+                      <div>
+                        <h5 class="mb-0">${course.title}</h5>
+                        <small class="text-muted">📖 ${done}/${total} ${t.lessons} ${t.completed}</small>
+                      </div>
                     </div>
+                    <div class="d-flex justify-content-between mb-1">
+                      <small>${t.progress}</small>
+                      <small class="font-weight-bold">${pct}%</small>
+                    </div>
+                    <div class="progress mb-3" style="height:8px;">
+                      <div class="progress-bar ${pct === 100 ? 'bg-success' : 'bg-primary'}" style="width:${pct}%"></div>
+                    </div>
+                    ${bestScore !== null ? `
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">${t.bestScore}</small>
+                        <span class="badge badge-${bestScore >= 60 ? 'success' : 'danger'}">${bestScore}%</span>
+                      </div>` : ""
+                    }
+                    <button class="btn btn-sm btn-outline-primary btn-block" data-goto-course="${course.id}">${t.viewCourse}</button>
                   </div>
                 </div>
-
-                <div class="progress-bar-section">
-                  <div class="progress-bar-label">
-                    <span>${t.progress}</span>
-                    <span class="pct-text">${pct}%</span>
-                  </div>
-                  <div class="progress-bar-bg">
-                    <div class="progress-bar-fill ${pct === 100 ? 'fill--complete' : ''}" style="width:${pct}%"></div>
-                  </div>
-                </div>
-
-                ${bestScore !== null ? `
-                  <div class="quiz-summary">
-                    <span class="quiz-summary-label">${t.bestScore}</span>
-                    <span class="quiz-summary-score ${bestScore >= 60 ? 'score--good' : 'score--low'}">${bestScore}%</span>
-                  </div>` : ""
-                }
-
-                <button class="btn btn--ghost btn--sm" data-goto-course="${course.id}">${t.viewCourse}</button>
               </div>
             `;
           }).join("")}

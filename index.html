@@ -1,93 +1,205 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Brilliant LMS – Nền tảng học tập</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
 
-  <!-- Safe Unicode fonts: Inter (Latin + Vietnamese) + JetBrains Mono for code -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="assets/css/main.css" />
-  <link rel="stylesheet" href="assets/css/animations.css" />
-  <link rel="stylesheet" href="assets/css/components.css" />
+  <!-- Icons -->
+  <link rel="stylesheet" href="assets/plugins/nucleo/css/nucleo.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Argon Dashboard CSS -->
+  <link rel="stylesheet" href="assets/css/argon-dashboard.css" />
+  <!-- LMS Custom Overrides -->
+  <link rel="stylesheet" href="assets/css/lms-overrides.css" />
 </head>
 <body>
-  <div id="app">
-    <!-- Navbar -->
-    <nav id="navbar" class="navbar hidden">
-      <div class="nav-brand" onclick="window.__router?.navigate('dashboard')" style="cursor:pointer">
-        <span class="brand-icon">🎓</span>
-        <span class="brand-text">Brilliant LMS</span>
+
+  <!-- ============================================================ -->
+  <!-- SIDEBAR (Argon) — hidden until logged in                     -->
+  <!-- ============================================================ -->
+  <nav class="navbar-vertical fixed-left navbar navbar-light bg-white navbar-expand-md" id="sidenav-main" style="display:none;">
+    <div class="container-fluid">
+      <!-- Brand -->
+      <a class="navbar-brand pt-0" href="#" onclick="window.__router?.navigate('dashboard'); return false;">
+        <span style="font-size:1.25rem; font-weight:700; color:#5e72e4;">🎓 Brilliant LMS</span>
+      </a>
+      <!-- Toggler (mobile) -->
+      <button class="navbar-toggler" type="button" id="sidebarToggler">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- Collapse -->
+      <div class="collapse navbar-collapse" id="sidebarCollapse">
+        <!-- Nav -->
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/home" data-page="dashboard">
+              <i class="ni ni-tv-2 text-primary"></i> <span data-vi="Trang chủ" data-en="Dashboard">Trang chủ</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/courses" data-page="courses">
+              <i class="ni ni-books text-orange"></i> <span data-vi="Khóa học" data-en="Courses">Khóa học</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/progress" data-page="progress">
+              <i class="ni ni-chart-bar-32 text-info"></i> <span data-vi="Tiến độ" data-en="Progress">Tiến độ</span>
+            </a>
+          </li>
+          <li class="nav-item nav-item--admin" style="display:none;">
+            <a class="nav-link" href="/admin" data-page="admin">
+              <i class="ni ni-settings-gear-65 text-red"></i> <span data-vi="Quản trị" data-en="Admin">Quản trị</span>
+            </a>
+          </li>
+        </ul>
+        <hr class="my-3" />
+        <ul class="navbar-nav mb-md-3">
+          <li class="nav-item">
+            <a class="nav-link" href="/profile" data-page="profile">
+              <i class="ni ni-single-02 text-yellow"></i> <span data-vi="Hồ sơ" data-en="Profile">Hồ sơ</span>
+            </a>
+          </li>
+        </ul>
       </div>
-      <div class="nav-links" id="navLinks">
-        <a href="/home" class="nav-link" data-page="dashboard" data-vi="Trang chủ" data-en="Home">Trang chủ</a>
-        <a href="/courses" class="nav-link" data-page="courses" data-vi="Khóa học" data-en="Courses">Khóa học</a>
-        <a href="/progress" class="nav-link" data-page="progress" data-vi="Tiến độ" data-en="Progress">Tiến độ</a>
-        <a href="/admin" class="nav-link nav-link--admin hidden" data-page="admin" data-vi="Quản trị" data-en="Admin">Quản trị</a>
-      </div>
-      <div class="nav-actions">
-        <button class="btn-icon" id="langToggle" title="Toggle Language">VI/EN</button>
-        <button class="btn-icon" id="themeToggle" title="Toggle Theme">🌙</button>
-        <div class="nav-user hidden" id="navUser">
-          <span class="streak-badge" id="navStreak" title="Learning Streak" style="font-weight: bold; color: #ff6b6b; padding: 0.2rem 0.6rem; background: rgba(255,107,107,0.1); border-radius: 12px; font-size: 0.85rem; margin-right: 0.5rem;">🔥 0</span>
-          <a href="/profile" class="nav-avatar-btn" id="navAvatarBtn" title="Hồ sơ cá nhân">
-            <span class="nav-avatar" id="navAvatar">?</span>
-          </a>
-          <span class="welcome-text" id="welcomeText"></span>
-          <button class="btn btn--outline btn--sm" id="logoutBtn" data-vi="Đăng xuất" data-en="Logout">Đăng xuất</button>
-        </div>
+    </div>
+  </nav>
+
+  <!-- ============================================================ -->
+  <!-- MAIN CONTENT                                                 -->
+  <!-- ============================================================ -->
+  <div class="main-content" id="mainContent">
+    <!-- Top Navbar (Argon) -->
+    <nav class="navbar navbar-top navbar-expand-md navbar-dark" id="navbar-main" style="display:none;">
+      <div class="container-fluid">
+        <!-- Brand text (current page) -->
+        <span class="h4 mb-0 text-white text-uppercase d-none d-lg-inline-block" id="navBrandText">Dashboard</span>
+        <!-- Search -->
+        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto">
+          <div class="form-group mb-0">
+            <div class="input-group input-group-alternative">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+              </div>
+              <input class="form-control" placeholder="Search" type="text" id="navSearchInput" />
+            </div>
+          </div>
+        </form>
+        <!-- Right nav items -->
+        <ul class="navbar-nav align-items-center d-none d-md-flex">
+          <!-- Language toggle -->
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="langToggle" title="Toggle Language" style="cursor:pointer;">
+              <span class="btn btn-sm btn-neutral" id="langBtnText">VI/EN</span>
+            </a>
+          </li>
+          <!-- Theme toggle -->
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="themeToggle" title="Toggle Theme" style="cursor:pointer;">
+              <i class="fas fa-moon"></i>
+            </a>
+          </li>
+          <!-- Streak -->
+          <li class="nav-item">
+            <span class="nav-link" id="navStreak" style="color:#fb6340; font-weight:600;">🔥 0</span>
+          </li>
+          <!-- User dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link pr-0" href="#" role="button" data-toggle="dropdown" id="userDropdownToggle">
+              <div class="media align-items-center">
+                <span class="avatar avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" id="navAvatar" style="font-weight:700;font-size:0.9rem;">?</span>
+                <div class="media ml-2 d-none d-lg-block">
+                  <span class="mb-0 text-sm font-weight-bold text-white" id="welcomeText"></span>
+                </div>
+              </div>
+            </a>
+            <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-right" id="userDropdownMenu">
+              <div class="dropdown-header noti-title">
+                <h6 class="text-overflow m-0" id="dropdownWelcome">Welcome!</h6>
+              </div>
+              <a href="#" class="dropdown-item" id="dropdownProfile">
+                <i class="ni ni-single-02"></i>
+                <span data-vi="Hồ sơ" data-en="My profile">Hồ sơ</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item" id="logoutBtn">
+                <i class="ni ni-user-run"></i>
+                <span data-vi="Đăng xuất" data-en="Logout">Đăng xuất</span>
+              </a>
+            </div>
+          </li>
+        </ul>
       </div>
     </nav>
 
-    <!-- Hamburger for mobile -->
-    <button class="nav-hamburger hidden" id="navHamburger" aria-label="Menu">☰</button>
-
     <!-- Page Container -->
-    <main id="pageContainer" class="page-container"></main>
+    <div id="pageContainer" class="container-fluid mt--7" style="padding-top:8rem; min-height:80vh;"></div>
 
-    <!-- Toast Notifications -->
-    <div id="toastContainer" class="toast-container"></div>
-
-    <!-- AI Chatbot Widget -->
-    <div id="chatbotWidget" class="chatbot-widget hidden">
-      <div class="chatbot-header">
-        <div class="chatbot-title">
-          <span class="chatbot-avatar">🤖</span>
-          <div>
-            <span class="chatbot-name">BrilliantBot AI</span>
-            <span class="chatbot-status" data-vi="Đang hoạt động" data-en="Online">Đang hoạt động</span>
+    <!-- Footer -->
+    <footer class="footer" id="appFooter" style="display:none;">
+      <div class="container-fluid">
+        <div class="row align-items-center justify-content-xl-between">
+          <div class="col-xl-6">
+            <div class="copyright text-center text-xl-left text-muted">
+              © 2026 <a href="#" class="font-weight-bold ml-1">Brilliant LMS</a>
+            </div>
           </div>
         </div>
-        <button class="chatbot-close" id="chatbotClose">✕</button>
       </div>
-      <div class="chatbot-messages" id="chatbotMessages">
-        <div class="chat-message chat-message--bot">
-          <span class="chat-avatar">🤖</span>
-          <div class="chat-bubble">Xin chào! Tôi là BrilliantBot. Hỏi tôi bất cứ điều gì về bài học nhé! 😊</div>
+    </footer>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- AI Chatbot Widget (kept as-is)                               -->
+  <!-- ============================================================ -->
+  <div id="chatbotWidget" class="chatbot-widget hidden">
+    <div class="chatbot-header">
+      <div class="chatbot-title">
+        <span class="chatbot-avatar">🤖</span>
+        <div>
+          <span class="chatbot-name">BrilliantBot AI</span>
+          <span class="chatbot-status" data-vi="Đang hoạt động" data-en="Online">Đang hoạt động</span>
         </div>
       </div>
-      <div class="chatbot-input-area">
-        <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Hỏi về bài học..." />
-        <button class="chatbot-send" id="chatbotSend">➤</button>
+      <button class="chatbot-close" id="chatbotClose">✕</button>
+    </div>
+    <div class="chatbot-messages" id="chatbotMessages">
+      <div class="chat-message chat-message--bot">
+        <span class="chat-avatar">🤖</span>
+        <div class="chat-bubble">Xin chào! Tôi là BrilliantBot. Hỏi tôi bất cứ điều gì về bài học nhé! 😊</div>
       </div>
     </div>
-    <button class="chatbot-fab hidden" id="chatbotFab">
-      <span class="fab-icon">💬</span>
-      <span class="fab-badge hidden" id="fabBadge">1</span>
-    </button>
-
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
-      <div class="loading-spinner">
-        <div class="spinner-ring"></div>
-        <span class="spinner-text">Brilliant LMS</span>
-      </div>
+    <div class="chatbot-input-area">
+      <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Hỏi về bài học..." />
+      <button class="chatbot-send" id="chatbotSend">➤</button>
     </div>
   </div>
+  <button class="chatbot-fab hidden" id="chatbotFab">
+    <span class="fab-icon">💬</span>
+    <span class="fab-badge hidden" id="fabBadge">1</span>
+  </button>
+
+  <!-- ============================================================ -->
+  <!-- Loading Overlay                                              -->
+  <!-- ============================================================ -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner">
+      <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <span class="d-block mt-3 font-weight-bold text-primary">Brilliant LMS</span>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toastContainer" class="toast-container"></div>
 
   <!-- Firebase SDK -->
   <script type="module">
@@ -106,5 +218,9 @@
     window.__app = new App();
     window.__app.init();
   </script>
+
+  <!-- Bootstrap JS for dropdowns -->
+  <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

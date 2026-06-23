@@ -1,12 +1,12 @@
 // ============================================================
-//  AuthView.js — Login & Register Page Templates (MVC2 View)
+//  AuthView.js — Login & Register (Argon Dashboard Style)
 // ============================================================
 
 export class AuthView {
 
   renderLogin(lang) {
     const t = lang === "vi" ? {
-      title: "Chào mừng trở lại",
+      title: "Chào mừng trở lại!",
       sub: "Đăng nhập để tiếp tục học tập",
       identifier: "Tên đăng nhập hoặc Email",
       password: "Mật khẩu",
@@ -16,7 +16,7 @@ export class AuthView {
       identifierPh: "username hoặc email@example.com",
       passPh: "Mật khẩu của bạn",
     } : {
-      title: "Welcome Back",
+      title: "Welcome Back!",
       sub: "Sign in to continue learning",
       identifier: "Username or Email",
       password: "Password",
@@ -28,40 +28,63 @@ export class AuthView {
     };
 
     return `
-      <div class="auth-page">
-        <div class="auth-bg">
-          <div class="auth-blob blob-1"></div>
-          <div class="auth-blob blob-2"></div>
-          <div class="auth-blob blob-3"></div>
-        </div>
-        <div class="auth-card animate-slide-up">
-          <div class="auth-brand">
-            <div class="auth-logo">🎓</div>
-            <h1 class="auth-logo-text">Brilliant LMS</h1>
-          </div>
-          <h2 class="auth-title">${t.title}</h2>
-          <p class="auth-sub">${t.sub}</p>
-          <form id="loginForm" class="auth-form" novalidate>
-            <div class="form-group">
-              <label class="form-label">${t.identifier}</label>
-              <input type="text" id="loginIdentifier" class="form-input"
-                placeholder="${t.identifierPh}" required autocomplete="username" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">${t.password}</label>
-              <div class="input-password-wrap">
-                <input type="password" id="loginPassword" class="form-input"
-                  placeholder="${t.passPh}" required autocomplete="current-password" />
-                <button type="button" class="btn-eye"
-                  onclick="const i=this.previousElementSibling; i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'👁':'🙈'">👁</button>
+      <div class="auth-page-wrapper">
+        <div class="header bg-gradient-info py-7 py-lg-8">
+          <div class="container">
+            <div class="header-body text-center mb-7">
+              <div class="row justify-content-center">
+                <div class="col-lg-5 col-md-6">
+                  <h1 class="text-white">🎓 Brilliant LMS</h1>
+                  <p class="text-lead text-light">${t.sub}</p>
+                </div>
               </div>
             </div>
-            <button type="submit" class="btn btn--primary btn--submit btn--full">${t.submit}</button>
-          </form>
-          <p class="auth-switch">
-            ${t.noAccount}
-            <a href="/register" id="goToRegister" class="link">${t.register}</a>
-          </p>
+          </div>
+          <div class="separator separator-bottom separator-skew zindex-100">
+            <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" version="1.1" viewBox="0 0 2560 100" x="0" y="0">
+              <polygon class="fill-default" points="2560 0 2560 100 0 100"></polygon>
+            </svg>
+          </div>
+        </div>
+        <div class="container mt--8 pb-5">
+          <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7">
+              <div class="card bg-secondary shadow border-0">
+                <div class="card-body px-lg-5 py-lg-5">
+                  <div class="text-center text-muted mb-4">
+                    <small>${t.title}</small>
+                  </div>
+                  <form id="loginForm" novalidate>
+                    <div class="form-group mb-3">
+                      <div class="input-group input-group-alternative">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="ni ni-email-83"></i></span>
+                        </div>
+                        <input class="form-control" placeholder="${t.identifierPh}" type="text" id="loginIdentifier" required autocomplete="username" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <div class="input-group input-group-alternative">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                        </div>
+                        <input class="form-control" placeholder="${t.passPh}" type="password" id="loginPassword" required autocomplete="current-password" />
+                      </div>
+                    </div>
+                    <div class="text-center">
+                      <button type="submit" class="btn btn-primary my-4">${t.submit}</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <div class="row mt-3">
+                <div class="col-6"></div>
+                <div class="col-6 text-right">
+                  <a href="/register" class="text-light" id="goToRegister"><small>${t.noAccount} ${t.register}</small></a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -84,8 +107,8 @@ export class AuthView {
       emailPh: "email@example.com",
       passPh: "Ít nhất 6 ký tự",
       confirmPh: "Nhập lại mật khẩu",
-      usernameHint: "Chỉ chữ cái thường, số, dấu gạch dưới (_). Không dấu, không khoảng trắng.",
-      passwordHint: "Tối thiểu 6 ký tự. Nên có chữ HOA, số và ký tự đặc biệt (!@#$...).",
+      usernameHint: "Chỉ chữ cái thường, số, dấu gạch dưới (_).",
+      passwordHint: "Tối thiểu 6 ký tự.",
     } : {
       title: "Create Account",
       sub: "Start your learning journey",
@@ -102,73 +125,93 @@ export class AuthView {
       emailPh: "email@example.com",
       passPh: "At least 6 characters",
       confirmPh: "Re-enter password",
-      usernameHint: "Lowercase letters, numbers, underscore (_) only. No spaces or accents.",
-      passwordHint: "Minimum 6 characters. Recommended: uppercase, number, special char (!@#$...).",
+      usernameHint: "Lowercase letters, numbers, underscore (_) only.",
+      passwordHint: "Minimum 6 characters.",
     };
 
     return `
-      <div class="auth-page">
-        <div class="auth-bg">
-          <div class="auth-blob blob-1"></div>
-          <div class="auth-blob blob-2"></div>
-          <div class="auth-blob blob-3"></div>
-        </div>
-        <div class="auth-card auth-card--register animate-slide-up">
-          <div class="auth-brand">
-            <div class="auth-logo">🎓</div>
-            <h1 class="auth-logo-text">Brilliant LMS</h1>
+      <div class="auth-page-wrapper">
+        <div class="header bg-gradient-info py-7 py-lg-8">
+          <div class="container">
+            <div class="header-body text-center mb-7">
+              <div class="row justify-content-center">
+                <div class="col-lg-5 col-md-6">
+                  <h1 class="text-white">🎓 Brilliant LMS</h1>
+                  <p class="text-lead text-light">${t.sub}</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <h2 class="auth-title">${t.title}</h2>
-          <p class="auth-sub">${t.sub}</p>
-          <form id="registerForm" class="auth-form" novalidate>
-
-            <div class="form-group">
-              <label class="form-label">${t.username} <span class="label-required">*</span></label>
-              <input type="text" id="registerUsername" class="form-input"
-                placeholder="${t.usernamePh}" required autocomplete="username"
-                pattern="[a-z0-9_]+" />
-              <p class="form-hint">⚠ ${t.usernameHint}</p>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">${t.fullname} <span class="label-required">*</span></label>
-              <input type="text" id="registerFullname" class="form-input"
-                placeholder="${t.fullnamePh}" required />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">${t.email} <span class="label-required">*</span></label>
-              <input type="email" id="registerEmail" class="form-input"
-                placeholder="${t.emailPh}" required autocomplete="email" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">${t.password} <span class="label-required">*</span></label>
-              <div class="input-password-wrap">
-                <input type="password" id="registerPassword" class="form-input"
-                  placeholder="${t.passPh}" required autocomplete="new-password" />
-                <button type="button" class="btn-eye"
-                  onclick="const i=this.previousElementSibling; i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'👁':'🙈'">👁</button>
+          <div class="separator separator-bottom separator-skew zindex-100">
+            <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" version="1.1" viewBox="0 0 2560 100" x="0" y="0">
+              <polygon class="fill-default" points="2560 0 2560 100 0 100"></polygon>
+            </svg>
+          </div>
+        </div>
+        <div class="container mt--8 pb-5">
+          <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+              <div class="card bg-secondary shadow border-0">
+                <div class="card-body px-lg-5 py-lg-5">
+                  <div class="text-center text-muted mb-4">
+                    <small>${t.title}</small>
+                  </div>
+                  <form id="registerForm" novalidate>
+                    <div class="form-group">
+                      <div class="input-group input-group-alternative mb-3">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="ni ni-hat-3"></i></span>
+                        </div>
+                        <input class="form-control" placeholder="${t.usernamePh}" type="text" id="registerUsername" required autocomplete="username" pattern="[a-z0-9_]+" />
+                      </div>
+                      <small class="text-muted">${t.usernameHint}</small>
+                    </div>
+                    <div class="form-group">
+                      <div class="input-group input-group-alternative mb-3">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="ni ni-single-02"></i></span>
+                        </div>
+                        <input class="form-control" placeholder="${t.fullnamePh}" type="text" id="registerFullname" required />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <div class="input-group input-group-alternative mb-3">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="ni ni-email-83"></i></span>
+                        </div>
+                        <input class="form-control" placeholder="${t.emailPh}" type="email" id="registerEmail" required autocomplete="email" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <div class="input-group input-group-alternative">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                        </div>
+                        <input class="form-control" placeholder="${t.passPh}" type="password" id="registerPassword" required autocomplete="new-password" />
+                      </div>
+                      <small class="text-muted">${t.passwordHint}</small>
+                    </div>
+                    <div class="form-group">
+                      <div class="input-group input-group-alternative">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                        </div>
+                        <input class="form-control" placeholder="${t.confirmPh}" type="password" id="registerConfirm" required autocomplete="new-password" />
+                      </div>
+                    </div>
+                    <div class="text-center">
+                      <button type="submit" class="btn btn-primary my-4">${t.submit}</button>
+                    </div>
+                  </form>
+                </div>
               </div>
-              <p class="form-hint">🔒 ${t.passwordHint}</p>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">${t.confirm} <span class="label-required">*</span></label>
-              <div class="input-password-wrap">
-                <input type="password" id="registerConfirm" class="form-input"
-                  placeholder="${t.confirmPh}" required autocomplete="new-password" />
-                <button type="button" class="btn-eye"
-                  onclick="const i=this.previousElementSibling; i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'👁':'🙈'">👁</button>
+              <div class="row mt-3">
+                <div class="col-12 text-center">
+                  <a href="/login" class="text-light" id="goToLogin"><small>${t.hasAccount} ${t.login}</small></a>
+                </div>
               </div>
             </div>
-
-            <button type="submit" class="btn btn--primary btn--submit btn--full">${t.submit}</button>
-          </form>
-          <p class="auth-switch">
-            ${t.hasAccount}
-            <a href="/login" id="goToLogin" class="link">${t.login}</a>
-          </p>
+          </div>
         </div>
       </div>
     `;

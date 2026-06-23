@@ -1,66 +1,60 @@
 // ============================================================
-//  QuizView.js — Quiz Page Templates
+//  QuizView.js — Quiz Page Templates (Argon Style)
 // ============================================================
 
 export class QuizView {
   renderQuiz(course, quiz, lang) {
     const t = lang === "vi" ? {
-      back: "← Thoát",
-      timer: "Thời gian",
-      submit: "Nộp bài",
-      answered: "đã trả lời",
-      of: "/",
+      back: "← Thoát", timer: "Thời gian", submit: "Nộp bài", answered: "đã trả lời", of: "/",
     } : {
-      back: "← Exit",
-      timer: "Time",
-      submit: "Submit",
-      answered: "answered",
-      of: "/",
+      back: "← Exit", timer: "Time", submit: "Submit", answered: "answered", of: "/",
     };
 
     const questions = quiz.questions || [];
     return `
-      <div class="quiz-page">
-        <div class="quiz-topbar animate-slide-up">
-          <button class="btn btn--ghost btn--sm" id="backToCourse">${t.back}</button>
-          <div class="quiz-title-wrap">
-            <h2 class="quiz-page-title">${quiz.title}</h2>
-            <span class="quiz-course-name">${course?.title || ""}</span>
+      <div class="header bg-gradient-default pb-6 pt-5 pt-md-8">
+        <div class="container-fluid">
+          <div class="d-flex justify-content-between align-items-center">
+            <button class="btn btn-sm btn-neutral" id="backToCourse">${t.back}</button>
+            <div class="text-center text-white">
+              <h3 class="mb-0 text-white">${quiz.title}</h3>
+              <small style="opacity:0.7">${course?.title || ""}</small>
+            </div>
+            ${quiz.timeLimitMinutes ? `
+              <div class="bg-white rounded px-3 py-2 shadow" style="font-weight:700;">
+                ⏱ <span id="quizTimer">${String(quiz.timeLimitMinutes).padStart(2,"0")}:00</span>
+              </div>` : `<div></div>`
+            }
           </div>
-          ${quiz.timeLimitMinutes ? `
-            <div class="quiz-timer-wrap">
-              <span class="timer-icon">⏱</span>
-              <span id="quizTimer" class="quiz-timer">${String(quiz.timeLimitMinutes).padStart(2,"0")}:00</span>
-            </div>` : "<div></div>"
-          }
+        </div>
+      </div>
+      <div class="container-fluid mt--6">
+        <div class="mb-3">
+          <div class="progress" style="height:6px;">
+            <div class="progress-bar bg-primary" id="quizProgress" style="width:0%"></div>
+          </div>
+          <small class="text-muted"><span id="quizProgressText">0/${questions.length}</span> ${t.answered}</small>
         </div>
 
-        <div class="quiz-progress-bar-wrap animate-fade">
-          <div class="quiz-progress-bar" id="quizProgress" style="width:0%"></div>
-        </div>
-        <div class="quiz-answered-text">
-          <span id="quizProgressText">0/${questions.length}</span> ${t.answered}
-        </div>
-
-        <div class="quiz-questions animate-slide-up delay-1">
-          ${questions.map((q, i) => `
-            <div class="quiz-question-card">
-              <div class="question-number">${lang === "vi" ? "Câu" : "Q"} ${i + 1}</div>
-              <p class="question-text">${q.question}</p>
-              <div class="question-options">
+        ${questions.map((q, i) => `
+          <div class="card shadow mb-3">
+            <div class="card-body">
+              <span class="badge badge-primary mb-2">${lang === "vi" ? "Câu" : "Q"} ${i + 1}</span>
+              <p class="font-weight-bold mb-3">${q.question}</p>
+              <div class="quiz-options">
                 ${(q.options || []).map((opt, j) => `
-                  <div class="quiz-option" data-question="${i}" data-value="${j}">
-                    <span class="option-letter">${String.fromCharCode(65 + j)}</span>
-                    <span class="option-text">${opt}</span>
+                  <div class="quiz-option d-flex align-items-center p-2 mb-2 border rounded" data-question="${i}" data-value="${j}" style="cursor:pointer; transition: all 0.15s;">
+                    <span class="badge badge-circle badge-default mr-3" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;">${String.fromCharCode(65 + j)}</span>
+                    <span>${opt}</span>
                   </div>
                 `).join("")}
               </div>
             </div>
-          `).join("")}
-        </div>
+          </div>
+        `).join("")}
 
-        <div class="quiz-submit-wrap animate-fade delay-2">
-          <button class="btn btn--primary btn--lg" id="submitQuizBtn">${t.submit}</button>
+        <div class="text-center py-4">
+          <button class="btn btn-lg btn-primary" id="submitQuizBtn">${t.submit}</button>
         </div>
       </div>
     `;
@@ -74,73 +68,55 @@ export class QuizView {
 
     const t = lang === "vi" ? {
       title: passed ? "🎉 Chúc mừng! Bạn đã vượt qua!" : "😔 Chưa đạt. Cố gắng hơn nhé!",
-      score: "Điểm số",
-      correct: "Đúng",
-      wrong: "Sai",
-      retake: "Làm lại",
-      back: "← Quay lại",
-      review: "Xem đáp án",
-      yourAnswer: "Bạn chọn",
-      correctAnswer: "Đáp án đúng",
+      score: "Điểm số", correct: "Đúng", wrong: "Sai",
+      retake: "Làm lại", back: "← Quay lại", review: "Xem đáp án",
+      yourAnswer: "Bạn chọn", correctAnswer: "Đáp án đúng",
     } : {
       title: passed ? "🎉 Congratulations! You passed!" : "😔 Not passed. Keep trying!",
-      score: "Score",
-      correct: "Correct",
-      wrong: "Wrong",
-      retake: "Retake",
-      back: "← Back",
-      review: "Review Answers",
-      yourAnswer: "Your Answer",
-      correctAnswer: "Correct Answer",
+      score: "Score", correct: "Correct", wrong: "Wrong",
+      retake: "Retake", back: "← Back", review: "Review Answers",
+      yourAnswer: "Your Answer", correctAnswer: "Correct Answer",
     };
 
     return `
-      <div class="quiz-result-page">
-        <div class="result-card animate-slide-up ${passed ? 'result--pass' : 'result--fail'}">
-          <div class="result-score-ring">
-            <svg viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="54" fill="none" stroke="var(--color-border)" stroke-width="8"/>
-              <circle cx="60" cy="60" r="54" fill="none" stroke="${passed ? 'var(--color-success)' : 'var(--color-error)'}" 
-                stroke-width="8" stroke-dasharray="${2 * Math.PI * 54}" 
-                stroke-dashoffset="${2 * Math.PI * 54 * (1 - pct/100)}"
-                stroke-linecap="round" transform="rotate(-90 60 60)" class="ring-fill"/>
-            </svg>
-            <div class="ring-text">
-              <span class="ring-pct">${pct}%</span>
-              <span class="ring-label">${t.score}</span>
+      <div class="header ${passed ? 'bg-gradient-success' : 'bg-gradient-danger'} pb-8 pt-5 pt-md-8">
+        <div class="container-fluid text-center">
+          <div class="py-3">
+            <h1 class="text-white display-2 font-weight-bold">${pct}%</h1>
+            <p class="text-white h3">${t.title}</p>
+            <div class="mt-3">
+              <span class="badge badge-success badge-lg mr-2">✓ ${score} ${t.correct}</span>
+              <span class="badge badge-danger badge-lg">✕ ${total - score} ${t.wrong}</span>
             </div>
-          </div>
-          <h2 class="result-title">${t.title}</h2>
-          <div class="result-stats">
-            <span class="stat-correct">✓ ${score} ${t.correct}</span>
-            <span class="stat-wrong">✕ ${total - score} ${t.wrong}</span>
-          </div>
-          <div class="result-actions">
-            <button class="btn btn--outline" id="retakeQuiz">${t.retake}</button>
-            <button class="btn btn--ghost" id="backToCourse">${t.back}</button>
+            <div class="mt-4">
+              <button class="btn btn-neutral mr-2" id="retakeQuiz">${t.retake}</button>
+              <button class="btn btn-outline-white" id="backToCourse">${t.back}</button>
+            </div>
           </div>
         </div>
-
-        <div class="result-review animate-slide-up delay-1">
-          <h3 class="review-title">${t.review}</h3>
-          ${results.map((r, i) => `
-            <div class="review-item ${r.isCorrect ? 'review--correct' : 'review--wrong'}">
-              <div class="review-q">
-                <span class="review-num">${i + 1}</span>
-                <span class="review-text">${r.question}</span>
-                <span class="review-icon">${r.isCorrect ? "✓" : "✕"}</span>
-              </div>
-              ${!r.isCorrect ? `
-                <div class="review-answers">
-                  <span class="your-ans">❌ ${t.yourAnswer}: ${r.userAnswer !== null ? r.options[parseInt(r.userAnswer)] : (lang === "vi" ? "Chưa trả lời" : "Not answered")}</span>
-                  <span class="correct-ans">✅ ${t.correctAnswer}: ${r.options[parseInt(r.correct)]}</span>
-                  <div style="margin-top: 0.5rem">
-                    <button class="btn btn--outline btn--xs btn-explain-ai" data-question="${r.question}" data-correct="${r.options[parseInt(r.correct)]}" data-wrong="${r.userAnswer !== null ? r.options[parseInt(r.userAnswer)] : ''}">🤖 ${lang === 'vi' ? 'Hỏi AI giải thích' : 'Ask AI to Explain'}</button>
+      </div>
+      <div class="container-fluid mt--7">
+        <div class="card shadow">
+          <div class="card-header border-0"><h3 class="mb-0">${t.review}</h3></div>
+          <div class="card-body p-0">
+            ${results.map((r, i) => `
+              <div class="p-3 border-bottom ${r.isCorrect ? '' : 'bg-lighter'}">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <span class="badge badge-${r.isCorrect ? 'success' : 'danger'} mr-2">${i + 1}</span>
+                    <strong>${r.question}</strong>
                   </div>
-                </div>` : ""
-              }
-            </div>
-          `).join("")}
+                  <span class="badge badge-${r.isCorrect ? 'success' : 'danger'}">${r.isCorrect ? "✓" : "✕"}</span>
+                </div>
+                ${!r.isCorrect ? `
+                  <div class="mt-2 ml-4">
+                    <small class="text-danger d-block">❌ ${t.yourAnswer}: ${r.userAnswer !== null ? r.options[parseInt(r.userAnswer)] : (lang === "vi" ? "Chưa trả lời" : "Not answered")}</small>
+                    <small class="text-success d-block">✅ ${t.correctAnswer}: ${r.options[parseInt(r.correct)]}</small>
+                    <button class="btn btn-sm btn-outline-primary mt-1 btn-explain-ai" data-question="${r.question}" data-correct="${r.options[parseInt(r.correct)]}" data-wrong="${r.userAnswer !== null ? r.options[parseInt(r.userAnswer)] : ''}">🤖 ${lang === 'vi' ? 'Hỏi AI giải thích' : 'Ask AI to Explain'}</button>
+                  </div>` : ""}
+              </div>
+            `).join("")}
+          </div>
         </div>
       </div>
     `;

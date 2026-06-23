@@ -1,5 +1,5 @@
 // ============================================================
-//  CourseView.js — Course & Lesson Page Templates
+//  CourseView.js — Course & Lesson Page Templates (Argon Style)
 // ============================================================
 
 export class CourseView {
@@ -16,71 +16,108 @@ export class CourseView {
 
     const t = lang === "vi" ? {
       greeting: `Chào mừng trở lại, ${name}! 👋`,
-      sub: "Tiếp tục hành trình học tập của bạn",
-      totalCourses: "Tổng khóa học",
-      enrolled: "Đã đăng ký",
-      completed: "Hoàn thành",
-      recent: "Khóa học gần đây",
-      allCourses: "Xem tất cả",
-      noCourses: "Chưa có khóa học nào.",
-      startLearning: "Bắt đầu học",
-      continueLearn: "Tiếp tục",
+      sub: "Tiếp tục hành trình học tập",
+      totalCourses: "Tổng khóa học", enrolled: "Đã đăng ký", completed: "Hoàn thành",
+      recent: "Khóa học gần đây", allCourses: "Xem tất cả", noCourses: "Chưa có khóa học nào.",
       lessons: "bài học",
     } : {
       greeting: `Welcome back, ${name}! 👋`,
       sub: "Continue your learning journey",
-      totalCourses: "Total Courses",
-      enrolled: "Enrolled",
-      completed: "Completed",
-      recent: "Recent Courses",
-      allCourses: "View All",
-      noCourses: "No courses yet.",
-      startLearning: "Start Learning",
-      continueLearn: "Continue",
+      totalCourses: "Total Courses", enrolled: "Enrolled", completed: "Completed",
+      recent: "Recent Courses", allCourses: "View All", noCourses: "No courses yet.",
       lessons: "lessons",
     };
 
     const recentCourses = courses.slice(0, 4);
 
     return `
-      <div class="dashboard-page">
-        <div class="dashboard-hero">
-          <div class="hero-content">
-            <h1 class="hero-title animate-slide-up">${t.greeting}</h1>
-            <p class="hero-sub animate-slide-up delay-1">${t.sub}</p>
+      <div class="header bg-gradient-info pb-8 pt-5 pt-md-8">
+        <div class="container-fluid">
+          <div class="header-body">
+            <div class="row">
+              <div class="col-xl-12">
+                <h1 class="text-white mb-0">${t.greeting}</h1>
+                <p class="text-white mt-1 mb-4" style="opacity:0.8">${t.sub}</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xl-4 col-lg-6">
+                <div class="card card-stats mb-4 mb-xl-0">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col">
+                        <h5 class="card-title text-uppercase text-muted mb-0">${t.totalCourses}</h5>
+                        <span class="h2 font-weight-bold mb-0">${totalCourses}</span>
+                      </div>
+                      <div class="col-auto">
+                        <div class="icon icon-shape bg-danger text-white rounded-circle shadow">
+                          <i class="fas fa-book"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-4 col-lg-6">
+                <div class="card card-stats mb-4 mb-xl-0">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col">
+                        <h5 class="card-title text-uppercase text-muted mb-0">${t.enrolled}</h5>
+                        <span class="h2 font-weight-bold mb-0">${enrolled}</span>
+                      </div>
+                      <div class="col-auto">
+                        <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
+                          <i class="fas fa-pencil-alt"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-4 col-lg-6">
+                <div class="card card-stats mb-4 mb-xl-0">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col">
+                        <h5 class="card-title text-uppercase text-muted mb-0">${t.completed}</h5>
+                        <span class="h2 font-weight-bold mb-0">${completedCount}</span>
+                      </div>
+                      <div class="col-auto">
+                        <div class="icon icon-shape bg-success text-white rounded-circle shadow">
+                          <i class="fas fa-trophy"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="hero-illustration animate-fade delay-2">🎓</div>
         </div>
-
-        <div class="stats-grid animate-slide-up delay-2">
-          <div class="stat-card">
-            <div class="stat-icon">📚</div>
-            <div class="stat-value">${totalCourses}</div>
-            <div class="stat-label">${t.totalCourses}</div>
+      </div>
+      <div class="container-fluid mt--7">
+        <div class="row">
+          <div class="col">
+            <div class="card shadow">
+              <div class="card-header border-0">
+                <div class="row align-items-center">
+                  <div class="col"><h3 class="mb-0">${t.recent}</h3></div>
+                  <div class="col text-right">
+                    <button class="btn btn-sm btn-primary" onclick="window.__router.navigate('courses')">${t.allCourses} →</button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                ${recentCourses.length === 0
+                  ? `<p class="text-muted text-center py-4">${t.noCourses}</p>`
+                  : `<div class="row course-card-grid">
+                      ${recentCourses.map(c => this._courseCard(c, allProgress.find(p => p.courseId === c.id), lang)).join("")}
+                    </div>`
+                }
+              </div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-icon">✏️</div>
-            <div class="stat-value">${enrolled}</div>
-            <div class="stat-label">${t.enrolled}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🏆</div>
-            <div class="stat-value">${completedCount}</div>
-            <div class="stat-label">${t.completed}</div>
-          </div>
-        </div>
-
-        <div class="section animate-slide-up delay-3">
-          <div class="section-header">
-            <h2 class="section-title">${t.recent}</h2>
-            <button class="btn btn--ghost btn--sm" onclick="window.__router.navigate('courses')">${t.allCourses} →</button>
-          </div>
-          ${recentCourses.length === 0
-            ? `<div class="empty-state"><span>📭</span><p>${t.noCourses}</p></div>`
-            : `<div class="courses-grid">
-                ${recentCourses.map(c => this._courseCard(c, allProgress.find(p => p.courseId === c.id), lang)).join("")}
-              </div>`
-          }
         </div>
       </div>
     `;
@@ -88,34 +125,28 @@ export class CourseView {
 
   renderCourseList(courses, progressMap, profile, lang) {
     const t = lang === "vi" ? {
-      title: "Khóa học",
-      sub: "Khám phá và học tập",
-      enroll: "Đăng ký",
-      enrolled: "Đã đăng ký",
-      view: "Xem khóa học",
-      noCourses: "Chưa có khóa học nào.",
-      lessons: "bài học",
+      title: "Khóa học", sub: "Khám phá và học tập",
+      enroll: "Đăng ký", enrolled: "Đã đăng ký", view: "Xem khóa học",
+      noCourses: "Chưa có khóa học nào.", lessons: "bài học",
       level: { beginner: "Cơ bản", intermediate: "Trung cấp", advanced: "Nâng cao" },
     } : {
-      title: "Courses",
-      sub: "Explore and learn",
-      enroll: "Enroll",
-      enrolled: "Enrolled",
-      view: "View Course",
-      noCourses: "No courses available.",
-      lessons: "lessons",
+      title: "Courses", sub: "Explore and learn",
+      enroll: "Enroll", enrolled: "Enrolled", view: "View Course",
+      noCourses: "No courses available.", lessons: "lessons",
       level: { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" },
     };
 
     return `
-      <div class="courses-page">
-        <div class="page-header animate-slide-up">
-          <h1 class="page-title">${t.title}</h1>
-          <p class="page-sub">${t.sub}</p>
+      <div class="header bg-gradient-info pb-8 pt-5 pt-md-8">
+        <div class="container-fluid">
+          <h1 class="text-white mb-0">${t.title}</h1>
+          <p class="text-white mt-1" style="opacity:0.8">${t.sub}</p>
         </div>
+      </div>
+      <div class="container-fluid mt--7">
         ${courses.length === 0
-          ? `<div class="empty-state animate-fade"><span>📭</span><p>${t.noCourses}</p></div>`
-          : `<div class="courses-grid animate-slide-up delay-1">
+          ? `<div class="card shadow"><div class="card-body text-center py-5"><p class="text-muted">${t.noCourses}</p></div></div>`
+          : `<div class="row course-card-grid">
               ${courses.map(c => {
                 const progress = progressMap[c.id];
                 const isEnrolled = !!progress?.enrolledAt;
@@ -134,145 +165,117 @@ export class CourseView {
     const pct = totalLessons > 0 ? Math.round((completedLess.length / totalLessons) * 100) : 0;
 
     const t = lang === "vi" ? {
-      back: "← Quay lại",
-      enroll: "Đăng ký khóa học",
-      enrolled: "Đã đăng ký",
-      lessons: "Bài học",
-      quizzes: "Bài kiểm tra",
-      progress: "Tiến độ",
-      completed: "hoàn thành",
-      noLessons: "Chưa có bài học.",
-      noQuizzes: "Chưa có bài kiểm tra.",
-      done: "✓",
-      start: "Bắt đầu",
-      take: "Làm bài",
+      back: "← Quay lại", enroll: "Đăng ký khóa học", enrolled: "Đã đăng ký",
+      lessons: "Bài học", quizzes: "Bài kiểm tra", progress: "Tiến độ",
+      completed: "hoàn thành", noLessons: "Chưa có bài học.", noQuizzes: "Chưa có bài kiểm tra.",
+      done: "✓", start: "Bắt đầu", take: "Làm bài",
     } : {
-      back: "← Back",
-      enroll: "Enroll Now",
-      enrolled: "Enrolled",
-      lessons: "Lessons",
-      quizzes: "Quizzes",
-      progress: "Progress",
-      completed: "completed",
-      noLessons: "No lessons yet.",
-      noQuizzes: "No quizzes yet.",
-      done: "✓",
-      start: "Start",
-      take: "Take Quiz",
+      back: "← Back", enroll: "Enroll Now", enrolled: "Enrolled",
+      lessons: "Lessons", quizzes: "Quizzes", progress: "Progress",
+      completed: "completed", noLessons: "No lessons yet.", noQuizzes: "No quizzes yet.",
+      done: "✓", start: "Start", take: "Take Quiz",
     };
 
-    const levelBadge = { beginner: "🟢", intermediate: "🟡", advanced: "🔴" }[course.level] || "📘";
+    const levelMap = { beginner: "bg-success", intermediate: "bg-warning", advanced: "bg-danger" };
+    const levelBg = levelMap[course.level] || "bg-primary";
 
     return `
-      <div class="course-detail-page">
-        <button class="btn btn--ghost btn--sm back-btn animate-fade" id="backToCourses">${t.back}</button>
-
-        <div class="course-hero animate-slide-up">
-          <div class="course-hero-thumb" style="background-image: url('${course.thumbnail || ""}')">
-            ${!course.thumbnail ? `<span class="course-hero-emoji">📚</span>` : ""}
+      <div class="header ${levelBg} pb-8 pt-5 pt-md-8">
+        <div class="container-fluid">
+          <button class="btn btn-sm btn-neutral mb-3" id="backToCourses">${t.back}</button>
+          <h1 class="text-white mb-1">${course.title}</h1>
+          <p class="text-white" style="opacity:0.8">${course.description || ""}</p>
+          <div class="d-flex align-items-center mt-2" style="gap:1rem;">
+            <span class="badge badge-default">📖 ${totalLessons} ${lang === "vi" ? "bài" : "lessons"}</span>
+            <span class="badge badge-default">📝 ${quizzes.length} ${lang === "vi" ? "bài kiểm tra" : "quizzes"}</span>
+            <span class="badge badge-${course.level === 'beginner' ? 'success' : course.level === 'advanced' ? 'danger' : 'warning'}">${course.level || "—"}</span>
           </div>
-          <div class="course-hero-info">
-            <div class="course-meta-row">
-              <span class="badge badge--level">${levelBadge} ${course.level || "—"}</span>
-              ${course.category ? `<span class="badge badge--cat">${course.category}</span>` : ""}
+          ${isEnrolled ? `
+            <div class="mt-3" style="max-width:400px;">
+              <div class="d-flex justify-content-between text-white mb-1">
+                <small>${t.progress}</small><small>${pct}% ${t.completed}</small>
+              </div>
+              <div class="progress" style="height:8px;">
+                <div class="progress-bar bg-success" style="width:${pct}%"></div>
+              </div>
+              <button class="btn btn-sm btn-neutral mt-2" id="btnStudyPlan" data-course="${course.title}">📅 ${lang==='vi'?'AI Kế hoạch học tập':'AI Study Plan'}</button>
             </div>
-            <h1 class="course-detail-title">${course.title}</h1>
-            <p class="course-detail-desc">${course.description || ""}</p>
-            <div class="course-detail-stats">
-              <span>📖 ${totalLessons} ${lang === "vi" ? "bài" : "lessons"}</span>
-              <span>📝 ${quizzes.length} ${lang === "vi" ? "bài kiểm tra" : "quizzes"}</span>
-            </div>
-            ${isEnrolled
-              ? `<div class="progress-wrap">
-                  <div class="progress-label">${t.progress}: ${pct}% ${t.completed}</div>
-                  <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
-                </div>
-                <button class="btn btn--outline btn--sm" id="btnStudyPlan" data-course="${course.title}" style="margin-top: 1rem;">📅 ${lang==='vi'?'AI Kế hoạch học tập':'AI Study Plan'}</button>`
-              : `<button class="btn btn--primary" id="enrollBtn">${t.enroll}</button>`
-            }
-          </div>
+          ` : `<button class="btn btn-neutral mt-3" id="enrollBtn">${t.enroll}</button>`}
         </div>
-
-        <div class="course-content-grid animate-slide-up delay-1">
-          <div class="lessons-section">
-            <h2 class="section-title">${t.lessons}</h2>
-            ${lessons.length === 0
-              ? `<p class="empty-text">${t.noLessons}</p>`
-              : `<ul class="lesson-list">
-                  ${lessons.map((l, i) => {
-                    const done = completedLess.includes(l.id);
-                    const locked = !isEnrolled;
-                    const lockMsg = lang === 'vi' ? 'Đăng ký khóa học để mở khoá' : 'Enroll course to unlock';
-                    return `<li class="lesson-item ${done ? 'lesson--done' : ''} ${locked ? 'lesson--locked' : ''}" data-lesson-id="${locked ? '' : l.id}" ${locked ? `data-lock-msg="${lockMsg}"` : ''}>
-                      <span class="lesson-num">${i + 1}</span>
-                      <div class="lesson-info">
-                        <span class="lesson-title">${l.title}</span>
-                        <span class="lesson-meta"><span class="lesson-meta-icon">${this._lessonTypeIcon(l.type)}</span> ${l.duration || 'N/A'}</span>
-                      </div>
-                      <span class="lesson-status">${done ? '✓' : locked ? '🔒' : '▶'}</span>
-                    </li>`;
-                  }).join("")}
-                </ul>`
-            }
+      </div>
+      <div class="container-fluid mt--7">
+        <div class="row">
+          <div class="col-xl-8">
+            <div class="card shadow mb-4">
+              <div class="card-header border-0"><h3 class="mb-0">${t.lessons}</h3></div>
+              ${lessons.length === 0
+                ? `<div class="card-body"><p class="text-muted">${t.noLessons}</p></div>`
+                : `<div class="table-responsive">
+                    <table class="table align-items-center table-flush">
+                      <thead class="thead-light">
+                        <tr><th>#</th><th>${lang==='vi'?'Tên bài':'Title'}</th><th>${lang==='vi'?'Loại':'Type'}</th><th>${lang==='vi'?'Trạng thái':'Status'}</th></tr>
+                      </thead>
+                      <tbody>
+                        ${lessons.map((l, i) => {
+                          const done = completedLess.includes(l.id);
+                          const locked = !isEnrolled;
+                          const lockMsg = lang === 'vi' ? 'Đăng ký khóa học để mở khoá' : 'Enroll to unlock';
+                          return `<tr class="lesson-list-item ${done ? 'done' : ''} ${locked ? 'locked' : ''}" data-lesson-id="${locked ? '' : l.id}" ${locked ? `title="${lockMsg}"` : ''} style="cursor:${locked?'not-allowed':'pointer'}">
+                            <td>${i + 1}</td>
+                            <td><strong>${l.title}</strong><br><small class="text-muted">${l.duration || ''}</small></td>
+                            <td><span class="badge badge-dot mr-4"><i class="bg-${done ? 'success' : 'info'}"></i> ${this._lessonTypeIcon(l.type)} ${l.type || 'lesson'}</span></td>
+                            <td>${done ? '<span class="badge badge-success">✓</span>' : locked ? '<span class="badge badge-secondary">🔒</span>' : '<span class="badge badge-primary">▶</span>'}</td>
+                          </tr>`;
+                        }).join("")}
+                      </tbody>
+                    </table>
+                  </div>`
+              }
+            </div>
           </div>
-
-          <div class="quizzes-section">
-            <h2 class="section-title">${t.quizzes}</h2>
-            ${quizzes.length === 0
-              ? `<p class="empty-text">${t.noQuizzes}</p>`
-              : `<ul class="quiz-list">
-                  ${quizzes.map(q => {
-                    const score   = progress?.quizScores?.[q.id];
-                    
-                    const now = new Date();
-                    let quizStatus = 'open';
-                    let quizStatusText = lang === 'vi' ? 'Đang mở' : 'Open';
-                    let statusColor = 'var(--color-success)';
-
-                    const openDate = q.openTime ? new Date(q.openTime) : null;
-                    const closeDate = q.closeTime ? new Date(q.closeTime) : null;
-
-                    if (openDate && now < openDate) {
-                      quizStatus = 'not_open';
-                      quizStatusText = lang === 'vi' ? `Mở lúc: ${openDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}` : `Opens at: ${openDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}`;
-                      statusColor = 'var(--color-warning)';
-                    } else if (closeDate && now > closeDate) {
-                      quizStatus = 'closed';
-                      quizStatusText = lang === 'vi' ? `Đã đóng (${closeDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')})` : `Closed (${closeDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')})`;
-                      statusColor = 'var(--color-error)';
-                    } else if (closeDate) {
-                      quizStatusText = lang === 'vi' ? `Đóng lúc: ${closeDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}` : `Closes at: ${closeDate.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}`;
-                    }
-                    
-                    const timeRestricted = quizStatus === 'not_open' || quizStatus === 'closed';
-                    const locked  = !isEnrolled || timeRestricted;
-                    
-                    let lockMsg = "";
-                    if (locked) {
-                       if (!isEnrolled) lockMsg = lang === "vi" ? "Đăng ký khóa học để mở khoá" : "Enroll course to unlock";
-                       else if (quizStatus === "not_open") lockMsg = lang === "vi" ? "Chưa đến thời gian mở" : "Not open yet";
-                       else if (quizStatus === "closed") lockMsg = lang === "vi" ? "Đã hết hạn làm bài" : "Quiz closed";
-                    }
-
-                    return `<li class="quiz-item ${locked ? 'quiz--locked' : ''}" data-quiz-id="${locked ? '' : q.id}" ${locked ? `data-lock-msg="${lockMsg}"` : ''}>
-                      <span class="quiz-icon">📝</span>
-                      <div class="quiz-info">
-                        <span class="quiz-title">${q.title}</span>
-                        <span class="quiz-meta">
-                          ${q.questions?.length || 0} ${lang === "vi" ? "câu" : "questions"} ${q.timeLimitMinutes ? `• ${q.timeLimitMinutes}${lang === "vi" ? " phút" : " min"}` : ""}
-                        </span>
-                        <div class="quiz-status" style="font-size: 0.75rem; color: ${statusColor}; margin-top: 0.2rem; font-weight: 500;">
-                          ⏰ ${quizStatusText}
-                        </div>
-                      </div>
-                      ${score
-                        ? `<span class="quiz-score ${score.percentage >= (q.passingScore || 60) ? 'score--pass' : 'score--fail'}">${score.percentage}%</span>`
-                        : `<span class="quiz-btn">${timeRestricted && isEnrolled ? '⛔' : locked ? '🔒' : t.take}</span>`
+          <div class="col-xl-4">
+            <div class="card shadow">
+              <div class="card-header border-0"><h3 class="mb-0">${t.quizzes}</h3></div>
+              ${quizzes.length === 0
+                ? `<div class="card-body"><p class="text-muted">${t.noQuizzes}</p></div>`
+                : `<div class="card-body p-0">
+                    ${quizzes.map(q => {
+                      const score = progress?.quizScores?.[q.id];
+                      const now = new Date();
+                      let quizStatus = 'open', statusColor = 'text-success', quizStatusText = lang==='vi'?'Đang mở':'Open';
+                      const openDate = q.openTime ? new Date(q.openTime) : null;
+                      const closeDate = q.closeTime ? new Date(q.closeTime) : null;
+                      if (openDate && now < openDate) {
+                        quizStatus = 'not_open'; statusColor = 'text-warning';
+                        quizStatusText = lang==='vi'?`Mở lúc: ${openDate.toLocaleString('vi-VN')}`:`Opens: ${openDate.toLocaleString('en-US')}`;
+                      } else if (closeDate && now > closeDate) {
+                        quizStatus = 'closed'; statusColor = 'text-danger';
+                        quizStatusText = lang==='vi'?`Đã đóng`:`Closed`;
+                      } else if (closeDate) {
+                        quizStatusText = lang==='vi'?`Đóng: ${closeDate.toLocaleString('vi-VN')}`:`Closes: ${closeDate.toLocaleString('en-US')}`;
                       }
-                    </li>`;
-                  }).join("")}
-                </ul>`
-            }
+                      const timeRestricted = quizStatus === 'not_open' || quizStatus === 'closed';
+                      const locked = !isEnrolled || timeRestricted;
+                      let lockMsg = "";
+                      if (!isEnrolled) lockMsg = lang==="vi"?"Đăng ký khóa học để mở":"Enroll to unlock";
+                      else if (quizStatus==="not_open") lockMsg = lang==="vi"?"Chưa mở":"Not open yet";
+                      else if (quizStatus==="closed") lockMsg = lang==="vi"?"Đã đóng":"Closed";
+
+                      return `<div class="quiz-list-item d-flex align-items-center p-3 border-bottom ${locked?'locked':''}" data-quiz-id="${locked?'':q.id}" ${locked?`title="${lockMsg}"`:''} style="cursor:${locked?'not-allowed':'pointer'}">
+                        <div class="flex-fill">
+                          <strong>${q.title}</strong>
+                          <div><small class="text-muted">${q.questions?.length||0} ${lang==="vi"?"câu":"Q"} ${q.timeLimitMinutes?`• ${q.timeLimitMinutes} ${lang==="vi"?"phút":"min"}`:""}</small></div>
+                          <small class="${statusColor}">⏰ ${quizStatusText}</small>
+                        </div>
+                        ${score
+                          ? `<span class="badge badge-${score.percentage>=(q.passingScore||60)?'success':'danger'} badge-lg">${score.percentage}%</span>`
+                          : `<span class="badge badge-${locked?'secondary':'primary'}">${timeRestricted&&isEnrolled?'⛔':locked?'🔒':t.take}</span>`
+                        }
+                      </div>`;
+                    }).join("")}
+                  </div>`
+              }
+            </div>
           </div>
         </div>
       </div>
@@ -282,60 +285,45 @@ export class CourseView {
   renderLesson(course, lesson, progress, lang) {
     const isCompleted = progress?.completedLessons?.includes(lesson.id);
     const t = lang === "vi" ? {
-      back: "← Quay lại khóa học",
-      markDone: "Đánh dấu hoàn thành",
-      completed: "✓ Đã hoàn thành",
-      material: "Tài liệu đính kèm",
-      openDoc: "Mở tài liệu",
+      back: "← Quay lại khóa học", markDone: "Đánh dấu hoàn thành",
+      completed: "✓ Đã hoàn thành", material: "Tài liệu đính kèm", openDoc: "Mở tài liệu",
     } : {
-      back: "← Back to course",
-      markDone: "Mark as Complete",
-      completed: "✓ Completed",
-      material: "Attached Material",
-      openDoc: "Open Document",
+      back: "← Back to course", markDone: "Mark as Complete",
+      completed: "✓ Completed", material: "Attached Material", openDoc: "Open Document",
     };
 
     return `
-      <div class="lesson-page">
-        <div class="lesson-header animate-slide-up">
-          <button class="btn btn--ghost btn--sm" id="backToCourse">${t.back}</button>
-          <div class="lesson-breadcrumb">
-            <span class="breadcrumb-course">${course?.title || ""}</span>
-            <span> / </span>
-            <span class="breadcrumb-lesson">${lesson.title}</span>
+      <div class="header bg-gradient-default pb-8 pt-5 pt-md-8">
+        <div class="container-fluid">
+          <button class="btn btn-sm btn-neutral mb-3" id="backToCourse">${t.back}</button>
+          <p class="text-white mb-0" style="opacity:0.7">${course?.title || ""}</p>
+          <h1 class="text-white">${lesson.title}</h1>
+          <div class="d-flex" style="gap:0.5rem;">
+            <span class="badge badge-default">${this._lessonTypeIcon(lesson.type)} ${lesson.type || 'lesson'}</span>
+            ${lesson.duration ? `<span class="badge badge-default">⏱ ${lesson.duration}</span>` : ""}
           </div>
         </div>
-
-        <div class="lesson-body animate-slide-up delay-1">
-          <h1 class="lesson-title">${lesson.title}</h1>
-          <div class="lesson-meta-row">
-            <span>${this._lessonTypeIcon(lesson.type)} ${lesson.type || 'lesson'}</span>
-            ${lesson.duration ? `<span>⏱ ${lesson.duration}</span>` : ""}
-          </div>
-
-          ${lesson.videoUrl ? `
-            <div class="video-container">
-              ${this._embedVideo(lesson.videoUrl)}
+      </div>
+      <div class="container-fluid mt--7">
+        <div class="card shadow">
+          <div class="card-body">
+            ${lesson.videoUrl ? `
+              <div class="video-container mb-4">${this._embedVideo(lesson.videoUrl)}</div>
+            ` : ""}
+            ${lesson.content ? `
+              <div class="lesson-content-body">${this._parseContent(lesson.content)}</div>
+            ` : ""}
+            ${lesson.docUrl ? `
+              <div class="mt-4 p-3 bg-secondary rounded">
+                <h4>📄 ${t.material}</h4>
+                <a href="${lesson.docUrl}" target="_blank" class="btn btn-sm btn-primary">${t.openDoc} ↗</a>
+              </div>
+            ` : ""}
+            <div class="mt-4 text-center">
+              <button class="btn btn-lg ${isCompleted ? 'btn-success' : 'btn-primary'}" id="markCompleteBtn" ${isCompleted ? 'disabled' : ''}>
+                ${isCompleted ? t.completed : t.markDone}
+              </button>
             </div>
-          ` : ""}
-
-          ${lesson.content ? `
-            <div class="lesson-content-body">
-              ${this._parseContent(lesson.content)}
-            </div>
-          ` : ""}
-
-          ${lesson.docUrl ? `
-            <div class="doc-section">
-              <h3>📄 ${t.material}</h3>
-              <a href="${lesson.docUrl}" target="_blank" class="btn btn--outline">${t.openDoc} ↗</a>
-            </div>
-          ` : ""}
-
-          <div class="lesson-actions">
-            <button class="btn btn--primary btn--lg" id="markCompleteBtn" ${isCompleted ? 'disabled' : ''}>
-              ${isCompleted ? t.completed : t.markDone}
-            </button>
           </div>
         </div>
       </div>
@@ -347,16 +335,18 @@ export class CourseView {
   _courseCard(course, progress, lang) {
     const pct = this._calcProgress(course, progress);
     return `
-      <div class="course-card" data-course-id="${course.id}">
-        <div class="course-card-thumb" style="background-image:url('${course.thumbnail || ""}')">
-          ${!course.thumbnail ? `<span class="card-emoji">📚</span>` : ""}
-        </div>
-        <div class="course-card-body">
-          <h3 class="course-card-title">${course.title}</h3>
-          <p class="course-card-desc">${(course.description || "").slice(0, 80)}${course.description?.length > 80 ? "…" : ""}</p>
-          <div class="course-card-footer">
-            <span class="course-card-meta">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"}</span>
-            ${pct > 0 ? `<div class="mini-progress"><div style="width:${pct}%"></div></div>` : ""}
+      <div class="col-xl-3 col-lg-6 mb-4">
+        <div class="card shadow" data-course-id="${course.id}" style="cursor:pointer;">
+          <div class="course-thumb">
+            ${course.thumbnail ? `<img src="${course.thumbnail}" alt="${course.title}" />` : `<span>📚</span>`}
+          </div>
+          <div class="card-body">
+            <h5 class="card-title mb-1">${course.title}</h5>
+            <p class="text-muted small mb-2">${(course.description || "").slice(0, 80)}${course.description?.length > 80 ? "…" : ""}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"}</small>
+              ${pct > 0 ? `<div class="progress" style="width:60px;height:6px;"><div class="progress-bar bg-success" style="width:${pct}%"></div></div>` : ""}
+            </div>
           </div>
         </div>
       </div>
@@ -364,25 +354,27 @@ export class CourseView {
   }
 
   _courseCardFull(course, progress, isEnrolled, t, lang) {
-    const pct       = this._calcProgress(course, progress);
-    const levelMap  = { beginner: "🟢", intermediate: "🟡", advanced: "🔴" };
-    const levelIcon = levelMap[course.level] || "📘";
+    const pct = this._calcProgress(course, progress);
+    const levelMap = { beginner: "success", intermediate: "warning", advanced: "danger" };
+    const levelColor = levelMap[course.level] || "primary";
 
     return `
-      <div class="course-card course-card--full" data-course-id="${course.id}">
-        <div class="course-card-thumb" style="background-image:url('${course.thumbnail || ""}')">
-          ${!course.thumbnail ? `<span class="card-emoji">📚</span>` : ""}
-          <span class="card-level-badge">${levelIcon}</span>
-        </div>
-        <div class="course-card-body">
-          ${course.category ? `<span class="card-tag">${course.category}</span>` : ""}
-          <h3 class="course-card-title">${course.title}</h3>
-          <p class="course-card-desc">${(course.description || "").slice(0, 100)}${(course.description || "").length > 100 ? "…" : ""}</p>
-          <div class="course-card-footer">
-            <span class="course-card-meta">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"}</span>
+      <div class="col-xl-3 col-lg-6 mb-4">
+        <div class="card shadow" data-course-id="${course.id}" style="cursor:pointer;">
+          <div class="course-thumb">
+            ${course.thumbnail ? `<img src="${course.thumbnail}" alt="${course.title}" />` : `<span>📚</span>`}
+          </div>
+          <div class="card-body">
+            ${course.category ? `<span class="badge badge-primary badge-sm mb-2">${course.category}</span>` : ""}
+            <h5 class="card-title mb-1">${course.title}</h5>
+            <p class="text-muted small mb-2">${(course.description || "").slice(0, 100)}${(course.description || "").length > 100 ? "…" : ""}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"}</small>
+              <span class="badge badge-${levelColor}">${course.level || "—"}</span>
+            </div>
             ${isEnrolled
-              ? `<div class="mini-progress-wrap"><div class="mini-progress"><div style="width:${pct}%"></div></div><span class="mini-pct">${pct}%</span></div>`
-              : `<button class="btn btn--primary btn--sm btn-enroll" data-course-id="${course.id}">${t.enroll}</button>`
+              ? `<div class="mt-2"><div class="progress" style="height:6px;"><div class="progress-bar bg-success" style="width:${pct}%"></div></div><small class="text-muted">${pct}%</small></div>`
+              : `<button class="btn btn-sm btn-primary mt-2 btn-enroll" data-course-id="${course.id}">${t.enroll}</button>`
             }
           </div>
         </div>
@@ -400,17 +392,14 @@ export class CourseView {
   }
 
   _embedVideo(url) {
-    // YouTube embed
     const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
     if (ytMatch) {
       return `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" allowfullscreen></iframe>`;
     }
-    // Direct video
     return `<video controls src="${url}" class="lesson-video"></video>`;
   }
 
   _parseContent(content) {
-    // Simple markdown-like parsing
     return content
       .replace(/^### (.+)$/gm, "<h3>$1</h3>")
       .replace(/^## (.+)$/gm, "<h2>$1</h2>")

@@ -1,7 +1,6 @@
 // ============================================================
 //  app.js — Brilliant LMS MVC2 Bootstrap & Router
-//  Path-based routing: /home, /courses, /login, /register, /profile
-//  GitHub Pages compatible via 404.html redirect trick
+//  Argon Dashboard layout with sidebar + top navbar
 // ============================================================
 
 import { AuthController }     from "./controllers/AuthController.js";
@@ -18,7 +17,6 @@ import { ToastService }       from "./services/ToastService.js";
 
 export class App {
   constructor() {
-    // Route map: pathname → handler
     this.routes = {
       "/":          () => this._defaultRoute(),
       "/home":      () => this.courseController.showDashboard(),
@@ -44,19 +42,19 @@ export class App {
     window.__theme  = this.theme;
     window.__toast  = this.toast;
     window.__router = this;
-    
+
     // Custom Prompt UI
     window.__prompt = (title, placeholder, callback, isPassword = false, onCancel = null) => {
       const lang = this.i18n.current;
       const overlay = document.createElement("div");
       overlay.className = "modal-overlay";
       overlay.innerHTML = `
-        <div class="modal animate-slide-up" style="max-width: 400px; padding: 1.5rem">
+        <div class="modal" style="max-width: 400px; padding: 1.5rem">
           <h3 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600">${title}</h3>
-          <input type="${isPassword ? 'password' : 'text'}" id="aiPromptInput" class="form-input" placeholder="${placeholder}" />
+          <input type="${isPassword ? 'password' : 'text'}" id="aiPromptInput" class="form-control" placeholder="${placeholder}" />
           <div class="modal-actions" style="margin-top: 1.5rem">
-            <button class="btn btn--ghost" id="aiPromptCancel">${lang === 'vi' ? 'Hủy' : 'Cancel'}</button>
-            <button class="btn btn--primary" id="aiPromptOk">OK</button>
+            <button class="btn btn-secondary btn-sm" id="aiPromptCancel">${lang === 'vi' ? 'Hủy' : 'Cancel'}</button>
+            <button class="btn btn-primary btn-sm" id="aiPromptOk">OK</button>
           </div>
         </div>
       `;
@@ -102,6 +100,8 @@ export class App {
     this._bindNavEvents();
     this._bindThemeToggle();
     this._bindLangToggle();
+    this._bindSidebarToggle();
+    this._bindUserDropdown();
     this._handleGHPagesRedirect();
 
     // Browser Back/Forward
@@ -112,20 +112,20 @@ export class App {
 
     this.authModel.onAuthStateChanged(async (user) => {
       this.currentUser = user;
-      this._updateNavbar(user);
 
       if (user) {
         await this.authModel.loadUserProfile(user.uid);
+        this._showAppChrome(true);
         this._updateNavbar(user);
         document.getElementById("chatbotWidget")?.classList.remove("hidden");
         document.getElementById("chatbotFab")?.classList.remove("hidden");
 
-        // Go to pending path or current URL path
         const target = this._pendingPath || this._getCurrentPath();
         this._pendingPath = null;
         const publicPaths = ["/login", "/register"];
         this._dispatchRoute(publicPaths.includes(target) ? "/home" : target, false);
       } else {
+        this._showAppChrome(false);
         document.getElementById("chatbotWidget")?.classList.add("hidden");
         document.getElementById("chatbotFab")?.classList.add("hidden");
         const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quiz", "/progress", "/admin", "/profile"];
@@ -140,6 +140,25 @@ export class App {
       this._hideLoading();
       this._authReady = true;
     });
+  }
+
+  // ── Show/hide sidebar + navbar (Argon chrome) ────────────
+  _showAppChrome(show) {
+    const sidebar = document.getElementById("sidenav-main");
+    const navbar  = document.getElementById("navbar-main");
+    const footer  = document.getElementById("appFooter");
+
+    if (show) {
+      document.body.classList.remove("auth-active");
+      sidebar.style.display = "";
+      navbar.style.display = "";
+      footer.style.display = "";
+    } else {
+      document.body.classList.add("auth-active");
+      sidebar.style.display = "none";
+      navbar.style.display = "none";
+      footer.style.display = "none";
+    }
   }
 
   // ── Public navigate (pushes history) ─────────────────────
@@ -166,11 +185,21 @@ export class App {
   _dispatchRoute(path, pushState = true, ...args) {
     this.currentPath = path;
 
-    // Update active nav link
-    document.querySelectorAll(".nav-link").forEach(l => {
-      const lPath = l.getAttribute("href");
-      l.classList.toggle("active", path === lPath || (path.startsWith(lPath) && lPath !== "/"));
+    // Update sidebar active state
+    document.querySelectorAll("#sidenav-main .nav-link").forEach(l => {
+      const href = l.getAttribute("href");
+      l.classList.toggle("active", path === href || (path.startsWith(href) && href !== "/" && href !== "#"));
     });
+
+    // Update top navbar brand text
+    const pageNames = {
+      "/home": "Dashboard", "/courses": "Courses", "/progress": "Progress",
+      "/admin": "Admin", "/profile": "Profile",
+    };
+    const brandText = document.getElementById("navBrandText");
+    if (brandText) {
+      brandText.textContent = pageNames[path] || "Brilliant LMS";
+    }
 
     if (pushState) {
       history.pushState({ path }, "", path);
@@ -202,10 +231,9 @@ export class App {
   }
 
   _getCurrentPath() {
-    // Handle GitHub Pages redirect: /?/some/path
     const search = window.location.search;
     if (search.startsWith("?/")) {
-      const path = "/" + search.slice(2).split("&")[0].replace(/~and~/g, "&")
+      const path = "/" + search.slice(2).split("&")[0].replace(/~and~/g, "&");
       history.replaceState({ path }, "", path);
       return path;
     }
@@ -221,87 +249,126 @@ export class App {
 
   // ── Nav bindings ─────────────────────────────────────────
   _bindNavEvents() {
-    document.querySelectorAll(".nav-link[data-page]").forEach(link => {
+    // Sidebar nav links
+    document.querySelectorAll("#sidenav-main .nav-link[data-page]").forEach(link => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
         this.navigate(link.dataset.page);
+        // Close mobile sidebar
+        const collapse = document.getElementById("sidebarCollapse");
+        if (collapse && collapse.classList.contains("show")) {
+          collapse.classList.remove("show");
+        }
       });
     });
 
-    document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    // Logout
+    document.getElementById("logoutBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
       this.authController.logout();
     });
 
-    document.getElementById("navAvatarBtn")?.addEventListener("click", (e) => {
+    // Profile dropdown
+    document.getElementById("dropdownProfile")?.addEventListener("click", (e) => {
       e.preventDefault();
       this.navigate("profile");
     });
+  }
 
-    // Mobile hamburger
-    const ham = document.getElementById("navHamburger");
-    const navLinks = document.getElementById("navLinks");
-    ham?.addEventListener("click", () => {
-      navLinks?.classList.toggle("nav-links--open");
+  _bindSidebarToggle() {
+    const toggler = document.getElementById("sidebarToggler");
+    const collapse = document.getElementById("sidebarCollapse");
+    toggler?.addEventListener("click", () => {
+      collapse?.classList.toggle("show");
+    });
+  }
+
+  _bindUserDropdown() {
+    const toggle = document.getElementById("userDropdownToggle");
+    const menu = document.getElementById("userDropdownMenu");
+    toggle?.addEventListener("click", (e) => {
+      e.preventDefault();
+      menu?.classList.toggle("show");
+    });
+    document.addEventListener("click", (e) => {
+      if (!toggle?.contains(e.target) && !menu?.contains(e.target)) {
+        menu?.classList.remove("show");
+      }
     });
   }
 
   _bindThemeToggle() {
     const btn = document.getElementById("themeToggle");
-    btn?.addEventListener("click", () => {
+    btn?.addEventListener("click", (e) => {
+      e.preventDefault();
       this.theme.toggle();
-      btn.textContent = this.theme.current === "dark" ? "☀️" : "🌙";
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.className = this.theme.current === "dark" ? "fas fa-sun" : "fas fa-moon";
+      }
     });
   }
 
   _bindLangToggle() {
-    document.getElementById("langToggle")?.addEventListener("click", () => {
+    document.getElementById("langToggle")?.addEventListener("click", (e) => {
+      e.preventDefault();
       this.i18n.toggle();
       this._updateNavbar(this.currentUser);
+      this._updateAllI18nTexts();
+      // Re-render current page
+      if (this.currentPath && this._authReady) {
+        this._dispatchRoute(this.currentPath, false);
+      }
     });
+  }
+
+  // ── Update all data-vi / data-en elements ────────────────
+  _updateAllI18nTexts() {
+    const lang = this.i18n.current;
+    document.querySelectorAll("[data-vi][data-en]").forEach(el => {
+      el.textContent = lang === "vi" ? el.dataset.vi : el.dataset.en;
+    });
+    const langBtn = document.getElementById("langBtnText");
+    if (langBtn) langBtn.textContent = lang === "vi" ? "🇻🇳 VI" : "🇺🇸 EN";
   }
 
   // ── Navbar update ────────────────────────────────────────
   _updateNavbar(user) {
-    const navbar    = document.getElementById("navbar");
-    const navUser   = document.getElementById("navUser");
-    const welcome   = document.getElementById("welcomeText");
-    const adminLink = document.querySelector(".nav-link--admin");
+    const adminItem = document.querySelector(".nav-item--admin");
+    const welcomeText = document.getElementById("welcomeText");
     const avatar    = document.getElementById("navAvatar");
-    const ham       = document.getElementById("navHamburger");
+    const streakBadge = document.getElementById("navStreak");
+    const dropdownWelcome = document.getElementById("dropdownWelcome");
 
     if (user) {
-      navbar.classList.remove("hidden");
-      navUser.classList.remove("hidden");
-      ham?.classList.remove("hidden");
-
       const profile     = this.authModel.userProfile;
       const username    = profile?.username || user.email.split("@")[0];
       const lang        = this.i18n.current;
-      welcome.textContent = lang === "vi"
-        ? `Chào, ${username} 👋`
-        : `Welcome, ${username} 👋`;
 
-      const streakBadge = document.getElementById("navStreak");
+      if (welcomeText) {
+        welcomeText.textContent = username;
+      }
+      if (dropdownWelcome) {
+        dropdownWelcome.textContent = lang === "vi" ? `Chào, ${username}!` : `Welcome, ${username}!`;
+      }
+
       if (streakBadge) {
         streakBadge.textContent = `🔥 ${profile?.streak || 0}`;
       }
 
-      // Avatar initials
       if (avatar) {
         const initials = (profile?.fullname || username || "?").charAt(0).toUpperCase();
         avatar.textContent = initials;
       }
 
       if (profile?.role === "admin") {
-        adminLink?.classList.remove("hidden");
+        adminItem?.style && (adminItem.style.display = "");
       } else {
-        adminLink?.classList.add("hidden");
+        adminItem?.style && (adminItem.style.display = "none");
       }
-    } else {
-      navbar.classList.add("hidden");
-      navUser.classList.add("hidden");
-      ham?.classList.add("hidden");
     }
+
+    this._updateAllI18nTexts();
   }
 
   _hideLoading() {
