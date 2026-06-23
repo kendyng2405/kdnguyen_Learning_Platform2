@@ -168,7 +168,6 @@
 
 /* ── Responsive fixes ── */
 @media (max-width: 767.98px) {
-  #pageContainer { padding-top: 6rem; }
   .chatbot-widget { width: 95vw; right: 2.5vw; bottom: 4rem; }
 }
 
