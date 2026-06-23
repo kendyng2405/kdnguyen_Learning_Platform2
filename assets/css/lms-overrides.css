@@ -153,6 +153,21 @@
   text-align: center;
 }
 
+/* ── Top Navbar Item Hover ── */
+.navbar-top .navbar-nav .nav-link {
+  border-radius: 2rem;
+  transition: all 0.2s ease-in-out;
+  padding: 0.5rem 1rem !important;
+  margin: 0 0.25rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.navbar-top .navbar-nav .nav-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+.navbar-top .navbar-nav .nav-link i { font-size: 1.1rem; }
+
+
 /* ── LMS Stat Cards (Argon style) ── */
 .lms-stat-card .icon {
   width: 48px; height: 48px;
@@ -168,7 +183,6 @@
 
 /* ── Lesson / Quiz Lists ── */
 .lesson-list-item, .quiz-list-item {
-  display: flex; align-items: center; padding: 0.75rem 1rem;
   border-bottom: 1px solid #e9ecef; cursor: pointer; transition: background 0.15s;
 }
 .lesson-list-item:hover, .quiz-list-item:hover { background: #f6f9fc; }

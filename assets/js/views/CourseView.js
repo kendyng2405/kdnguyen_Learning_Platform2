@@ -6,115 +6,41 @@ export class CourseView {
 
   renderDashboard(courses, allProgress, profile, lang) {
     const name = profile?.username || profile?.fullname || "Learner";
-    const totalCourses   = courses.length;
-    const enrolled       = allProgress.length;
-    const completedCount = allProgress.filter(p => {
-      const course = courses.find(c => c.id === p.courseId);
-      if (!course) return false;
-      return p.completedLessons?.length >= (course.lessonCount || 0) && course.lessonCount > 0;
-    }).length;
-
+    const name = profile && profile.fullname ? profile.fullname.split(" ")[0] : "Bạn";
     const t = lang === "vi" ? {
       greeting: `Chào mừng trở lại, ${name}! 👋`,
-      sub: "Tiếp tục hành trình học tập",
-      totalCourses: "Tổng khóa học", enrolled: "Đã đăng ký", completed: "Hoàn thành",
-      recent: "Khóa học gần đây", allCourses: "Xem tất cả", noCourses: "Chưa có khóa học nào.",
-      lessons: "bài học",
+      sub: "Brilliant LMS - Nền tảng học tập tương tác hiện đại.",
+      desc: "Khám phá các khóa học chất lượng cao, bài kiểm tra thực hành và theo dõi tiến độ của bạn một cách trực quan.",
+      explore: "Khám phá khóa học",
+      profile: "Hồ sơ của tôi"
     } : {
       greeting: `Welcome back, ${name}! 👋`,
-      sub: "Continue your learning journey",
-      totalCourses: "Total Courses", enrolled: "Enrolled", completed: "Completed",
-      recent: "Recent Courses", allCourses: "View All", noCourses: "No courses yet.",
-      lessons: "lessons",
+      sub: "Brilliant LMS - Modern Interactive Learning Platform.",
+      desc: "Explore high-quality courses, practice quizzes, and track your progress intuitively.",
+      explore: "Explore Courses",
+      profile: "My Profile"
     };
 
-    const recentCourses = courses.slice(0, 4);
-
     return `
-      <div class="header bg-gradient-info pb-8 pt-5 pt-md-8">
+      <div class="header bg-gradient-info pb-8 pt-5 pt-md-8" style="min-height: 80vh; display: flex; align-items: center;">
         <div class="container-fluid">
-          <div class="header-body">
-            <div class="row">
-              <div class="col-xl-12">
-                <h1 class="text-white mb-0">${t.greeting}</h1>
-                <p class="text-white mt-1 mb-4" style="opacity:0.8">${t.sub}</p>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-xl-4 col-lg-6">
-                <div class="card card-stats mb-4 mb-xl-0">
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col">
-                        <h5 class="card-title text-uppercase text-muted mb-0">${t.totalCourses}</h5>
-                        <span class="h2 font-weight-bold mb-0">${totalCourses}</span>
-                      </div>
-                      <div class="col-auto">
-                        <div class="icon icon-shape bg-danger text-white rounded-circle shadow">
-                          <i class="fas fa-book"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+          <div class="header-body text-center">
+            <div class="row justify-content-center">
+              <div class="col-xl-8 col-lg-10">
+                <div class="icon icon-shape bg-white text-info rounded-circle shadow mb-4" style="width: 80px; height: 80px; font-size: 2rem;">
+                  <i class="fas fa-graduation-cap"></i>
                 </div>
-              </div>
-              <div class="col-xl-4 col-lg-6">
-                <div class="card card-stats mb-4 mb-xl-0">
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col">
-                        <h5 class="card-title text-uppercase text-muted mb-0">${t.enrolled}</h5>
-                        <span class="h2 font-weight-bold mb-0">${enrolled}</span>
-                      </div>
-                      <div class="col-auto">
-                        <div class="icon icon-shape bg-warning text-white rounded-circle shadow">
-                          <i class="fas fa-pencil-alt"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <h1 class="display-2 text-white font-weight-bold mb-3">${t.greeting}</h1>
+                <h2 class="text-white mb-4" style="font-weight: 400;">${t.sub}</h2>
+                <p class="text-white mt-1 mb-5" style="opacity:0.9; font-size: 1.1rem;">${t.desc}</p>
+                <div class="mt-4">
+                  <button class="btn btn-lg btn-white text-info mr-3 shadow" onclick="window.__router.navigate('courses')">
+                    <i class="fas fa-book-open mr-2"></i> ${t.explore}
+                  </button>
+                  <button class="btn btn-lg btn-outline-white shadow" onclick="window.__router.navigate('profile')">
+                    <i class="fas fa-user mr-2"></i> ${t.profile}
+                  </button>
                 </div>
-              </div>
-              <div class="col-xl-4 col-lg-6">
-                <div class="card card-stats mb-4 mb-xl-0">
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col">
-                        <h5 class="card-title text-uppercase text-muted mb-0">${t.completed}</h5>
-                        <span class="h2 font-weight-bold mb-0">${completedCount}</span>
-                      </div>
-                      <div class="col-auto">
-                        <div class="icon icon-shape bg-success text-white rounded-circle shadow">
-                          <i class="fas fa-trophy"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="container-fluid mt--7">
-        <div class="row">
-          <div class="col">
-            <div class="card shadow">
-              <div class="card-header border-0">
-                <div class="row align-items-center">
-                  <div class="col"><h3 class="mb-0">${t.recent}</h3></div>
-                  <div class="col text-right">
-                    <button class="btn btn-sm btn-primary" onclick="window.__router.navigate('courses')">${t.allCourses} →</button>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body">
-                ${recentCourses.length === 0
-                  ? `<p class="text-muted text-center py-4">${t.noCourses}</p>`
-                  : `<div class="row course-card-grid">
-                      ${recentCourses.map(c => this._courseCard(c, allProgress.find(p => p.courseId === c.id), lang)).join("")}
-                    </div>`
-                }
               </div>
             </div>
           </div>

@@ -329,7 +329,7 @@ export class App {
       el.textContent = lang === "vi" ? el.dataset.vi : el.dataset.en;
     });
     const langBtn = document.getElementById("langBtnText");
-    if (langBtn) langBtn.textContent = lang === "vi" ? "🇻🇳 VI" : "🇺🇸 EN";
+    if (langBtn) langBtn.innerHTML = lang === "vi" ? `<i class="fas fa-globe-asia mr-1"></i> VI` : `<i class="fas fa-globe-americas mr-1"></i> EN`;
   }
 
   // ── Navbar update ────────────────────────────────────────
@@ -353,7 +353,8 @@ export class App {
       }
 
       if (streakBadge) {
-        streakBadge.textContent = `🔥 ${profile?.streak || 0}`;
+        streakBadge.innerHTML = `<i class="fas fa-fire mr-1 text-danger"></i> ${profile?.streak || 0}`;
+        streakBadge.style.color = "#fb6340";
       }
 
       if (avatar) {
