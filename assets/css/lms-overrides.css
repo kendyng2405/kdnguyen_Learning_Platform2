@@ -212,3 +212,64 @@ body.auth-active #sidenav-main { display: none !important; }
 body.auth-active .main-content { margin-left: 0 !important; }
 body.auth-active #navbar-main { display: none !important; }
 body.auth-active #appFooter { display: none !important; }
+
+/* ── Brilliant Style Dashboard ── */
+.brilliant-bg { background-color: #f7f9fa !important; }
+.brilliant-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid #eef1f3;
+  padding: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.brilliant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+.brilliant-streak-day {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 2px solid #eef1f3;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; color: #a0aab2;
+  margin: 0 auto;
+}
+.brilliant-streak-day.active {
+  border-color: #fb6340; color: #fb6340; background: rgba(251, 99, 64, 0.1);
+}
+.brilliant-btn-gradient {
+  background: linear-gradient(90deg, #9b51e0, #4a90e2);
+  color: white;
+  border-radius: 2rem;
+  font-weight: 700;
+  border: none;
+  padding: 0.75rem 2rem;
+  transition: opacity 0.2s;
+}
+.brilliant-btn-gradient:hover {
+  opacity: 0.9; color: white;
+}
+.brilliant-btn-gradient-orange {
+  background: linear-gradient(90deg, #ff9966, #ff5e62);
+  color: white;
+  border-radius: 2rem;
+  font-weight: 700;
+  border: none;
+  padding: 0.75rem 2rem;
+}
+.brilliant-course-thumb {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.brilliant-recommended-badge {
+  color: #9b51e0;
+  background: rgba(155, 81, 224, 0.1);
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.7rem;
+}
+

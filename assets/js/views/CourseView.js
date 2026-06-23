@@ -5,45 +5,117 @@
 export class CourseView {
 
   renderDashboard(courses, allProgress, profile, lang) {
-    const name = profile?.username || profile?.fullname || "Learner";
     const name = profile && profile.fullname ? profile.fullname.split(" ")[0] : "Bạn";
+    const streak = profile?.streak || 0;
+    
+    // Find the recommended course (first enrolled or first available)
+    const recommended = courses.length > 0 ? courses[0] : null;
+    const courseTitle = recommended ? recommended.title : "Introduction to Programming";
+    const courseLevel = recommended ? (recommended.level || "LEVEL 1").toUpperCase() : "LEVEL 1";
+    const courseThumb = recommended && recommended.thumbnail ? recommended.thumbnail : "https://cdn-icons-png.flaticon.com/512/4144/4144682.png";
+    
     const t = lang === "vi" ? {
-      greeting: `Chào mừng trở lại, ${name}! 👋`,
-      sub: "Brilliant LMS - Nền tảng học tập tương tác hiện đại.",
-      desc: "Khám phá các khóa học chất lượng cao, bài kiểm tra thực hành và theo dõi tiến độ của bạn một cách trực quan.",
-      explore: "Khám phá khóa học",
-      profile: "Hồ sơ của tôi"
+      solve: "Giải thêm 3 bài tập để bắt đầu chuỗi ngày",
+      premiumTitle: "Mở khóa toàn bộ tính năng Premium",
+      premiumSub: "để học thông minh hơn, nhanh hơn",
+      premiumBtn: "Khám phá Premium",
+      leagues: "MỞ KHÓA BẢNG XẾP HẠNG",
+      recommended: "ĐỀ XUẤT",
+      start: "Bắt đầu",
+      days: ["T3", "T4", "T5", "T6", "T7"]
     } : {
-      greeting: `Welcome back, ${name}! 👋`,
-      sub: "Brilliant LMS - Modern Interactive Learning Platform.",
-      desc: "Explore high-quality courses, practice quizzes, and track your progress intuitively.",
-      explore: "Explore Courses",
-      profile: "My Profile"
+      solve: "Solve 3 problems to start a streak",
+      premiumTitle: "Unlock all learning with Premium",
+      premiumSub: "to get smarter, faster",
+      premiumBtn: "Explore Premium",
+      leagues: "UNLOCK LEAGUES",
+      recommended: "RECOMMENDED",
+      start: "Start",
+      days: ["T", "W", "Th", "F", "S"]
     };
 
     return `
-      <div class="header bg-gradient-info pb-8 pt-5 pt-md-8" style="min-height: 80vh; display: flex; align-items: center;">
-        <div class="container-fluid">
-          <div class="header-body text-center">
-            <div class="row justify-content-center">
-              <div class="col-xl-8 col-lg-10">
-                <div class="icon icon-shape bg-white text-info rounded-circle shadow mb-4" style="width: 80px; height: 80px; font-size: 2rem;">
-                  <i class="fas fa-graduation-cap"></i>
+      <div class="container-fluid mt-5 brilliant-bg" style="min-height: 90vh;">
+        <div class="row pt-4">
+          
+          <!-- LEFT COLUMN: STATS & STREAK -->
+          <div class="col-lg-4 mb-4">
+            
+            <!-- Streak Card -->
+            <div class="brilliant-card mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <h1 class="display-3 font-weight-bold mb-0 mr-2" style="line-height: 1;">${streak}</h1>
+                <i class="fas fa-bolt text-warning" style="font-size: 2rem; opacity: 0.5;"></i>
+              </div>
+              <p class="text-dark font-weight-bold mb-4">${t.solve}</p>
+              
+              <div class="d-flex justify-content-between text-center px-2">
+                ${t.days.map((d, i) => `
+                  <div>
+                    <div class="brilliant-streak-day ${i === 0 && streak > 0 ? 'active' : ''} mb-2">
+                      <i class="fas fa-bolt ${i === 0 && streak > 0 ? '' : 'text-light'}"></i>
+                    </div>
+                    <small class="text-muted font-weight-bold">${d}</small>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Premium Card -->
+            <div class="brilliant-card mb-4 text-center" style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);">
+              <div class="d-flex align-items-center justify-content-center mb-2">
+                <i class="fas fa-gem text-info mr-2" style="font-size: 1.5rem;"></i>
+                <h4 class="mb-0 font-weight-bold">${t.premiumTitle}</h4>
+              </div>
+              <p class="text-muted mb-4">${t.premiumSub}</p>
+              <button class="brilliant-btn-gradient-orange w-100 shadow-sm" onclick="window.__router.navigate('courses')">${t.premiumBtn}</button>
+            </div>
+
+            <!-- Leagues Card -->
+            <div class="brilliant-card d-flex align-items-center">
+              <div class="icon icon-shape bg-secondary text-dark rounded-circle mr-3" style="width: 50px; height: 50px;">
+                <i class="fas fa-lock"></i>
+              </div>
+              <div>
+                <h5 class="text-muted font-weight-bold mb-1" style="letter-spacing: 0.5px;">${t.leagues}</h5>
+                <p class="text-dark mb-0 font-weight-bold">0 of 175 XP</p>
+              </div>
+            </div>
+            
+          </div>
+          
+          <!-- RIGHT COLUMN: RECOMMENDED COURSE -->
+          <div class="col-lg-8">
+            <div class="brilliant-card text-center p-5">
+              <span class="brilliant-recommended-badge text-uppercase mb-3 d-inline-block">${t.recommended}</span>
+              <h2 class="display-4 font-weight-bold mb-1 text-dark">${courseTitle}</h2>
+              <p class="text-muted font-weight-bold text-uppercase mb-4" style="letter-spacing: 1px;">${courseLevel}</p>
+              
+              <div class="brilliant-course-thumb mx-auto mb-4" style="max-width: 250px;">
+                <img src="${courseThumb}" alt="Course" class="img-fluid" />
+              </div>
+              
+              <div class="d-flex align-items-center justify-content-center mb-4">
+                <div class="icon icon-shape bg-success text-white rounded-circle mr-3 shadow-sm" style="width: 40px; height: 40px;">
+                  <i class="fas fa-play"></i>
                 </div>
-                <h1 class="display-2 text-white font-weight-bold mb-3">${t.greeting}</h1>
-                <h2 class="text-white mb-4" style="font-weight: 400;">${t.sub}</h2>
-                <p class="text-white mt-1 mb-5" style="opacity:0.9; font-size: 1.1rem;">${t.desc}</p>
-                <div class="mt-4">
-                  <button class="btn btn-lg btn-white text-info mr-3 shadow" onclick="window.__router.navigate('courses')">
-                    <i class="fas fa-book-open mr-2"></i> ${t.explore}
-                  </button>
-                  <button class="btn btn-lg btn-outline-white shadow" onclick="window.__router.navigate('profile')">
-                    <i class="fas fa-user mr-2"></i> ${t.profile}
-                  </button>
-                </div>
+                <h4 class="mb-0 font-weight-bold text-dark">Filtering Images</h4>
+              </div>
+              
+              <button class="brilliant-btn-gradient btn-block btn-lg shadow" onclick="window.__router.navigate('course', '${recommended ? recommended.id : ''}')">
+                ${t.start}
+              </button>
+              
+              <div class="d-flex justify-content-center mt-5">
+                ${courses.slice(1, 6).map(c => `
+                  <div class="mx-2 brilliant-course-thumb shadow-sm" style="width: 60px; height: 60px; cursor: pointer;" onclick="window.__router.navigate('course', '${c.id}')">
+                    <img src="${c.thumbnail || 'https://cdn-icons-png.flaticon.com/512/4144/4144682.png'}" class="img-fluid h-100" style="object-fit: cover;" />
+                  </div>
+                `).join('')}
               </div>
             </div>
           </div>
+          
         </div>
       </div>
     `;
