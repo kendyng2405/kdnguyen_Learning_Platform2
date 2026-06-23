@@ -233,38 +233,39 @@
   position: relative;
   overflow: hidden;
   min-height: 100vh;
-  background: linear-gradient(180deg, #edf6ff 0%, #f7f9ff 54%, #f8fbff 100%);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(17,205,239,0.34), transparent 34%),
+    radial-gradient(circle at 88% 14%, rgba(111,66,193,0.3), transparent 36%),
+    radial-gradient(circle at 54% 88%, rgba(94,114,228,0.2), transparent 44%),
+    linear-gradient(135deg, #dff6ff 0%, #e8edff 48%, #f0e6ff 100%);
 }
 .page-login .auth-page-wrapper::before,
 .page-register .auth-page-wrapper::before {
   content: "";
   position: absolute;
-  left: -6vw;
-  right: -6vw;
-  top: -8vh;
-  height: 52vh;
+  inset: 0;
   pointer-events: none;
-  border-bottom-left-radius: 48px;
-  border-bottom-right-radius: 48px;
-  background:
-    radial-gradient(circle at 18% 30%, rgba(255,255,255,0.22), transparent 24%),
-    radial-gradient(circle at 82% 28%, rgba(155,81,224,0.35), transparent 28%),
-    linear-gradient(135deg, #11cdef 0%, #5e72e4 55%, #6f42c1 100%);
-  box-shadow: 0 26px 80px rgba(94,114,228,0.24);
+  background-image:
+    linear-gradient(rgba(255,255,255,0.28) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.22) 1px, transparent 1px);
+  background-size: 72px 72px;
+  opacity: 0.36;
 }
 .page-login .auth-page-wrapper::after,
 .page-register .auth-page-wrapper::after {
   content: "";
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 52%;
+  width: min(980px, 82vw);
+  height: min(980px, 82vw);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
   pointer-events: none;
   background:
-    linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
-    radial-gradient(circle at 16% 74%, rgba(17,205,239,0.2), transparent 28%),
-    radial-gradient(circle at 88% 72%, rgba(94,114,228,0.18), transparent 30%);
-  background-size: 72px 72px, 72px 72px, auto, auto;
-  opacity: 0.9;
+    radial-gradient(circle, rgba(255,255,255,0.5), rgba(255,255,255,0.08) 46%, transparent 68%);
+  filter: blur(18px);
+  opacity: 0.74;
 }
 .page-login .header.bg-gradient-info,
 .page-register .header.bg-gradient-info {
@@ -277,6 +278,15 @@
 .page-login .header .header-body,
 .page-register .header .header-body {
   margin-bottom: 0 !important;
+}
+.page-login .header h1,
+.page-register .header h1 {
+  color: #172b4d !important;
+  text-shadow: none;
+}
+.page-login .header .text-light,
+.page-register .header .text-light {
+  color: #53657d !important;
 }
 .page-login .separator,
 .page-register .separator {
