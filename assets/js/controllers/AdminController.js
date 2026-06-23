@@ -35,63 +35,87 @@ export class AdminController {
   }
 
   _bindAdminEvents() {
-    // Tab switching
-    document.querySelectorAll(".admin-tab").forEach(tab => {
-      tab.addEventListener("click", () => {
-        document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
-        document.querySelectorAll(".admin-panel").forEach(p => p.classList.remove("active"));
-        tab.classList.add("active");
-        const panel = document.getElementById(tab.dataset.panel);
-        panel?.classList.add("active");
-      });
-    });
-
-    // Create course
-    document.getElementById("createCourseBtn")?.addEventListener("click", () => this._showCourseModal());
-
-    // Edit/Delete course
-    document.querySelectorAll(".btn-edit-course").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const id = btn.dataset.courseId;
-        const course = await this.courseModel.getCourseById(id);
-        this._showCourseModal(course);
-      });
-    });
-
-    document.querySelectorAll(".btn-delete-course").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const id   = btn.dataset.courseId;
-        const lang = window.__i18n.current;
-        if (!confirm(lang === "vi" ? "Xóa khóa học này?" : "Delete this course?")) return;
-        try {
-          await this.courseModel.deleteCourse(id);
-          window.__toast.success(lang === "vi" ? "Đã xóa khóa học." : "Course deleted.");
-          this.showAdmin();
-        } catch (e) {
-          window.__toast.error(e.message);
+    // We use a single event listener on document.body for reliable event delegation
+    if (!this._adminClickHandler) {
+      this._adminClickHandler = async (e) => {
+        // Tab switching
+        const tab = e.target.closest(".admin-tab");
+        if (tab) {
+          document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
+          document.querySelectorAll(".admin-panel").forEach(p => p.classList.remove("active"));
+          tab.classList.add("active");
+          const panel = document.getElementById(tab.dataset.panel);
+          panel?.classList.add("active");
+          return;
         }
-      });
-    });
 
-    // Manage lessons
-    document.querySelectorAll(".btn-manage-lessons").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const courseId = btn.dataset.courseId;
-        await this._showLessonsManager(courseId);
-      });
-    });
+        // Create course
+        const createBtn = e.target.closest("#createCourseBtn");
+        if (createBtn) {
+          this._showCourseModal();
+          return;
+        }
 
-    // Manage quizzes
-    document.querySelectorAll(".btn-manage-quizzes").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const courseId = btn.dataset.courseId;
-        await this._showQuizzesManager(courseId);
-      });
-    });
+        // Edit course
+        const editBtn = e.target.closest(".btn-edit-course");
+        if (editBtn) {
+          e.stopPropagation();
+          const id = editBtn.dataset.courseId;
+          try {
+            const course = await this.courseModel.getCourseById(id);
+            this._showCourseModal(course);
+          } catch(err) {
+            alert("Error loading course: " + err.message);
+          }
+          return;
+        }
+
+        // Delete course
+        const deleteBtn = e.target.closest(".btn-delete-course");
+        if (deleteBtn) {
+          e.stopPropagation();
+          const id = deleteBtn.dataset.courseId;
+          const lang = window.__i18n.current;
+          if (!confirm(lang === "vi" ? "Xóa khóa học này?" : "Delete this course?")) return;
+          try {
+            await this.courseModel.deleteCourse(id);
+            window.__toast.success(lang === "vi" ? "Đã xóa khóa học." : "Course deleted.");
+            this.showAdmin();
+          } catch (err) {
+            alert("Error deleting course: " + err.message);
+          }
+          return;
+        }
+
+        // Manage lessons
+        const manageLessonsBtn = e.target.closest(".btn-manage-lessons");
+        if (manageLessonsBtn) {
+          e.stopPropagation();
+          const courseId = manageLessonsBtn.dataset.courseId;
+          try {
+            await this._showLessonsManager(courseId);
+          } catch(err) {
+            alert("Error loading lessons: " + err.message);
+          }
+          return;
+        }
+
+        // Manage quizzes
+        const manageQuizzesBtn = e.target.closest(".btn-manage-quizzes");
+        if (manageQuizzesBtn) {
+          e.stopPropagation();
+          const courseId = manageQuizzesBtn.dataset.courseId;
+          try {
+            await this._showQuizzesManager(courseId);
+          } catch(err) {
+            alert("Error loading quizzes: " + err.message);
+          }
+          return;
+        }
+      };
+      // Bind only once
+      document.body.addEventListener("click", this._adminClickHandler);
+    }
   }
 
   _showCourseModal(course = null) {

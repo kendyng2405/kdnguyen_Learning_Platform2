@@ -3,13 +3,13 @@
 //  Argon Dashboard layout with sidebar + top navbar
 // ============================================================
 
-import { AuthController }     from "./controllers/AuthController.js?v=5";
-import { CourseController }   from "./controllers/CourseController.js?v=5";
-import { QuizController }     from "./controllers/QuizController.js?v=5";
-import { ProgressController } from "./controllers/ProgressController.js?v=5";
-import { AdminController }    from "./controllers/AdminController.js?v=5";
-import { ChatbotController }  from "./controllers/ChatbotController.js?v=5";
-import { ProfileController }  from "./controllers/ProfileController.js?v=5";
+import { AuthController }     from "./controllers/AuthController.js?v=6";
+import { CourseController }   from "./controllers/CourseController.js?v=6";
+import { QuizController }     from "./controllers/QuizController.js?v=6";
+import { ProgressController } from "./controllers/ProgressController.js?v=6";
+import { AdminController }    from "./controllers/AdminController.js?v=6";
+import { ChatbotController }  from "./controllers/ChatbotController.js?v=6";
+import { ProfileController }  from "./controllers/ProfileController.js?v=6";
 import { AuthModel }          from "./models/AuthModel.js";
 import { I18nService }        from "./services/I18nService.js";
 import { ThemeService }       from "./services/ThemeService.js";
