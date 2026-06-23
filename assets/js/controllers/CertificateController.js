@@ -2,9 +2,9 @@
 //  CertificateController.js - Course completion certificate
 // ============================================================
 
-import { CourseModel } from "../models/CourseModel.js?v=9";
-import { QuizModel } from "../models/QuizModel.js?v=9";
-import { CertificateView } from "../views/CertificateView.js?v=9";
+import { CourseModel } from "../models/CourseModel.js?v=10";
+import { QuizModel } from "../models/QuizModel.js?v=10";
+import { CertificateView } from "../views/CertificateView.js?v=10";
 
 export class CertificateController {
   constructor(app) {

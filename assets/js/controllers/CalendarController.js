@@ -2,9 +2,9 @@
 //  CalendarController.js - Weekly schedule, deadlines, AI reminders
 // ============================================================
 
-import { CourseModel } from "../models/CourseModel.js?v=9";
-import { QuizModel } from "../models/QuizModel.js?v=9";
-import { CalendarView } from "../views/CalendarView.js?v=9";
+import { CourseModel } from "../models/CourseModel.js?v=10";
+import { QuizModel } from "../models/QuizModel.js?v=10";
+import { CalendarView } from "../views/CalendarView.js?v=10";
 
 export class CalendarController {
   constructor(app) {

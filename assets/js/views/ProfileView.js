@@ -25,7 +25,12 @@ export class ProfileView {
       roleStudent: "Student", roleAdmin: "Administrator",
     };
 
-    const roleLabel = profile?.role === "admin" ? t.roleAdmin : t.roleStudent;
+    const isSystemAdmin = profile?.role === "admin" && profile?.isSuperAdmin === true;
+    const isTeacher = profile?.role === "teacher" || profile?.role === "admin";
+    const roleLabel = isSystemAdmin
+      ? (lang === "vi" ? "Admin hệ thống" : "System Admin")
+      : (isTeacher ? (lang === "vi" ? "Giảng viên" : "Teacher") : t.roleStudent);
+    const roleClass = isSystemAdmin ? "admin" : (isTeacher ? "teacher" : "student");
     const initials  = (profile?.fullname || profile?.username || "?").charAt(0).toUpperCase();
 
     return `
@@ -35,7 +40,7 @@ export class ProfileView {
           <div class="row">
             <div class="col-lg-12">
               <h1 class="display-2 text-white">${profile?.fullname || profile?.username || "—"}</h1>
-              <p class="text-white mt-0 mb-3">@${profile?.username || "—"} · <span class="profile-role-badge profile-role-badge--${profile?.role === 'admin' ? 'admin' : 'student'}">${roleLabel}</span></p>
+              <p class="text-white mt-0 mb-3">@${profile?.username || "—"} · <span class="profile-role-badge profile-role-badge--${roleClass}">${roleLabel}</span></p>
             </div>
           </div>
         </div>

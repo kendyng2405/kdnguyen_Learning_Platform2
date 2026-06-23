@@ -98,6 +98,7 @@ export class QuizModel {
   async enrollCourse(uid, courseId) {
     const ref = doc(this.db, "progress", `${uid}_${courseId}`);
     const snap = await getDoc(ref);
+    const isNewEnrollment = !snap.exists();
     if (!snap.exists()) {
       await setDoc(ref, {
         completedLessons: [],
@@ -113,6 +114,15 @@ export class QuizModel {
       const enrolled = userSnap.data().enrolledCourses || [];
       if (!enrolled.includes(courseId)) {
         await updateDoc(userRef, { enrolledCourses: [...enrolled, courseId] });
+      }
+    }
+    if (isNewEnrollment) {
+      const courseRef = doc(this.db, "courses", courseId);
+      const courseSnap = await getDoc(courseRef);
+      if (courseSnap.exists()) {
+        await updateDoc(courseRef, {
+          enrolledCount: (courseSnap.data().enrolledCount || 0) + 1,
+        });
       }
     }
   }

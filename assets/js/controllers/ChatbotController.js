@@ -130,9 +130,12 @@ export class ChatbotController {
       console.warn("Could not fetch context data for chatbot", e);
     }
 
-   const systemPrompt = lang === "vi"
+   let systemPrompt = lang === "vi"
     ? `Bạn là BrilliantBot - trợ lý AI thông minh của Brilliant LMS. Trả lời thân thiện, xưng là mình và gọi người dùng là bạn.\nQUAN TRỌNG: Bạn ĐÃ ĐƯỢC CUNG CẤP nội dung của trang web hiện tại trong phần "Context" bên dưới. NẾU người dùng hỏi về "trang này", "câu hỏi này", "bài học này" hoặc hỏi các câu hỏi liên quan đến nội dung đang học, HÃY DỰA VÀO phần Context để trả lời. TUYỆT ĐỐI KHÔNG BẢO LÀ "không thể nhìn thấy trang", "không có khả năng truy cập", v.v. vì bạn đã có toàn bộ dữ liệu ở phần Context. ${contextStr}`
     : `You are BrilliantBot, a smart AI tutor for Brilliant LMS. Always reply directly and kindly.\nIMPORTANT: You HAVE BEEN PROVIDED the content of the current page in the "Context" section below. IF the user asks about "this page", "this question", "this lesson", you MUST USE the Context to answer. NEVER SAY "I cannot see your screen" or "I don't have access to the page" because you already have the data in Context. ${contextStr}`;
+    systemPrompt = lang === "vi"
+      ? `Bạn là BrilliantBot của Brilliant LMS. Trả lời đúng trọng tâm, dễ hiểu, tối đa 4 ý ngắn. Nếu giải thích quiz: nêu đáp án đúng, vì sao đúng, vì sao lựa chọn của học viên sai, và 1 mẹo nhớ. Không lan man, không hỏi ngược trừ khi thiếu dữ liệu. Luôn dùng Context nếu có. ${contextStr}`
+      : `You are BrilliantBot for Brilliant LMS. Reply concisely in at most 4 short points. For quiz explanations: state the correct answer, why it is correct, why the learner's choice is wrong, and one memory tip. Do not ramble or ask back unless data is missing. Always use Context when provided. ${contextStr}`;
 
     this.history.push({ role: "user", parts: [{ text: userMessage }] });
     if (this.history.length > 20) this.history = this.history.slice(-20);
@@ -161,7 +164,7 @@ export class ChatbotController {
     const body = {
       system_instruction: { parts: [{ text: systemPrompt }] },
       contents: finalHistory,
-      generationConfig: { temperature: 0.7, maxOutputTokens: 5000 },
+      generationConfig: { temperature: 0.45, maxOutputTokens: 900 },
     };
 
     return await this._fetchModel(null, body);

@@ -19,6 +19,13 @@ export class CourseModel {
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   }
 
+  async getCoursesForInstructor(uid, includeOrphans = true) {
+    const courses = await this.getAllCourses();
+    return courses.filter(course => (
+      course.ownerId === uid || (includeOrphans && !course.ownerId)
+    ));
+  }
+
   async getCourseById(id) {
     const snap = await getDoc(doc(this.db, "courses", id));
     return snap.exists() ? { id: snap.id, ...snap.data() } : null;
@@ -30,7 +37,7 @@ export class CourseModel {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lessonCount: 0,
-      enrolledCount: 0,
+      enrolledCount: data.enrolledCount || 0,
     });
     return ref.id;
   }

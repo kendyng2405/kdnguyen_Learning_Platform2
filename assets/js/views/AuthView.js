@@ -4,6 +4,98 @@
 
 export class AuthView {
 
+  renderLanding(lang) {
+    const t = lang === "vi" ? {
+      login: "Đăng nhập",
+      badge: "Nền tảng học tập cá nhân hóa bằng AI",
+      title: "Brilliant LMS",
+      sub: "Học theo lộ trình riêng, làm quiz có phản hồi tức thì, theo dõi deadline và nhận chứng chỉ khi hoàn thành khóa học.",
+      student: "Tạo tài khoản học viên",
+      teacher: "Tạo tài khoản giảng viên",
+      scroll: "Cuộn để khám phá",
+      features: ["AI đề xuất khóa học", "Quiz phản hồi tức thì", "Lịch học + deadline", "Chứng chỉ PDF"],
+      sectionTitle: "Một không gian học tập sống động",
+      sectionSub: "Brilliant LMS kết hợp bài học, nhiệm vụ, bảng xếp hạng và trợ lý AI để người học luôn biết bước tiếp theo.",
+      teacherTitle: "Dành cho giảng viên",
+      teacherSub: "Tạo khóa học, bài học, quiz AI và quản lý học viên trong các khóa học của mình.",
+      studentTitle: "Dành cho học viên",
+      studentSub: "Trả lời vài câu hỏi, nhận đề xuất khóa phù hợp và bắt đầu học ngay.",
+    } : {
+      login: "Sign in",
+      badge: "AI-personalized learning platform",
+      title: "Brilliant LMS",
+      sub: "Follow a personal path, get instant quiz feedback, track deadlines, and earn certificates when courses are completed.",
+      student: "Create student account",
+      teacher: "Create teacher account",
+      scroll: "Scroll to explore",
+      features: ["AI recommendations", "Instant quiz feedback", "Calendar + deadlines", "PDF certificates"],
+      sectionTitle: "A living learning space",
+      sectionSub: "Brilliant LMS combines lessons, missions, leaderboards, and an AI tutor so every learner knows the next step.",
+      teacherTitle: "For teachers",
+      teacherSub: "Create courses, lessons, AI quizzes, and manage learners in your own courses.",
+      studentTitle: "For students",
+      studentSub: "Answer a few questions, get matched with suitable courses, and start learning.",
+    };
+
+    return `
+      <div class="landing-page">
+        <header class="landing-nav">
+          <div class="landing-logo"><i class="fas fa-graduation-cap"></i><span>Brilliant LMS</span></div>
+          <button class="btn btn-outline-primary" id="landingLoginBtn">${t.login}</button>
+        </header>
+        <section class="landing-hero">
+          <div class="landing-hero-copy">
+            <span class="landing-badge">${t.badge}</span>
+            <h1>${t.title}</h1>
+            <p>${t.sub}</p>
+            <div class="landing-actions">
+              <button class="btn btn-primary btn-lg" id="landingStudentBtn"><i class="fas fa-user-graduate mr-2"></i>${t.student}</button>
+              <button class="btn btn-outline-primary btn-lg" id="landingTeacherBtn"><i class="fas fa-chalkboard-teacher mr-2"></i>${t.teacher}</button>
+            </div>
+            <small>${t.scroll}</small>
+          </div>
+          <div class="landing-orbit" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <div class="landing-orbit-card">
+              <i class="fas fa-robot"></i>
+              <strong>AI Tutor</strong>
+              <small>Quiz • Deadline • Certificate</small>
+            </div>
+          </div>
+        </section>
+        <section class="landing-feature-band">
+          ${t.features.map((feature, index) => `
+            <article style="--delay:${index * 0.08}s">
+              <i class="fas ${["fa-magic", "fa-check-circle", "fa-calendar-alt", "fa-award"][index]}"></i>
+              <strong>${feature}</strong>
+            </article>
+          `).join("")}
+        </section>
+        <section class="landing-story">
+          <div>
+            <span class="landing-badge">${t.sectionTitle}</span>
+            <h2>${t.sectionTitle}</h2>
+            <p>${t.sectionSub}</p>
+          </div>
+          <div class="landing-role-grid">
+            <article>
+              <i class="fas fa-chalkboard-teacher"></i>
+              <h3>${t.teacherTitle}</h3>
+              <p>${t.teacherSub}</p>
+              <button class="btn btn-sm btn-primary" onclick="window.__router.navigate('register','teacher')">${t.teacher}</button>
+            </article>
+            <article>
+              <i class="fas fa-user-graduate"></i>
+              <h3>${t.studentTitle}</h3>
+              <p>${t.studentSub}</p>
+              <button class="btn btn-sm btn-primary" onclick="window.__router.navigate('register','student')">${t.student}</button>
+            </article>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
   renderLogin(lang) {
     const t = lang === "vi" ? {
       title: "Chào mừng trở lại!",
@@ -90,7 +182,8 @@ export class AuthView {
     `;
   }
 
-  renderRegister(lang) {
+  renderRegister(lang, role = "student") {
+    const isTeacher = role === "teacher";
     const t = lang === "vi" ? {
       title: "Tạo tài khoản mới",
       sub: "Bắt đầu hành trình học tập của bạn",
@@ -137,7 +230,7 @@ export class AuthView {
               <div class="row justify-content-center">
                 <div class="col-lg-5 col-md-6">
                   <h1 class="text-white">🎓 Brilliant LMS</h1>
-                  <p class="text-lead text-light">${t.sub}</p>
+                  <p class="text-lead text-light">${isTeacher ? (lang === "vi" ? "Tạo và quản lý khóa học của riêng bạn" : "Create and manage your own courses") : t.sub}</p>
                 </div>
               </div>
             </div>
@@ -154,9 +247,11 @@ export class AuthView {
               <div class="card bg-secondary shadow border-0">
                 <div class="card-body px-lg-5 py-lg-5">
                   <div class="text-center text-muted mb-4">
-                    <small>${t.title}</small>
+                    <small>${isTeacher ? (lang === "vi" ? "Tạo tài khoản giảng viên" : "Create Teacher Account") : t.title}</small>
                   </div>
                   <form id="registerForm" novalidate>
+                    <input type="hidden" id="registerRole" value="${isTeacher ? "teacher" : "student"}" />
+                    ${isTeacher ? "" : this._renderStudentOnboarding(lang)}
                     <div class="form-group">
                       <div class="input-group input-group-alternative mb-3">
                         <div class="input-group-prepend">
@@ -215,5 +310,63 @@ export class AuthView {
         </div>
       </div>
     `;
+  }
+
+  _renderStudentOnboarding(lang) {
+    const t = lang === "vi" ? {
+      next: "Tiếp",
+      back: "Quay lại",
+      done: "Hoàn tất định hướng",
+      progress: "AI sẽ dùng các câu trả lời này để đề xuất khóa học phù hợp.",
+      steps: [
+        { key: "level", title: "Bạn đang học ở bậc nào?", options: ["THCS", "THPT", "Đại học", "Đi làm"] },
+        { key: "field", title: "Bạn muốn học về mảng nào?", options: ["Công nghệ", "Kinh doanh", "Ngoại ngữ", "Thiết kế"] },
+        { key: "topic", title: "Chủ đề bạn đang quan tâm?", options: ["Lập trình", "AI", "Kỹ năng mềm", "Ôn thi"] },
+        { key: "subject", title: "Môn bạn thích nhất?", options: ["Toán", "Tin học", "Tiếng Anh", "SWT"] },
+        { key: "goal", title: "Mục tiêu học của bạn?", options: ["Nắm nền tảng", "Thi đạt điểm cao", "Làm dự án", "Đi làm tốt hơn"] },
+      ],
+    } : {
+      next: "Next",
+      back: "Back",
+      done: "Finish setup",
+      progress: "AI will use these answers to recommend suitable courses.",
+      steps: [
+        { key: "level", title: "What is your current level?", options: ["Middle school", "High school", "University", "Working"] },
+        { key: "field", title: "What field do you want to learn?", options: ["Technology", "Business", "Languages", "Design"] },
+        { key: "topic", title: "What topic interests you?", options: ["Programming", "AI", "Soft skills", "Exam prep"] },
+        { key: "subject", title: "Favorite subject?", options: ["Math", "Computer Science", "English", "SWT"] },
+        { key: "goal", title: "Your learning goal?", options: ["Build basics", "Score higher", "Build projects", "Work better"] },
+      ],
+    };
+
+    return `
+      <div id="studentOnboardingWizard" class="student-onboarding-wizard">
+        <div class="onboarding-progress"><span id="onboardingProgress"></span></div>
+        <p class="onboarding-hint">${t.progress}</p>
+        ${t.steps.map((step, index) => `
+          <section class="onboarding-step ${index === 0 ? "active" : ""}">
+            <h3>${step.title}</h3>
+            <input type="hidden" name="pref_${step.key}" data-onboarding-input />
+            <div class="onboarding-options">
+              ${step.options.map(option => `<button type="button" class="onboarding-option" data-value="${this._attr(option)}">${option}</button>`).join("")}
+            </div>
+            <div class="onboarding-actions">
+              ${index > 0 ? `<button type="button" class="btn btn-sm btn-outline-primary" data-onboarding-prev>${t.back}</button>` : "<span></span>"}
+              ${index < t.steps.length - 1
+                ? `<button type="button" class="btn btn-sm btn-primary" data-onboarding-next>${t.next}</button>`
+                : `<button type="button" class="btn btn-sm btn-success" data-onboarding-next>${t.done}</button>`}
+            </div>
+          </section>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  _attr(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 }

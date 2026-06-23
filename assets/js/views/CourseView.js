@@ -15,7 +15,7 @@ export class CourseView {
     const leaderboardPct = Math.min(100, Math.round((completedLessons / leaderboardGoal) * 100));
     
     // Find the recommended course (first enrolled or first available)
-    const recommended = courses.length > 0 ? courses[0] : null;
+    const recommended = this._pickRecommendedCourse(courses, profile);
     const courseTitle = recommended ? recommended.title : "Introduction to Programming";
     const courseLevel = recommended ? (recommended.level || "LEVEL 1").toUpperCase() : "LEVEL 1";
     const courseThumb = recommended && recommended.thumbnail ? recommended.thumbnail : "https://cdn-icons-png.flaticon.com/512/4144/4144682.png";
@@ -112,6 +112,7 @@ export class CourseView {
               <div class="dashboard-course-meta mb-4">
                 <span><i class="fas fa-route mr-2 text-success"></i>${recommended?.category || t.courseMeta}</span>
                 <span><i class="fas fa-book-open mr-2 text-info"></i>${recommended?.lessonCount || 0} ${t.lessons}</span>
+                <span><i class="fas fa-users mr-2 text-primary"></i>${recommended?.enrolledCount || 0} ${lang === "vi" ? "người học" : "learners"}</span>
               </div>
               
               <button class="brilliant-btn-gradient btn-block btn-lg shadow" onclick="${startAction}">
@@ -199,6 +200,7 @@ export class CourseView {
               <div class="d-flex align-items-center text-muted font-weight-bold" style="gap: 1.5rem;">
                 <div><i class="fas fa-layer-group mr-2 text-dark"></i>${totalLessons} ${t.lessons}</div>
                 <div><i class="fas fa-dumbbell mr-2 text-dark"></i>${totalExercises} ${t.exercises}</div>
+                <div><i class="fas fa-users mr-2 text-dark"></i>${course.enrolledCount || 0}</div>
               </div>
               
               ${!isEnrolled ? `
@@ -404,7 +406,7 @@ export class CourseView {
             <h5 class="card-title mb-1">${course.title}</h5>
             <p class="text-muted small mb-2">${(course.description || "").slice(0, 80)}${course.description?.length > 80 ? "…" : ""}</p>
             <div class="d-flex justify-content-between align-items-center mt-auto">
-              <small class="text-muted">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"}</small>
+              <small class="text-muted">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"} · <i class="fas fa-users"></i> ${course.enrolledCount || 0}</small>
               ${pct > 0 ? `<div class="progress" style="width:60px;height:6px;"><div class="progress-bar bg-success" style="width:${pct}%"></div></div>` : ""}
             </div>
           </div>
@@ -430,7 +432,7 @@ export class CourseView {
             <p class="text-muted small mb-2">${(course.description || "").slice(0, 100)}${(course.description || "").length > 100 ? "…" : ""}</p>
             <div class="mt-auto">
               <div class="d-flex justify-content-between align-items-center">
-                <small class="text-muted">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"}</small>
+                <small class="text-muted">📖 ${course.lessonCount || 0} ${lang === "vi" ? "bài" : "lessons"} · <i class="fas fa-users"></i> ${course.enrolledCount || 0}</small>
                 <span class="badge badge-${levelColor}">${course.level || "—"}</span>
               </div>
               ${isEnrolled
@@ -447,6 +449,19 @@ export class CourseView {
   _calcProgress(course, progress) {
     if (!progress || !course?.lessonCount) return 0;
     return Math.round(((progress.completedLessons?.length || 0) / course.lessonCount) * 100);
+  }
+
+  _pickRecommendedCourse(courses, profile) {
+    if (!courses.length) return null;
+    const keywords = profile?.learningPreferences?.keywords || "";
+    if (!keywords) return courses[0];
+    const words = keywords.split(/\s+/).filter(Boolean);
+    return [...courses].sort((a, b) => this._courseMatchScore(b, words) - this._courseMatchScore(a, words))[0] || courses[0];
+  }
+
+  _courseMatchScore(course, words) {
+    const text = `${course.title || ""} ${course.category || ""} ${course.description || ""}`.toLowerCase();
+    return words.reduce((score, word) => score + (text.includes(word) ? 1 : 0), 0);
   }
 
   _lessonTypeIcon(type) {

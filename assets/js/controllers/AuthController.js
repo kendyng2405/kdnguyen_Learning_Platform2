@@ -2,14 +2,22 @@
 //  AuthController.js — Authentication Business Logic (MVC2)
 // ============================================================
 
-import { AuthModel } from "../models/AuthModel.js?v=9";
-import { AuthView }  from "../views/AuthView.js?v=9";
+import { AuthModel } from "../models/AuthModel.js?v=10";
+import { AuthView }  from "../views/AuthView.js?v=10";
 
 export class AuthController {
   constructor(app) {
     this.app   = app;
     this.model = new AuthModel();
     this.view  = new AuthView();
+  }
+
+  showLandingPage() {
+    const lang = window.__i18n.current;
+    this.app._showAppChrome?.(false);
+    const html = this.view.renderLanding(lang);
+    this._renderPage(html, "landing");
+    this._bindLandingPage();
   }
 
   showLoginPage() {
@@ -19,11 +27,18 @@ export class AuthController {
     this._bindLoginForm();
   }
 
-  showRegisterPage() {
+  showRegisterPage(role = "student") {
     const lang = window.__i18n.current;
-    const html = this.view.renderRegister(lang);
+    const html = this.view.renderRegister(lang, role);
     this._renderPage(html, "register");
+    this._bindRegisterOnboarding();
     this._bindRegisterForm();
+  }
+
+  _bindLandingPage() {
+    document.getElementById("landingStudentBtn")?.addEventListener("click", () => this.app.navigate("register", "student"));
+    document.getElementById("landingTeacherBtn")?.addEventListener("click", () => this.app.navigate("register", "teacher"));
+    document.getElementById("landingLoginBtn")?.addEventListener("click", () => this.app.navigate("login"));
   }
 
   async logout() {
@@ -84,6 +99,8 @@ export class AuthController {
       const email    = document.getElementById("registerEmail").value.trim();
       const password = document.getElementById("registerPassword").value;
       const confirm  = document.getElementById("registerConfirm").value;
+      const role     = document.getElementById("registerRole")?.value === "teacher" ? "teacher" : "student";
+      const learningPreferences = this._collectLearningPreferences();
       const btn      = form.querySelector(".btn--submit");
       const lang     = window.__i18n.current;
 
@@ -118,7 +135,7 @@ export class AuthController {
 
       this._setLoading(btn, true);
       try {
-        await this.model.register(username, fullname, email, password);
+        await this.model.register(username, fullname, email, password, { role, learningPreferences });
         window.__toast.success(
           lang === "vi" ? "Đăng ký thành công! Chào mừng bạn! 🎉" : "Registration successful! Welcome! 🎉"
         );
@@ -132,6 +149,74 @@ export class AuthController {
       e.preventDefault();
       this.app.navigate("login");
     });
+  }
+
+  _bindRegisterOnboarding() {
+    const wizard = document.getElementById("studentOnboardingWizard");
+    if (!wizard) return;
+
+    const steps = Array.from(wizard.querySelectorAll(".onboarding-step"));
+    let current = 0;
+
+    const showStep = (index) => {
+      steps.forEach((step, i) => step.classList.toggle("active", i === index));
+      const progress = document.getElementById("onboardingProgress");
+      if (progress) progress.style.width = `${Math.round(((index + 1) / steps.length) * 100)}%`;
+    };
+
+    wizard.addEventListener("click", (e) => {
+      const option = e.target.closest(".onboarding-option");
+      if (option) {
+        const step = option.closest(".onboarding-step");
+        step.querySelectorAll(".onboarding-option").forEach(btn => btn.classList.remove("selected"));
+        option.classList.add("selected");
+        const input = step.querySelector("[data-onboarding-input]");
+        if (input) input.value = option.dataset.value || option.textContent.trim();
+        this._playUiSound(660, 0.1);
+      }
+
+      if (e.target.closest("[data-onboarding-next]") && current < steps.length - 1) {
+        current += 1;
+        showStep(current);
+        this._playUiSound(760, 0.08);
+      }
+
+      if (e.target.closest("[data-onboarding-prev]") && current > 0) {
+        current -= 1;
+        showStep(current);
+        this._playUiSound(520, 0.08);
+      }
+    });
+
+    showStep(current);
+  }
+
+  _collectLearningPreferences() {
+    const fields = ["level", "field", "topic", "subject", "goal"];
+    const prefs = {};
+    fields.forEach(key => {
+      const value = document.querySelector(`[name="pref_${key}"]`)?.value.trim();
+      if (value) prefs[key] = value;
+    });
+    const keywords = Object.values(prefs).join(" ").toLowerCase();
+    return Object.keys(prefs).length ? { ...prefs, keywords } : null;
+  }
+
+  _playUiSound(freq = 640, duration = 0.08) {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new Ctx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = freq;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch (e) {}
   }
 
   _renderPage(html, name) {

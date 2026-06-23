@@ -54,8 +54,9 @@ export class AuthModel {
   }
 
   // ── Register with username uniqueness check ─────────────
-  async register(username, fullname, email, password) {
+  async register(username, fullname, email, password, options = {}) {
     const uname = username.trim().toLowerCase();
+    const cleanEmail = email.trim();
 
     // Check username uniqueness
     const q = query(
@@ -68,17 +69,22 @@ export class AuthModel {
       throw { code: "auth/username-taken" };
     }
 
-    const cred = await createUserWithEmailAndPassword(this.auth, email.trim(), password);
+    const cred = await createUserWithEmailAndPassword(this.auth, cleanEmail, password);
     const user = cred.user;
 
-    const isAdmin = APP_CONFIG.adminEmails.includes(email.trim());
+    const isSystemAdmin = (APP_CONFIG.adminEmails || []).includes(cleanEmail);
+    const isTeacherEmail = (APP_CONFIG.teacherEmails || []).includes(cleanEmail);
+    const requestedRole = options.role === "teacher" ? "teacher" : "student";
+    const role = isSystemAdmin ? "admin" : (isTeacherEmail ? "teacher" : requestedRole);
 
     await setDoc(doc(this.db, "users", user.uid), {
       uid: user.uid,
       username: uname,
       fullname: fullname.trim(),
-      email: email.trim(),
-      role: isAdmin ? "admin" : "student",
+      email: cleanEmail,
+      role,
+      isSuperAdmin: isSystemAdmin,
+      learningPreferences: options.learningPreferences || null,
       createdAt: serverTimestamp(),
       dob: null,
       progress: {},
@@ -160,6 +166,21 @@ export class AuthModel {
     }));
   }
 
+  async getAllUsers(maxRows = 200) {
+    const q = query(
+      collection(this.db, "users"),
+      orderBy("createdAt", "desc"),
+      limit(maxRows)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  async updateUserRole(uid, role) {
+    const isSuperAdmin = role === "admin";
+    await updateDoc(doc(this.db, "users", uid), { role, isSuperAdmin });
+  }
+
   // ── Password reset via email ────────────────────────────
   async sendPasswordReset(email) {
 //  const { sendPasswordResetEmail } = await import(
@@ -179,5 +200,9 @@ export class AuthModel {
 
   getCurrentUser() {
     return this.auth.currentUser;
+  }
+
+  isConfiguredAdmin(email) {
+    return (APP_CONFIG.adminEmails || []).includes(String(email || "").trim());
   }
 }

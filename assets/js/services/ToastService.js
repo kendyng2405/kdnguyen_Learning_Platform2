@@ -1,1 +1,1 @@
-export { ToastService } from "./I18nService.js?v=9";
+export { ToastService } from "./I18nService.js?v=10";

@@ -2,9 +2,9 @@
 //  AdminController.js — Admin Panel (CRUD for courses/lessons/quizzes)
 // ============================================================
 
-import { CourseModel } from "../models/CourseModel.js?v=9";
-import { QuizModel }   from "../models/QuizModel.js?v=9";
-import { AdminView }   from "../views/AdminView.js?v=9";
+import { CourseModel } from "../models/CourseModel.js?v=10";
+import { QuizModel }   from "../models/QuizModel.js?v=10";
+import { AdminView }   from "../views/AdminView.js?v=10";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 export class AdminController {
@@ -16,7 +16,7 @@ export class AdminController {
   }
 
   async showAdmin() {
-    if (!this.app.isAdmin()) {
+    if (!this.app.canManageCourses()) {
       window.__toast.error(
         window.__i18n.current === "vi"
           ? "Bạn không có quyền truy cập trang này."
@@ -27,9 +27,14 @@ export class AdminController {
     }
 
     this._renderPage('<div class="page-loading"><div class="spinner-ring"></div></div>', "admin");
-    const courses = await this.courseModel.getAllCourses();
+    const uid = this.app.getUser()?.uid;
+    const isSystemAdmin = this.app.isSystemAdmin();
+    const [courses, users] = await Promise.all([
+      isSystemAdmin ? this.courseModel.getAllCourses() : this.courseModel.getCoursesForInstructor(uid, true),
+      isSystemAdmin ? this.app.authModel.getAllUsers() : Promise.resolve([]),
+    ]);
     const lang    = window.__i18n.current;
-    const html    = this.view.renderAdmin(courses, lang);
+    const html    = this.view.renderAdmin(courses, lang, { isSystemAdmin, users });
     this._renderPage(html, "admin");
     this._bindAdminEvents();
   }
@@ -83,6 +88,23 @@ export class AdminController {
             this.showAdmin();
           } catch (err) {
             alert("Error deleting course: " + err.message);
+          }
+          return;
+        }
+
+        const saveRoleBtn = e.target.closest(".btn-save-user-role");
+        if (saveRoleBtn) {
+          e.stopPropagation();
+          if (!this.app.isSystemAdmin()) return;
+          const uid = saveRoleBtn.dataset.uid;
+          const select = document.querySelector(`.user-role-select[data-uid="${uid}"]`);
+          const role = select?.value || "student";
+          try {
+            await this.app.authModel.updateUserRole(uid, role);
+            window.__toast.success(window.__i18n.current === "vi" ? "Đã cập nhật vai trò người dùng." : "User role updated.");
+            this.showAdmin();
+          } catch (err) {
+            window.__toast.error(err.message);
           }
           return;
         }
@@ -188,7 +210,15 @@ export class AdminController {
           });
         }
 
-        const data = { title, description, category, level, thumbnail, password };
+        const ownerProfile = this.app.getUserProfile();
+        const ownerData = (!isEdit || !course.ownerId) && !this.app.isSystemAdmin()
+          ? {
+              ownerId: this.app.getUser()?.uid,
+              ownerName: ownerProfile?.fullname || ownerProfile?.username || "",
+              ownerEmail: ownerProfile?.email || "",
+            }
+          : {};
+        const data = { title, description, category, level, thumbnail, password, ...ownerData };
 
         if (isEdit) {
           await this.courseModel.updateCourse(course.id, data);
@@ -717,9 +747,9 @@ export class AdminController {
 
       try {
         const questions = await this._generateQuestionsWithAI(source, count, types, lang);
-        this._renderQuestionForms(questions, lang);
-        window.__toast.success(t.success);
         close();
+        this._renderQuestionForms(questions, lang);
+        setTimeout(() => window.__toast.success(t.success), 80);
       } catch (e) {
         window.__toast.error(lang === "vi" ? "Lỗi tạo câu hỏi AI: " + e.message : "AI Error: " + e.message);
       } finally {

@@ -15,7 +15,7 @@
 
 /* ── Toast Container ── */
 .toast-container {
-  position: fixed; top: 1rem; right: 1rem; z-index: 99998;
+  position: fixed; top: 1rem; right: 1rem; z-index: 100300;
   display: flex; flex-direction: column; gap: 0.5rem;
   max-width: 380px;
 }
@@ -2067,7 +2067,316 @@ body.auth-active #appFooter { display: none !important; }
   box-shadow: 0 6px 16px rgba(0,0,0,0.16);
 }
 .profile-role-badge--admin { background: #fb6340; }
+.profile-role-badge--teacher { background: #5e72e4; }
 .profile-role-badge--student { background: #2dce89; }
+
+/* Landing page and onboarding */
+.landing-page {
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(94,114,228,0.18), transparent 28%),
+    radial-gradient(circle at 85% 18%, rgba(17,205,239,0.2), transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, #f7f9fa 100%);
+  color: #172b4d;
+}
+.landing-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem min(5vw, 4rem);
+  backdrop-filter: blur(16px);
+  background: rgba(255,255,255,0.72);
+  border-bottom: 1px solid rgba(94,114,228,0.08);
+}
+.landing-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #5e72e4;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+.landing-hero {
+  min-height: 88vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 460px;
+  align-items: center;
+  gap: 3rem;
+  padding: 5rem min(5vw, 4rem);
+}
+.landing-badge {
+  display: inline-flex;
+  margin-bottom: 1rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  color: #5e72e4;
+  background: rgba(94,114,228,0.1);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.landing-hero h1 {
+  margin: 0;
+  color: #172b4d;
+  font-size: clamp(3.2rem, 8vw, 7rem);
+  line-height: 0.92;
+  font-weight: 950;
+}
+.landing-hero p,
+.landing-story p {
+  max-width: 680px;
+  color: #667085;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin: 2rem 0 1rem;
+}
+.landing-hero small {
+  color: #8898aa;
+  font-weight: 800;
+}
+.landing-orbit {
+  position: relative;
+  min-height: 460px;
+  display: grid;
+  place-items: center;
+}
+.landing-orbit > span {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(94,114,228,0.24);
+  animation: orbitSpin 12s linear infinite;
+}
+.landing-orbit > span:nth-child(1) { width: 420px; height: 420px; }
+.landing-orbit > span:nth-child(2) { width: 320px; height: 320px; animation-direction: reverse; }
+.landing-orbit > span:nth-child(3) { width: 210px; height: 210px; animation-duration: 8s; }
+.landing-orbit-card {
+  position: relative;
+  z-index: 2;
+  width: 260px;
+  min-height: 230px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.5rem;
+  border-radius: 28px;
+  color: #fff;
+  background: linear-gradient(135deg, #5e72e4, #11cdef);
+  box-shadow: 0 28px 70px rgba(94,114,228,0.28);
+  animation: floatCard 4s ease-in-out infinite;
+}
+.landing-orbit-card i {
+  font-size: 3rem;
+}
+.landing-feature-band,
+.landing-story {
+  padding: 3rem min(5vw, 4rem);
+}
+.landing-feature-band {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+.landing-feature-band article,
+.landing-role-grid article {
+  border: 1px solid #eef1f3;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.88);
+  box-shadow: 0 14px 34px rgba(50,50,93,0.08);
+  animation: landingRise 0.7s ease both;
+  animation-delay: var(--delay, 0s);
+}
+.landing-feature-band article {
+  padding: 1.25rem;
+}
+.landing-feature-band i,
+.landing-role-grid i {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+  border-radius: 14px;
+  color: #5e72e4;
+  background: rgba(94,114,228,0.1);
+}
+.landing-feature-band strong {
+  display: block;
+  color: #172b4d;
+  font-size: 1rem;
+}
+.landing-story {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 2rem;
+  align-items: start;
+  min-height: 70vh;
+}
+.landing-story h2 {
+  color: #172b4d;
+  font-size: clamp(2rem, 4vw, 4rem);
+  font-weight: 950;
+}
+.landing-role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.landing-role-grid article {
+  padding: 1.5rem;
+}
+.landing-role-grid h3 {
+  color: #172b4d;
+  font-weight: 900;
+}
+@keyframes orbitSpin { to { transform: rotate(360deg); } }
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+@keyframes landingRise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.student-onboarding-wizard {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 10px 28px rgba(50,50,93,0.08);
+}
+.onboarding-progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9ecef;
+}
+.onboarding-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #9b51e0, #4a90e2);
+  transition: width 0.28s ease;
+}
+.onboarding-hint {
+  margin: 0.8rem 0 1rem;
+  color: #8898aa;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.onboarding-step {
+  display: none;
+  animation: stepSlide 0.28s ease both;
+}
+.onboarding-step.active {
+  display: block;
+}
+.onboarding-step h3 {
+  color: #172b4d;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+.onboarding-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+.onboarding-option {
+  min-height: 48px;
+  border: 1px solid #dfe4ef;
+  border-radius: 14px;
+  background: #fff;
+  color: #525f7f;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.onboarding-option:hover,
+.onboarding-option.selected {
+  transform: translateY(-2px);
+  color: #5e72e4;
+  border-color: #5e72e4;
+  background: rgba(94,114,228,0.08);
+}
+.onboarding-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+@keyframes stepSlide {
+  from { opacity: 0; transform: translateX(22px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 0.65rem;
+}
+.admin-tab {
+  border: 1px solid #e9ecef;
+  border-radius: 999px;
+  background: #fff;
+  color: #525f7f;
+  padding: 0.7rem 1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+.admin-tab.active {
+  color: #fff;
+  border-color: #5e72e4;
+  background: #5e72e4;
+  box-shadow: 0 10px 24px rgba(94,114,228,0.2);
+}
+.admin-panel {
+  display: none;
+}
+.admin-panel.active {
+  display: block;
+  animation: pageFadeUp 0.22s ease both;
+}
+.admin-enrolled-pill {
+  display: inline-flex;
+  align-items: center;
+  min-width: 54px;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  color: #5e72e4;
+  background: rgba(94,114,228,0.1);
+  font-weight: 900;
+}
+
+.quiz-score-ring {
+  position: relative;
+  overflow: hidden;
+}
+.quiz-score-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(from calc(var(--score) * 3.6deg), transparent 0deg, rgba(255,255,255,0.08) 18deg, rgba(79,209,197,0.5) 34deg, transparent 56deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 58%, #000 60% 74%, transparent 76%);
+  mask: radial-gradient(circle, transparent 0 58%, #000 60% 74%, transparent 76%);
+  animation: scoreSweep 1.55s linear infinite;
+  pointer-events: none;
+}
+@keyframes scoreSweep {
+  to { transform: rotate(360deg); }
+}
 
 html[data-theme="dark"] .global-search-panel,
 html[data-theme="dark"] .quiz-review-modern,
@@ -2357,6 +2666,27 @@ html[data-theme="dark"] .bg-secondary {
   .calendar-hero-stats,
   .certificate-actions {
     flex-direction: column;
+  }
+  .landing-nav {
+    padding: 0.9rem 1rem;
+  }
+  .landing-hero,
+  .landing-story {
+    grid-template-columns: 1fr;
+    padding: 2rem 1rem;
+  }
+  .landing-orbit {
+    min-height: 320px;
+  }
+  .landing-orbit > span:nth-child(1) { width: 300px; height: 300px; }
+  .landing-orbit > span:nth-child(2) { width: 230px; height: 230px; }
+  .landing-feature-band,
+  .landing-role-grid,
+  .onboarding-options {
+    grid-template-columns: 1fr;
+  }
+  .landing-feature-band {
+    padding: 1rem;
   }
   .question-form-header,
   .admin-question-tools {

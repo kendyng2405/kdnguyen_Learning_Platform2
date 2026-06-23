@@ -18,6 +18,8 @@ export const APP_CONFIG = {
   name: "Brilliant LMS",
   defaultLang: "vi",
   defaultTheme: "light",
-  // Thêm email admin vào đây, ví dụ: ["admin@example.com"]
+  // Email trong danh sách này là admin hệ thống, quản lý toàn bộ LMS.
   adminEmails: [],
+  // Email trong danh sách này tự động thành giảng viên khi đăng ký.
+  teacherEmails: [],
 };

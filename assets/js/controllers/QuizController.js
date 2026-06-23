@@ -2,9 +2,9 @@
 //  QuizController.js - Quiz Business Logic
 // ============================================================
 
-import { QuizModel } from "../models/QuizModel.js?v=9";
-import { CourseModel } from "../models/CourseModel.js?v=9";
-import { QuizView } from "../views/QuizView.js?v=9";
+import { QuizModel } from "../models/QuizModel.js?v=10";
+import { CourseModel } from "../models/CourseModel.js?v=10";
+import { QuizView } from "../views/QuizView.js?v=10";
 
 export class QuizController {
   constructor(app) {
@@ -270,9 +270,12 @@ export class QuizController {
 
   _sendAIMessage(question, correct, chosen, wasCorrect = false) {
     const lang = window.__i18n.current;
-    const msg = lang === "vi"
+    let msg = lang === "vi"
       ? `Giải thích dễ hiểu giúp tôi câu hỏi: "${question}". Đáp án đúng là "${correct}". ${wasCorrect ? "Tôi đã chọn đúng, hãy giải thích vì sao đáp án này đúng." : `Tôi đã chọn "${chosen || "chưa trả lời"}", hãy giải thích vì sao sai và cách hiểu đúng.`}`
       : `Explain this question clearly: "${question}". The correct answer is "${correct}". ${wasCorrect ? "I chose correctly; explain why this answer is right." : `I chose "${chosen || "not answered"}"; explain why it is wrong and how to understand it.`}`;
+    msg = lang === "vi"
+      ? `Giải thích thật ngắn, tối đa 4 ý. Câu hỏi: "${question}". Đáp án đúng: "${correct}". ${wasCorrect ? "Tôi chọn đúng, hãy nói vì sao đúng và mẹo nhớ." : `Tôi chọn "${chosen || "chưa trả lời"}", hãy nói vì sao sai, cách hiểu đúng và mẹo nhớ.`}`
+      : `Explain briefly in at most 4 points. Question: "${question}". Correct answer: "${correct}". ${wasCorrect ? "I chose correctly; explain why and give one memory tip." : `I chose "${chosen || "not answered"}"; explain why it is wrong, the right idea, and one memory tip.`}`;
 
     const chatInput = document.getElementById("chatbotInput");
     const fab = document.getElementById("chatbotFab");

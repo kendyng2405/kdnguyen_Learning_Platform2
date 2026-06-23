@@ -3,26 +3,26 @@
 //  Argon Dashboard layout with sidebar + top navbar
 // ============================================================
 
-import { AuthController }         from "./controllers/AuthController.js?v=9";
-import { CourseController }       from "./controllers/CourseController.js?v=9";
-import { QuizController }         from "./controllers/QuizController.js?v=9";
-import { ProgressController }     from "./controllers/ProgressController.js?v=9";
-import { AdminController }        from "./controllers/AdminController.js?v=9";
-import { ChatbotController }      from "./controllers/ChatbotController.js?v=9";
-import { ProfileController }      from "./controllers/ProfileController.js?v=9";
-import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=9";
-import { MissionsController }     from "./controllers/MissionsController.js?v=9";
-import { CalendarController }     from "./controllers/CalendarController.js?v=9";
-import { CertificateController }  from "./controllers/CertificateController.js?v=9";
-import { AuthModel }              from "./models/AuthModel.js?v=9";
-import { I18nService }            from "./services/I18nService.js?v=9";
-import { ThemeService }           from "./services/ThemeService.js?v=9";
-import { ToastService }           from "./services/ToastService.js?v=9";
+import { AuthController }         from "./controllers/AuthController.js?v=10";
+import { CourseController }       from "./controllers/CourseController.js?v=10";
+import { QuizController }         from "./controllers/QuizController.js?v=10";
+import { ProgressController }     from "./controllers/ProgressController.js?v=10";
+import { AdminController }        from "./controllers/AdminController.js?v=10";
+import { ChatbotController }      from "./controllers/ChatbotController.js?v=10";
+import { ProfileController }      from "./controllers/ProfileController.js?v=10";
+import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=10";
+import { MissionsController }     from "./controllers/MissionsController.js?v=10";
+import { CalendarController }     from "./controllers/CalendarController.js?v=10";
+import { CertificateController }  from "./controllers/CertificateController.js?v=10";
+import { AuthModel }              from "./models/AuthModel.js?v=10";
+import { I18nService }            from "./services/I18nService.js?v=10";
+import { ThemeService }           from "./services/ThemeService.js?v=10";
+import { ToastService }           from "./services/ToastService.js?v=10";
 
 export class App {
   constructor() {
     this.routes = {
-      "/":          () => this._defaultRoute(),
+      "/":          () => this.authController.showLandingPage(),
       "/home":      () => this.courseController.showDashboard(),
       "/courses":   () => this.courseController.showCourseList(),
       "/progress":  () => this.progressController.showProgress(),
@@ -31,7 +31,7 @@ export class App {
       "/missions":  () => this.missionsController.showMissions(),
       "/admin":     () => this.adminController.showAdmin(),
       "/login":     () => this.authController.showLoginPage(),
-      "/register":  () => this.authController.showRegisterPage(),
+      "/register":  () => this.authController.showRegisterPage("student"),
       "/profile":   () => this.profileController.showProfile(),
     };
     this.currentUser    = null;
@@ -158,8 +158,8 @@ export class App {
 
         const target = this._pendingPath || this._getCurrentPath();
         this._pendingPath = null;
-        const publicPaths = ["/login", "/register"];
-        this._dispatchRoute(publicPaths.includes(target) ? "/home" : target, false);
+        const authOnlyPath = target === "/login" || target.startsWith("/register");
+        this._dispatchRoute(authOnlyPath ? "/home" : target, false);
       } else {
         this._showAppChrome(false);
         document.getElementById("chatbotWidget")?.classList.add("hidden");
@@ -208,7 +208,7 @@ export class App {
       missions:  "/missions",
       admin:     "/admin",
       login:     "/login",
-      register:  "/register",
+      register:  args[0] ? `/register/${args[0]}` : "/register",
       profile:   "/profile",
       course:    args[0] ? `/course/${args[0]}`   : "/courses",
       lesson:    args[1] ? `/lesson/${args[0]}/${args[1]}` : "/courses",
@@ -233,7 +233,7 @@ export class App {
 
     // Update top navbar brand text
     const pageNames = {
-      "/home": "Dashboard", "/courses": "Courses", "/progress": "Progress",
+      "/": "Brilliant LMS", "/home": "Dashboard", "/courses": "Courses", "/progress": "Progress",
       "/leaderboard": "Leaderboard", "/calendar": "Calendar", "/missions": "Missions", "/admin": "Admin", "/profile": "Profile",
     };
     const brandText = document.getElementById("navBrandText");
@@ -250,11 +250,13 @@ export class App {
     const lessonMatch = path.match(/^\/lesson\/([^/]+)\/(.+)$/);
     const quizMatch   = path.match(/^\/quiz\/([^/]+)\/(.+)$/);
     const certificateMatch = path.match(/^\/certificate\/(.+)$/);
+    const registerMatch = path.match(/^\/register\/(teacher|student)$/);
 
     if (courseMatch)  return this.courseController.showCourseDetail(courseMatch[1]);
     if (lessonMatch)  return this.courseController.showLesson(lessonMatch[1], lessonMatch[2]);
     if (quizMatch)    return this.quizController.showQuiz(quizMatch[1], quizMatch[2]);
     if (certificateMatch) return this.certificateController.showCertificate(certificateMatch[1]);
+    if (registerMatch) return this.authController.showRegisterPage(registerMatch[1]);
 
     const handler = this.routes[path];
     if (handler) {
@@ -265,11 +267,7 @@ export class App {
   }
 
   _defaultRoute() {
-    if (this.currentUser) {
-      this._dispatchRoute("/home", false);
-    } else {
-      this._dispatchRoute("/login", false);
-    }
+    this.authController.showLandingPage();
   }
 
   _getCurrentPath() {
@@ -475,8 +473,14 @@ export class App {
         avatar.textContent = initials;
       }
 
-      if (profile?.role === "admin") {
+      if (this.canManageCourses()) {
         adminItem?.style && (adminItem.style.display = "");
+        const adminLabel = adminItem?.querySelector("[data-vi][data-en]");
+        if (adminLabel) {
+          adminLabel.dataset.vi = this.isSystemAdmin() ? "Admin hệ thống" : "Giảng dạy";
+          adminLabel.dataset.en = this.isSystemAdmin() ? "System Admin" : "Teaching";
+          adminLabel.textContent = lang === "vi" ? adminLabel.dataset.vi : adminLabel.dataset.en;
+        }
       } else {
         adminItem?.style && (adminItem.style.display = "none");
       }
@@ -493,7 +497,13 @@ export class App {
   }
 
   // ── Public helpers ────────────────────────────────────────
-  isAdmin()        { return this.authModel.userProfile?.role === "admin"; }
+  isSystemAdmin()  {
+    const profile = this.authModel.userProfile;
+    return profile?.role === "admin" && (profile?.isSuperAdmin === true || this.authModel.isConfiguredAdmin(profile?.email));
+  }
+  isTeacher()      { return ["teacher", "admin"].includes(this.authModel.userProfile?.role); }
+  canManageCourses() { return this.isTeacher() || this.isSystemAdmin(); }
+  isAdmin()        { return this.canManageCourses(); }
   getUser()        { return this.currentUser; }
   getUserProfile() { return this.authModel.userProfile; }
 

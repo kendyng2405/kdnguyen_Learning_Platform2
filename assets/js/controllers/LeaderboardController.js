@@ -2,9 +2,9 @@
 //  LeaderboardController.js — XP ranking page
 // ============================================================
 
-import { AuthModel } from "../models/AuthModel.js?v=9";
-import { QuizModel } from "../models/QuizModel.js?v=9";
-import { LeaderboardView } from "../views/LeaderboardView.js?v=9";
+import { AuthModel } from "../models/AuthModel.js?v=10";
+import { QuizModel } from "../models/QuizModel.js?v=10";
+import { LeaderboardView } from "../views/LeaderboardView.js?v=10";
 
 export class LeaderboardController {
   constructor(app) {

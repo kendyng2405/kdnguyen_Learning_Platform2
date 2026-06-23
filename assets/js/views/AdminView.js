@@ -3,7 +3,7 @@
 // ============================================================
 
 export class AdminView {
-  renderAdmin(courses, lang) {
+  _renderAdminLegacy(courses, lang) {
     const t = lang === "vi" ? {
       title: "Quản trị hệ thống", sub: "Quản lý nội dung khóa học",
       courses: "Khóa học", addCourse: "+ Thêm khóa học", noCourses: "Chưa có khóa học nào.",
@@ -66,6 +66,170 @@ export class AdminView {
         </div>
       </div>
     `;
+  }
+
+  renderAdmin(courses, lang, context = {}) {
+    const users = context.users || [];
+    const isSystemAdmin = !!context.isSystemAdmin;
+    const t = lang === "vi" ? {
+      title: isSystemAdmin ? "Admin hệ thống" : "Không gian giảng viên",
+      sub: isSystemAdmin ? "Quản lý người dùng và toàn bộ khóa học trên LMS" : "Quản lý khóa học, bài học và quiz của bạn",
+      courses: "Khóa học",
+      users: "Người dùng",
+      addCourse: "+ Thêm khóa học",
+      noCourses: "Chưa có khóa học nào.",
+      lessons: "Bài học",
+      quizzes: "Quiz",
+      edit: "Sửa",
+      delete: "Xóa",
+      enrolled: "Người học",
+      owner: "Giảng viên",
+      role: "Vai trò",
+      save: "Lưu",
+      joined: "Ngày tạo",
+    } : {
+      title: isSystemAdmin ? "System Admin" : "Teacher Studio",
+      sub: isSystemAdmin ? "Manage LMS users and all courses" : "Manage your courses, lessons, and quizzes",
+      courses: "Courses",
+      users: "Users",
+      addCourse: "+ Add Course",
+      noCourses: "No courses yet.",
+      lessons: "Lessons",
+      quizzes: "Quizzes",
+      edit: "Edit",
+      delete: "Delete",
+      enrolled: "Learners",
+      owner: "Teacher",
+      role: "Role",
+      save: "Save",
+      joined: "Created",
+    };
+
+    return `
+      <div class="header bg-gradient-danger pb-8">
+        <div class="container-fluid">
+          <h1 class="text-white mb-0">${t.title}</h1>
+          <p class="text-white mt-1" style="opacity:0.8">${t.sub}</p>
+        </div>
+      </div>
+      <div class="container-fluid mt--7 admin-section">
+        <div class="admin-tabs mb-3">
+          <button type="button" class="admin-tab active" data-panel="adminCoursesPanel"><i class="fas fa-book mr-2"></i>${t.courses}</button>
+          ${isSystemAdmin ? `<button type="button" class="admin-tab" data-panel="adminUsersPanel"><i class="fas fa-users mr-2"></i>${t.users}</button>` : ""}
+        </div>
+        <section class="admin-panel active" id="adminCoursesPanel">
+          <div class="card shadow">
+            <div class="card-header border-0">
+              <div class="row align-items-center">
+                <div class="col"><h3 class="mb-0">${t.courses} (${courses.length})</h3></div>
+                <div class="col text-right">
+                  <button class="btn btn-sm btn-primary" id="createCourseBtn">${t.addCourse}</button>
+                </div>
+              </div>
+            </div>
+            ${courses.length === 0
+              ? `<div class="card-body text-center py-5"><p class="text-muted">${t.noCourses}</p></div>`
+              : `<div class="table-responsive">
+                  <table class="table align-items-center table-flush">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>${lang === "vi" ? "Tên khóa học" : "Title"}</th>
+                        <th>${lang === "vi" ? "Danh mục" : "Category"}</th>
+                        <th>${lang === "vi" ? "Cấp độ" : "Level"}</th>
+                        <th>${t.lessons}</th>
+                        <th>${t.enrolled}</th>
+                        ${isSystemAdmin ? `<th>${t.owner}</th>` : ""}
+                        <th>${lang === "vi" ? "Hành động" : "Actions"}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${courses.map(c => `
+                        <tr>
+                          <td><strong>${this._escape(c.title)}</strong></td>
+                          <td>${this._escape(c.category || "—")}</td>
+                          <td><span class="badge badge-dot mr-4"><i class="bg-${c.level === 'beginner' ? 'success' : c.level === 'advanced' ? 'danger' : 'warning'}"></i> ${this._escape(c.level || "—")}</span></td>
+                          <td>${c.lessonCount || 0}</td>
+                          <td><span class="admin-enrolled-pill"><i class="fas fa-user-graduate mr-1"></i>${c.enrolledCount || 0}</span></td>
+                          ${isSystemAdmin ? `<td>${this._escape(c.ownerName || c.ownerEmail || "—")}</td>` : ""}
+                          <td>
+                            <button class="btn btn-sm btn-outline-primary btn-manage-lessons" data-course-id="${c.id}"><i class="fas fa-book-open mr-1"></i>${t.lessons}</button>
+                            <button class="btn btn-sm btn-outline-info btn-manage-quizzes" data-course-id="${c.id}"><i class="fas fa-clipboard-list mr-1"></i>${t.quizzes}</button>
+                            <button class="btn btn-sm btn-outline-default btn-edit-course" data-course-id="${c.id}"><i class="fas fa-pen mr-1"></i>${t.edit}</button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete-course" data-course-id="${c.id}"><i class="fas fa-trash mr-1"></i>${t.delete}</button>
+                          </td>
+                        </tr>
+                      `).join("")}
+                    </tbody>
+                  </table>
+                </div>`}
+          </div>
+        </section>
+        ${isSystemAdmin ? this._renderUsersPanel(users, t, lang) : ""}
+      </div>
+    `;
+  }
+
+  _renderUsersPanel(users, t, lang) {
+    return `
+      <section class="admin-panel" id="adminUsersPanel">
+        <div class="card shadow">
+          <div class="card-header border-0">
+            <h3 class="mb-0">${t.users} (${users.length})</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-items-center table-flush">
+              <thead class="thead-light">
+                <tr>
+                  <th>${lang === "vi" ? "Người dùng" : "User"}</th>
+                  <th>Email</th>
+                  <th>XP</th>
+                  <th>${t.role}</th>
+                  <th>${t.joined}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${users.map(user => `
+                  <tr>
+                    <td><strong>${this._escape(user.fullname || user.username || "—")}</strong><br><small class="text-muted">@${this._escape(user.username || "—")}</small></td>
+                    <td>${this._escape(user.email || "—")}</td>
+                    <td>${user.xp || 0}</td>
+                    <td>
+                      <select class="form-control form-control-sm user-role-select" data-uid="${user.uid || user.id}">
+                        ${["student", "teacher", "admin"].map(role => `<option value="${role}" ${user.role === role ? "selected" : ""}>${this._roleLabel(role, lang)}</option>`).join("")}
+                      </select>
+                    </td>
+                    <td>${this._formatDate(user.createdAt, lang)}</td>
+                    <td class="text-right"><button class="btn btn-sm btn-primary btn-save-user-role" data-uid="${user.uid || user.id}">${t.save}</button></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  _roleLabel(role, lang) {
+    const vi = { student: "Học viên", teacher: "Giảng viên", admin: "Admin hệ thống" };
+    const en = { student: "Student", teacher: "Teacher", admin: "System Admin" };
+    return (lang === "vi" ? vi : en)[role] || role;
+  }
+
+  _formatDate(value, lang) {
+    const raw = value?.toDate ? value.toDate() : value;
+    const date = raw ? new Date(raw) : null;
+    return date && !Number.isNaN(date.getTime())
+      ? date.toLocaleDateString(lang === "vi" ? "vi-VN" : "en-US")
+      : "—";
+  }
+
+  _escape(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
   }
 
   renderCourseModal(course, lang) {
