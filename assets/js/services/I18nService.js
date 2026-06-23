@@ -14,19 +14,7 @@ export class I18nService {
     this.current = this.current === "vi" ? "en" : "vi";
     localStorage.setItem("kd_lang", this.current);
     this._applyLang(this.current);
-    const btn = document.getElementById("langToggle");
-    if (btn) btn.textContent = this.current === "vi" ? "VI/EN" : "EN/VI";
-    const profile = window.__app?.getUserProfile();
-    const user    = window.__app?.getUser();
-    if (user && profile) {
-      const displayName = profile.username || profile.fullname || user.email.split("@")[0];
-      const welcome = document.getElementById("welcomeText");
-      if (welcome) {
-        welcome.textContent = this.current === "vi"
-          ? `Chào, ${displayName} 👋`
-          : `Welcome, ${displayName} 👋`;
-      }
-    }
+    return this.current;
   }
 
   _applyLang(lang) {
@@ -44,18 +32,34 @@ export class ThemeService {
   constructor() {
     this.current = localStorage.getItem("kd_theme") || APP_CONFIG.defaultTheme;
     this._apply(this.current);
-    const btn = document.getElementById("themeToggle");
-    if (btn) btn.textContent = this.current === "dark" ? "☀️" : "🌙";
+    this.syncButton();
   }
 
   toggle() {
     this.current = this.current === "light" ? "dark" : "light";
     localStorage.setItem("kd_theme", this.current);
     this._apply(this.current);
+    this.syncButton();
+    return this.current;
+  }
+
+  syncButton() {
+    const btn = document.getElementById("themeToggle");
+    const icon = btn?.querySelector("i");
+    if (icon) {
+      icon.className = this.current === "dark" ? "fas fa-sun" : "fas fa-moon";
+    }
+    if (btn) {
+      btn.setAttribute(
+        "aria-label",
+        this.current === "dark" ? "Switch to light mode" : "Switch to dark mode"
+      );
+    }
   }
 
   _apply(theme) {
     document.documentElement.setAttribute("data-theme", theme);
+    document.body?.setAttribute("data-theme", theme);
   }
 }
 

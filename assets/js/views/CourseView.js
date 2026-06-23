@@ -7,19 +7,26 @@ export class CourseView {
   renderDashboard(courses, allProgress, profile, lang) {
     const name = profile && profile.fullname ? profile.fullname.split(" ")[0] : "Bạn";
     const streak = profile?.streak || 0;
+    const xp = profile?.xp || 0;
+    const leaderboardGoal = 175;
+    const leaderboardPct = Math.min(100, Math.round((xp / leaderboardGoal) * 100));
     
     // Find the recommended course (first enrolled or first available)
     const recommended = courses.length > 0 ? courses[0] : null;
     const courseTitle = recommended ? recommended.title : "Introduction to Programming";
     const courseLevel = recommended ? (recommended.level || "LEVEL 1").toUpperCase() : "LEVEL 1";
     const courseThumb = recommended && recommended.thumbnail ? recommended.thumbnail : "https://cdn-icons-png.flaticon.com/512/4144/4144682.png";
+    const startAction = recommended ? `window.__router.navigate('course', '${recommended.id}')` : "window.__router.navigate('courses')";
     
     const t = lang === "vi" ? {
       solve: "Giải thêm 3 bài tập để bắt đầu chuỗi ngày",
       premiumTitle: "Mở khóa toàn bộ tính năng Premium",
       premiumSub: "để học thông minh hơn, nhanh hơn",
       premiumBtn: "Khám phá Premium",
-      leagues: "MỞ KHÓA BẢNG XẾP HẠNG",
+      leagues: xp >= leaderboardGoal ? "BẢNG XẾP HẠNG" : "MỞ KHÓA BẢNG XẾP HẠNG",
+      leaderboardSub: `${xp} / ${leaderboardGoal} XP`,
+      courseMeta: "Lộ trình học",
+      lessons: "bài học",
       recommended: "ĐỀ XUẤT",
       start: "Bắt đầu",
       days: ["T3", "T4", "T5", "T6", "T7"]
@@ -28,7 +35,10 @@ export class CourseView {
       premiumTitle: "Unlock all learning with Premium",
       premiumSub: "to get smarter, faster",
       premiumBtn: "Explore Premium",
-      leagues: "UNLOCK LEAGUES",
+      leagues: xp >= leaderboardGoal ? "LEADERBOARD" : "UNLOCK LEADERBOARD",
+      leaderboardSub: `${xp} / ${leaderboardGoal} XP`,
+      courseMeta: "Learning path",
+      lessons: "lessons",
       recommended: "RECOMMENDED",
       start: "Start",
       days: ["T", "W", "Th", "F", "S"]
@@ -71,14 +81,15 @@ export class CourseView {
               <button class="brilliant-btn-gradient-orange w-100 shadow-sm" onclick="window.__router.navigate('courses')">${t.premiumBtn}</button>
             </div>
 
-            <!-- Leagues Card -->
-            <div class="brilliant-card d-flex align-items-center">
-              <div class="icon icon-shape bg-secondary text-dark rounded-circle mr-3" style="width: 50px; height: 50px;">
-                <i class="fas fa-lock"></i>
+            <!-- Leaderboard Card -->
+            <div class="brilliant-card dashboard-leaderboard-card" onclick="window.__router.navigate('leaderboard')">
+              <div class="icon icon-shape ${xp >= leaderboardGoal ? 'bg-success text-white' : 'bg-secondary text-dark'} rounded-circle mr-3" style="width: 50px; height: 50px;">
+                <i class="fas ${xp >= leaderboardGoal ? 'fa-trophy' : 'fa-lock'}"></i>
               </div>
-              <div>
+              <div class="flex-grow-1">
                 <h5 class="text-muted font-weight-bold mb-1" style="letter-spacing: 0.5px;">${t.leagues}</h5>
-                <p class="text-dark mb-0 font-weight-bold">0 of 175 XP</p>
+                <p class="text-dark mb-2 font-weight-bold">${t.leaderboardSub}</p>
+                <div class="leaderboard-unlock-track"><span style="width:${leaderboardPct}%"></span></div>
               </div>
             </div>
             
@@ -95,24 +106,14 @@ export class CourseView {
                 <img src="${courseThumb}" alt="Course" class="img-fluid" />
               </div>
               
-              <div class="d-flex align-items-center justify-content-center mb-4">
-                <div class="icon icon-shape bg-success text-white rounded-circle mr-3 shadow-sm" style="width: 40px; height: 40px;">
-                  <i class="fas fa-play"></i>
-                </div>
-                <h4 class="mb-0 font-weight-bold text-dark">Filtering Images</h4>
+              <div class="dashboard-course-meta mb-4">
+                <span><i class="fas fa-route mr-2 text-success"></i>${recommended?.category || t.courseMeta}</span>
+                <span><i class="fas fa-book-open mr-2 text-info"></i>${recommended?.lessonCount || 0} ${t.lessons}</span>
               </div>
               
-              <button class="brilliant-btn-gradient btn-block btn-lg shadow" onclick="window.__router.navigate('course', '${recommended ? recommended.id : ''}')">
+              <button class="brilliant-btn-gradient btn-block btn-lg shadow" onclick="${startAction}">
                 ${t.start}
               </button>
-              
-              <div class="d-flex justify-content-center mt-5">
-                ${courses.slice(1, 6).map(c => `
-                  <div class="mx-2 brilliant-course-thumb shadow-sm" style="width: 60px; height: 60px; cursor: pointer;" onclick="window.__router.navigate('course', '${c.id}')">
-                    <img src="${c.thumbnail || 'https://cdn-icons-png.flaticon.com/512/4144/4144682.png'}" class="img-fluid h-100" style="object-fit: cover;" />
-                  </div>
-                `).join('')}
-              </div>
             </div>
           </div>
           

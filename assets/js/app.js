@@ -3,17 +3,18 @@
 //  Argon Dashboard layout with sidebar + top navbar
 // ============================================================
 
-import { AuthController }     from "./controllers/AuthController.js?v=6";
-import { CourseController }   from "./controllers/CourseController.js?v=6";
-import { QuizController }     from "./controllers/QuizController.js?v=6";
-import { ProgressController } from "./controllers/ProgressController.js?v=6";
-import { AdminController }    from "./controllers/AdminController.js?v=6";
-import { ChatbotController }  from "./controllers/ChatbotController.js?v=6";
-import { ProfileController }  from "./controllers/ProfileController.js?v=6";
-import { AuthModel }          from "./models/AuthModel.js";
-import { I18nService }        from "./services/I18nService.js";
-import { ThemeService }       from "./services/ThemeService.js";
-import { ToastService }       from "./services/ToastService.js";
+import { AuthController }         from "./controllers/AuthController.js?v=7";
+import { CourseController }       from "./controllers/CourseController.js?v=7";
+import { QuizController }         from "./controllers/QuizController.js?v=7";
+import { ProgressController }     from "./controllers/ProgressController.js?v=7";
+import { AdminController }        from "./controllers/AdminController.js?v=7";
+import { ChatbotController }      from "./controllers/ChatbotController.js?v=7";
+import { ProfileController }      from "./controllers/ProfileController.js?v=7";
+import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=7";
+import { AuthModel }              from "./models/AuthModel.js?v=7";
+import { I18nService }            from "./services/I18nService.js?v=7";
+import { ThemeService }           from "./services/ThemeService.js?v=7";
+import { ToastService }           from "./services/ToastService.js?v=7";
 
 export class App {
   constructor() {
@@ -22,6 +23,7 @@ export class App {
       "/home":      () => this.courseController.showDashboard(),
       "/courses":   () => this.courseController.showCourseList(),
       "/progress":  () => this.progressController.showProgress(),
+      "/leaderboard": () => this.leaderboardController.showLeaderboard(),
       "/admin":     () => this.adminController.showAdmin(),
       "/login":     () => this.authController.showLoginPage(),
       "/register":  () => this.authController.showRegisterPage(),
@@ -120,6 +122,7 @@ export class App {
     this.adminController    = new AdminController(this);
     this.chatbotController  = new ChatbotController(this);
     this.profileController  = new ProfileController(this);
+    this.leaderboardController = new LeaderboardController(this);
 
     this._bindNavEvents();
     this._bindThemeToggle();
@@ -152,7 +155,7 @@ export class App {
         this._showAppChrome(false);
         document.getElementById("chatbotWidget")?.classList.add("hidden");
         document.getElementById("chatbotFab")?.classList.add("hidden");
-        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quiz", "/progress", "/admin", "/profile"];
+        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quiz", "/progress", "/leaderboard", "/admin", "/profile"];
         const cur = this._getCurrentPath();
         if (protectedPaths.some(p => cur.startsWith(p))) {
           this._dispatchRoute("/login", false);
@@ -191,6 +194,7 @@ export class App {
       dashboard: "/home",
       courses:   "/courses",
       progress:  "/progress",
+      leaderboard: "/leaderboard",
       admin:     "/admin",
       login:     "/login",
       register:  "/register",
@@ -218,7 +222,7 @@ export class App {
     // Update top navbar brand text
     const pageNames = {
       "/home": "Dashboard", "/courses": "Courses", "/progress": "Progress",
-      "/admin": "Admin", "/profile": "Profile",
+      "/leaderboard": "Leaderboard", "/admin": "Admin", "/profile": "Profile",
     };
     const brandText = document.getElementById("navBrandText");
     if (brandText) {
@@ -326,10 +330,7 @@ export class App {
     btn?.addEventListener("click", (e) => {
       e.preventDefault();
       this.theme.toggle();
-      const icon = btn.querySelector("i");
-      if (icon) {
-        icon.className = this.theme.current === "dark" ? "fas fa-sun" : "fas fa-moon";
-      }
+      this.theme.syncButton();
     });
   }
 
@@ -353,7 +354,9 @@ export class App {
       el.textContent = lang === "vi" ? el.dataset.vi : el.dataset.en;
     });
     const langBtn = document.getElementById("langBtnText");
-    if (langBtn) langBtn.innerHTML = lang === "vi" ? `<i class="fas fa-globe-asia mr-1"></i> VI` : `<i class="fas fa-globe-americas mr-1"></i> EN`;
+    const langIcon = document.getElementById("langBtnIcon");
+    if (langBtn) langBtn.textContent = lang === "vi" ? "VI" : "EN";
+    if (langIcon) langIcon.className = lang === "vi" ? "fas fa-globe-asia mr-1" : "fas fa-globe-americas mr-1";
   }
 
   // ── Navbar update ────────────────────────────────────────

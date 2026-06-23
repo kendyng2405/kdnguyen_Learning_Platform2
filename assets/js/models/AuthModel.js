@@ -16,7 +16,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp,
-  collection, query, where, getDocs, limit,
+  collection, query, where, getDocs, limit, orderBy,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { APP_CONFIG } from "../config.js";
 
@@ -144,6 +144,20 @@ export class AuthModel {
     if (this.userProfile) {
       Object.assign(this.userProfile, data);
     }
+  }
+
+  async getLeaderboard(maxRows = 30) {
+    const q = query(
+      collection(this.db, "users"),
+      orderBy("xp", "desc"),
+      limit(maxRows)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d, index) => ({
+      id: d.id,
+      rank: index + 1,
+      ...d.data(),
+    }));
   }
 
   // ── Password reset via email ────────────────────────────

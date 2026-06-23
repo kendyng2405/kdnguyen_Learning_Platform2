@@ -2,9 +2,9 @@
 //  ProgressController.js — Progress Tracking
 // ============================================================
 
-import { QuizModel }   from "../models/QuizModel.js";
-import { CourseModel } from "../models/CourseModel.js";
-import { ProgressView } from "../views/ProgressView.js";
+import { QuizModel }    from "../models/QuizModel.js?v=7";
+import { CourseModel }  from "../models/CourseModel.js?v=7";
+import { ProgressView } from "../views/ProgressView.js?v=7";
 
 export class ProgressController {
   constructor(app) {
@@ -25,13 +25,10 @@ export class ProgressController {
     ]);
 
     // Merge progress with course info
-    const data = await Promise.all(
-      allProgress.map(async (p) => {
-        const course  = allCourses.find(c => c.id === p.courseId);
-        const lessons = course ? await this.courseModel.getLessons(p.courseId) : [];
-        return { ...p, course, totalLessons: lessons.length };
-      })
-    );
+    const data = allProgress.map((p) => {
+      const course = allCourses.find(c => c.id === p.courseId);
+      return { ...p, course, totalLessons: course?.lessonCount || 0 };
+    });
 
     const html = this.view.renderProgress(data, lang);
     this._renderPage(html, "progress");

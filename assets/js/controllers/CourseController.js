@@ -2,9 +2,9 @@
 //  CourseController.js — Course & Lesson Business Logic
 // ============================================================
 
-import { CourseModel } from "../models/CourseModel.js";
-import { QuizModel }   from "../models/QuizModel.js";
-import { CourseView }  from "../views/CourseView.js";
+import { CourseModel } from "../models/CourseModel.js?v=7";
+import { QuizModel }   from "../models/QuizModel.js?v=7";
+import { CourseView }  from "../views/CourseView.js?v=7";
 
 export class CourseController {
   constructor(app) {
@@ -29,16 +29,14 @@ export class CourseController {
 
   async showCourseList() {
     this._renderPage('<div class="page-loading"><div class="spinner-ring"></div></div>', "courses");
-    const courses = await this.courseModel.getAllCourses();
     const uid     = this.app.getUser().uid;
     const profile = this.app.getUserProfile();
     const lang    = window.__i18n.current;
-
-    // Load progress for all courses
-    const progressMap = {};
-    for (const c of courses) {
-      progressMap[c.id] = await this.quizModel.getProgress(uid, c.id);
-    }
+    const [courses, allProgress] = await Promise.all([
+      this.courseModel.getAllCourses(),
+      this.quizModel.getAllProgressForUser(uid),
+    ]);
+    const progressMap = Object.fromEntries(allProgress.map(p => [p.courseId, p]));
 
     const html = this.view.renderCourseList(courses, progressMap, profile, lang);
     this._renderPage(html, "courses");

@@ -2,8 +2,8 @@
 //  ProfileController.js — Profile Management (MVC2 Controller)
 // ============================================================
 
-import { AuthModel }   from "../models/AuthModel.js";
-import { ProfileView } from "../views/ProfileView.js";
+import { AuthModel }   from "../models/AuthModel.js?v=7";
+import { ProfileView } from "../views/ProfileView.js?v=7";
 
 export class ProfileController {
   constructor(app) {
