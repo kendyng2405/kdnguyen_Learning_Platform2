@@ -37,7 +37,7 @@ export class AuthView {
         <div class="auth-card animate-slide-up">
           <div class="auth-brand">
             <div class="auth-logo">🎓</div>
-            <h1 class="auth-logo-text">KDLearnSpace</h1>
+            <h1 class="auth-logo-text">Brilliant LMS</h1>
           </div>
           <h2 class="auth-title">${t.title}</h2>
           <p class="auth-sub">${t.sub}</p>
@@ -116,7 +116,7 @@ export class AuthView {
         <div class="auth-card auth-card--register animate-slide-up">
           <div class="auth-brand">
             <div class="auth-logo">🎓</div>
-            <h1 class="auth-logo-text">KDLearnSpace</h1>
+            <h1 class="auth-logo-text">Brilliant LMS</h1>
           </div>
           <h2 class="auth-title">${t.title}</h2>
           <p class="auth-sub">${t.sub}</p>

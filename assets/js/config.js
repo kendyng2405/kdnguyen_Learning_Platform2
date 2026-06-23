@@ -1,5 +1,5 @@
 // ============================================================
-//  config.js — KDLearnSpace Configuration
+//  config.js — Brilliant LMS Configuration
 // ============================================================
 
 export const firebaseConfig = {
@@ -15,7 +15,7 @@ export const firebaseConfig = {
 export const GEMINI_PROXY_URL = "https://kdnguyen-learning-platform2-t1cm.vercel.app/api/chat";
 
 export const APP_CONFIG = {
-  name: "KDLearnSpace",
+  name: "Brilliant LMS",
   defaultLang: "vi",
   defaultTheme: "light",
   // Thêm email admin vào đây, ví dụ: ["admin@example.com"]

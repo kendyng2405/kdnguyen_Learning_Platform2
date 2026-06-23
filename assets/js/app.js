@@ -1,5 +1,5 @@
 // ============================================================
-//  app.js — KDLearnSpace MVC2 Bootstrap & Router
+//  app.js — Brilliant LMS MVC2 Bootstrap & Router
 //  Path-based routing: /home, /courses, /login, /register, /profile
 //  GitHub Pages compatible via 404.html redirect trick
 // ============================================================

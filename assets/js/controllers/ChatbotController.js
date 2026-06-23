@@ -78,7 +78,7 @@ export class ChatbotController {
       this._appendMessage("bot", reply);
     } catch (e) {
       this._hideTyping();
-      console.error("[KDLearnBot] Error:", e.message);
+      console.error("[BrilliantBot] Error:", e.message);
       const lang = window.__i18n?.current || "vi";
       if (e.message.includes("1048576") || e.message.includes("exceeds the maximum number of tokens")) {
         this._appendMessage("bot", lang === "vi"
@@ -127,8 +127,8 @@ export class ChatbotController {
     }
 
    const systemPrompt = lang === "vi"
-    ? `Bạn là KDLearnBot - trợ lý AI thông minh của KDLearnSpace. Trả lời thân thiện, xưng là mình và gọi người dùng là bạn.\nQUAN TRỌNG: Bạn ĐÃ ĐƯỢC CUNG CẤP nội dung của trang web hiện tại trong phần "Context" bên dưới. NẾU người dùng hỏi về "trang này", "câu hỏi này", "bài học này" hoặc hỏi các câu hỏi liên quan đến nội dung đang học, HÃY DỰA VÀO phần Context để trả lời. TUYỆT ĐỐI KHÔNG BẢO LÀ "không thể nhìn thấy trang", "không có khả năng truy cập", v.v. vì bạn đã có toàn bộ dữ liệu ở phần Context. ${contextStr}`
-    : `You are KDLearnBot, a smart AI tutor for KDLearnSpace. Always reply directly and kindly.\nIMPORTANT: You HAVE BEEN PROVIDED the content of the current page in the "Context" section below. IF the user asks about "this page", "this question", "this lesson", you MUST USE the Context to answer. NEVER SAY "I cannot see your screen" or "I don't have access to the page" because you already have the data in Context. ${contextStr}`;
+    ? `Bạn là BrilliantBot - trợ lý AI thông minh của Brilliant LMS. Trả lời thân thiện, xưng là mình và gọi người dùng là bạn.\nQUAN TRỌNG: Bạn ĐÃ ĐƯỢC CUNG CẤP nội dung của trang web hiện tại trong phần "Context" bên dưới. NẾU người dùng hỏi về "trang này", "câu hỏi này", "bài học này" hoặc hỏi các câu hỏi liên quan đến nội dung đang học, HÃY DỰA VÀO phần Context để trả lời. TUYỆT ĐỐI KHÔNG BẢO LÀ "không thể nhìn thấy trang", "không có khả năng truy cập", v.v. vì bạn đã có toàn bộ dữ liệu ở phần Context. ${contextStr}`
+    : `You are BrilliantBot, a smart AI tutor for Brilliant LMS. Always reply directly and kindly.\nIMPORTANT: You HAVE BEEN PROVIDED the content of the current page in the "Context" section below. IF the user asks about "this page", "this question", "this lesson", you MUST USE the Context to answer. NEVER SAY "I cannot see your screen" or "I don't have access to the page" because you already have the data in Context. ${contextStr}`;
 
     this.history.push({ role: "user", parts: [{ text: userMessage }] });
     if (this.history.length > 20) this.history = this.history.slice(-20);
@@ -182,11 +182,11 @@ async _fetchModel(model, body) {
 
   const data = await res.json();
   
-  console.log("[KDLearnBot] Full Gemini Response:", JSON.stringify(data, null, 2));
+  console.log("[BrilliantBot] Full Gemini Response:", JSON.stringify(data, null, 2));
 
   const candidate = data.candidates?.[0];
   if (!candidate?.content?.parts?.[0]?.text) {
-    console.warn("[KDLearnBot] Empty response - finishReason:", candidate?.finishReason);
+    console.warn("[BrilliantBot] Empty response - finishReason:", candidate?.finishReason);
     throw new Error("Empty response from Gemini");
   }
 
