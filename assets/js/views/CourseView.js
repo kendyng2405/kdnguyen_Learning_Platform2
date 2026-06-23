@@ -160,121 +160,156 @@ export class CourseView {
     const isEnrolled    = !!progress?.enrolledAt;
     const completedLess = progress?.completedLessons || [];
     const totalLessons  = lessons.length;
-    const pct = totalLessons > 0 ? Math.round((completedLess.length / totalLessons) * 100) : 0;
-
+    const totalExercises = quizzes.length;
+    
+    // Determine active lesson
+    let activeLessonIdx = lessons.findIndex(l => !completedLess.includes(l.id));
+    if (activeLessonIdx === -1 && lessons.length > 0) activeLessonIdx = lessons.length - 1; // all completed
+    if (activeLessonIdx === -1) activeLessonIdx = 0; // no lessons
+    
     const t = lang === "vi" ? {
-      back: "← Quay lại", enroll: "Đăng ký khóa học", enrolled: "Đã đăng ký",
-      lessons: "Bài học", quizzes: "Bài kiểm tra", progress: "Tiến độ",
-      completed: "hoàn thành", noLessons: "Chưa có bài học.", noQuizzes: "Chưa có bài kiểm tra.",
-      done: "✓", start: "Bắt đầu", take: "Làm bài",
+      lessons: "Bài học", exercises: "Bài tập", start: "Bắt đầu",
+      enroll: "Đăng ký để học", locked: "Khóa", level: "CẤP ĐỘ",
+      intro: "Giới thiệu", plan: "Kế hoạch AI"
     } : {
-      back: "← Back", enroll: "Enroll Now", enrolled: "Enrolled",
-      lessons: "Lessons", quizzes: "Quizzes", progress: "Progress",
-      completed: "completed", noLessons: "No lessons yet.", noQuizzes: "No quizzes yet.",
-      done: "✓", start: "Start", take: "Take Quiz",
+      lessons: "Lessons", exercises: "Exercises", start: "Start",
+      enroll: "Enroll to Learn", locked: "Locked", level: "LEVEL",
+      intro: "Introduction", plan: "AI Study Plan"
     };
 
-    const levelMap = { beginner: "bg-success", intermediate: "bg-warning", advanced: "bg-danger" };
-    const levelBg = levelMap[course.level] || "bg-primary";
-
     return `
-      <div class="header ${levelBg} pb-8 pt-5 pt-md-8">
-        <div class="container-fluid">
-          <button class="btn btn-sm btn-neutral mb-3" id="backToCourses">${t.back}</button>
-          <h1 class="text-white mb-1">${course.title}</h1>
-          <p class="text-white" style="opacity:0.8">${course.description || ""}</p>
-          <div class="d-flex align-items-center mt-2" style="gap:1rem;">
-            <span class="badge badge-default">📖 ${totalLessons} ${lang === "vi" ? "bài" : "lessons"}</span>
-            <span class="badge badge-default">📝 ${quizzes.length} ${lang === "vi" ? "bài kiểm tra" : "quizzes"}</span>
-            <span class="badge badge-${course.level === 'beginner' ? 'success' : course.level === 'advanced' ? 'danger' : 'warning'}">${course.level || "—"}</span>
-          </div>
-          ${isEnrolled ? `
-            <div class="mt-3" style="max-width:400px;">
-              <div class="d-flex justify-content-between text-white mb-1">
-                <small>${t.progress}</small><small>${pct}% ${t.completed}</small>
+      <div class="container-fluid mt-5 brilliant-bg" style="min-height: 90vh;">
+        <button class="btn btn-sm btn-neutral mb-4 ml-3 shadow-sm" id="backToCourses"><i class="fas fa-arrow-left"></i></button>
+        <div class="row px-lg-4">
+          
+          <!-- LEFT COLUMN: COURSE INFO -->
+          <div class="col-lg-4 mb-4">
+            <div class="brilliant-card" style="position: sticky; top: 100px;">
+              <div class="brilliant-course-thumb mb-4" style="max-width: 100px; box-shadow: none;">
+                <img src="${course.thumbnail || 'https://cdn-icons-png.flaticon.com/512/4144/4144682.png'}" alt="Course" class="img-fluid" />
               </div>
-              <div class="progress" style="height:8px;">
-                <div class="progress-bar bg-success" style="width:${pct}%"></div>
+              <h2 class="font-weight-bold text-dark mb-3">${course.title}</h2>
+              <p class="text-muted mb-4" style="font-size: 1.05rem; line-height: 1.6;">${course.description || ""}</p>
+              
+              <div class="d-flex align-items-center text-muted font-weight-bold" style="gap: 1.5rem;">
+                <div><i class="fas fa-layer-group mr-2 text-dark"></i>${totalLessons} ${t.lessons}</div>
+                <div><i class="fas fa-dumbbell mr-2 text-dark"></i>${totalExercises} ${t.exercises}</div>
               </div>
-              <button class="btn btn-sm btn-neutral mt-2" id="btnStudyPlan" data-course="${course.title}">📅 ${lang==='vi'?'AI Kế hoạch học tập':'AI Study Plan'}</button>
-            </div>
-          ` : `<button class="btn btn-neutral mt-3" id="enrollBtn">${t.enroll}</button>`}
-        </div>
-      </div>
-      <div class="container-fluid mt--7">
-        <div class="row">
-          <div class="col-xl-8">
-            <div class="card shadow mb-4">
-              <div class="card-header border-0"><h3 class="mb-0">${t.lessons}</h3></div>
-              ${lessons.length === 0
-                ? `<div class="card-body"><p class="text-muted">${t.noLessons}</p></div>`
-                : `<div class="table-responsive">
-                    <table class="table align-items-center table-flush">
-                      <thead class="thead-light">
-                        <tr><th>#</th><th>${lang==='vi'?'Tên bài':'Title'}</th><th>${lang==='vi'?'Loại':'Type'}</th><th>${lang==='vi'?'Trạng thái':'Status'}</th></tr>
-                      </thead>
-                      <tbody>
-                        ${lessons.map((l, i) => {
-                          const done = completedLess.includes(l.id);
-                          const locked = !isEnrolled;
-                          const lockMsg = lang === 'vi' ? 'Đăng ký khóa học để mở khoá' : 'Enroll to unlock';
-                          return `<tr class="lesson-list-item ${done ? 'done' : ''} ${locked ? 'locked' : ''}" data-lesson-id="${locked ? '' : l.id}" ${locked ? `title="${lockMsg}"` : ''} style="cursor:${locked?'not-allowed':'pointer'}">
-                            <td>${i + 1}</td>
-                            <td><strong>${l.title}</strong><br><small class="text-muted">${l.duration || ''}</small></td>
-                            <td><span class="badge badge-dot mr-4"><i class="bg-${done ? 'success' : 'info'}"></i> ${this._lessonTypeIcon(l.type)} ${l.type || 'lesson'}</span></td>
-                            <td>${done ? '<span class="badge badge-success">✓</span>' : locked ? '<span class="badge badge-secondary">🔒</span>' : '<span class="badge badge-primary">▶</span>'}</td>
-                          </tr>`;
-                        }).join("")}
-                      </tbody>
-                    </table>
-                  </div>`
-              }
+              
+              ${!isEnrolled ? `
+                <button class="brilliant-btn-gradient btn-block mt-4" id="enrollBtn">${t.enroll}</button>
+              ` : `
+                <button class="btn btn-outline-info btn-block mt-4 font-weight-bold" id="btnStudyPlan" data-course="${course.title}">
+                  <i class="fas fa-magic mr-2"></i> ${t.plan}
+                </button>
+              `}
             </div>
           </div>
-          <div class="col-xl-4">
-            <div class="card shadow">
-              <div class="card-header border-0"><h3 class="mb-0">${t.quizzes}</h3></div>
-              ${quizzes.length === 0
-                ? `<div class="card-body"><p class="text-muted">${t.noQuizzes}</p></div>`
-                : `<div class="card-body p-0">
-                    ${quizzes.map(q => {
-                      const score = progress?.quizScores?.[q.id];
-                      const now = new Date();
-                      let quizStatus = 'open', statusColor = 'text-success', quizStatusText = lang==='vi'?'Đang mở':'Open';
-                      const openDate = q.openTime ? new Date(q.openTime) : null;
-                      const closeDate = q.closeTime ? new Date(q.closeTime) : null;
-                      if (openDate && now < openDate) {
-                        quizStatus = 'not_open'; statusColor = 'text-warning';
-                        quizStatusText = lang==='vi'?`Mở lúc: ${openDate.toLocaleString('vi-VN')}`:`Opens: ${openDate.toLocaleString('en-US')}`;
-                      } else if (closeDate && now > closeDate) {
-                        quizStatus = 'closed'; statusColor = 'text-danger';
-                        quizStatusText = lang==='vi'?`Đã đóng`:`Closed`;
-                      } else if (closeDate) {
-                        quizStatusText = lang==='vi'?`Đóng: ${closeDate.toLocaleString('vi-VN')}`:`Closes: ${closeDate.toLocaleString('en-US')}`;
-                      }
-                      const timeRestricted = quizStatus === 'not_open' || quizStatus === 'closed';
-                      const locked = !isEnrolled || timeRestricted;
-                      let lockMsg = "";
-                      if (!isEnrolled) lockMsg = lang==="vi"?"Đăng ký khóa học để mở":"Enroll to unlock";
-                      else if (quizStatus==="not_open") lockMsg = lang==="vi"?"Chưa mở":"Not open yet";
-                      else if (quizStatus==="closed") lockMsg = lang==="vi"?"Đã đóng":"Closed";
+          
+          <!-- RIGHT COLUMN: LEARNING PATH -->
+          <div class="col-lg-8">
+            <div class="brilliant-path-container">
+              
+              <div class="brilliant-level-badge shadow-sm">
+                <span class="text-uppercase" style="color: #9b51e0; font-weight: 800; font-size: 0.75rem; letter-spacing: 1px;">${t.level} 1</span>
+                <h4 class="mb-0 text-dark font-weight-bold mt-1">${t.intro}</h4>
+              </div>
+              
+              ${lessons.map((l, i) => {
+                const isCompleted = completedLess.includes(l.id);
+                const isActive = (i === activeLessonIdx) && isEnrolled;
+                const isLocked = !isEnrolled || (i > activeLessonIdx);
+                
+                let nodeClass = "locked";
+                let iconHtml = '<i class="fas fa-lock" style="font-size:1.5rem;"></i>';
+                
+                if (isCompleted) {
+                  nodeClass = "completed";
+                  iconHtml = '<i class="fas fa-check" style="font-size:2rem;"></i>';
+                } else if (isActive) {
+                  nodeClass = "active";
+                  iconHtml = '<i class="fas fa-play" style="font-size:2rem;"></i>';
+                } else if (isEnrolled && !isLocked) {
+                  nodeClass = "";
+                  iconHtml = '<i class="fas fa-play" style="color:#94a3b8; font-size:1.5rem;"></i>';
+                }
 
-                      return `<div class="quiz-list-item d-flex align-items-center p-3 border-bottom ${locked?'locked':''}" data-quiz-id="${locked?'':q.id}" ${locked?`title="${lockMsg}"`:''} style="cursor:${locked?'not-allowed':'pointer'}">
-                        <div class="flex-fill">
-                          <strong>${q.title}</strong>
-                          <div><small class="text-muted">${q.questions?.length||0} ${lang==="vi"?"câu":"Q"} ${q.timeLimitMinutes?`• ${q.timeLimitMinutes} ${lang==="vi"?"phút":"min"}`:""}</small></div>
-                          <small class="${statusColor}">⏰ ${quizStatusText}</small>
+                return `
+                  <div class="brilliant-node-wrapper">
+                    <!-- The visual node -->
+                    <div class="brilliant-node ${nodeClass}" data-lesson-id="${isLocked ? '' : l.id}" style="cursor:${isLocked?'not-allowed':'pointer'}">
+                      ${iconHtml}
+                    </div>
+                    
+                    ${!isActive ? `
+                      <div class="brilliant-node-title ${isLocked ? 'text-muted' : ''}">${l.title}</div>
+                    ` : ''}
+                    
+                    <!-- Popover for active node -->
+                    ${isActive ? `
+                      <div class="brilliant-node-active-popover">
+                        <h4 class="font-weight-bold text-dark mb-3">${l.title}</h4>
+                        <button class="brilliant-btn-gradient btn-block" data-lesson-id="${l.id}">
+                          ${t.start}
+                        </button>
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join("")}
+              
+              ${lessons.length === 0 ? `<p class="text-muted">${t.noLessons || 'No lessons.'}</p>` : ''}
+              
+              ${quizzes.length > 0 ? `
+                <div class="brilliant-level-badge shadow-sm mt-5">
+                  <span class="text-uppercase" style="color: #f5365c; font-weight: 800; font-size: 0.75rem; letter-spacing: 1px;">TEST</span>
+                  <h4 class="mb-0 text-dark font-weight-bold mt-1">Quizzes</h4>
+                </div>
+                
+                ${quizzes.map((q, i) => {
+                  const score = progress?.quizScores?.[q.id];
+                  const isCompleted = score && score.percentage >= (q.passingScore || 60);
+                  const isLocked = !isEnrolled;
+                  
+                  let nodeClass = "locked";
+                  let iconHtml = '<i class="fas fa-lock" style="font-size:1.5rem;"></i>';
+                  
+                  if (isCompleted) {
+                    nodeClass = "completed";
+                    iconHtml = '<i class="fas fa-check" style="font-size:2rem;"></i>';
+                  } else if (!isLocked) {
+                    nodeClass = "active";
+                    iconHtml = '<i class="fas fa-clipboard-list" style="font-size:2rem;"></i>';
+                  }
+
+                  return `
+                    <div class="brilliant-node-wrapper">
+                      <div class="brilliant-node ${nodeClass}" data-quiz-id="${isLocked ? '' : q.id}" style="cursor:${isLocked?'not-allowed':'pointer'}">
+                        ${iconHtml}
+                      </div>
+                      
+                      ${isCompleted ? `
+                        <div class="brilliant-node-title text-success">${q.title} - ${score.percentage}%</div>
+                      ` : `
+                        <div class="brilliant-node-title ${isLocked ? 'text-muted' : ''}">${q.title}</div>
+                      `}
+                      
+                      ${!isLocked && !isCompleted ? `
+                        <div class="brilliant-node-active-popover">
+                          <h4 class="font-weight-bold text-dark mb-3">${q.title}</h4>
+                          <button class="brilliant-btn-gradient-orange btn-block" data-quiz-id="${q.id}">
+                            ${t.start}
+                          </button>
                         </div>
-                        ${score
-                          ? `<span class="badge badge-${score.percentage>=(q.passingScore||60)?'success':'danger'} badge-lg">${score.percentage}%</span>`
-                          : `<span class="badge badge-${locked?'secondary':'primary'}">${timeRestricted&&isEnrolled?'⛔':locked?'🔒':t.take}</span>`
-                        }
-                      </div>`;
-                    }).join("")}
-                  </div>`
-              }
+                      ` : ''}
+                    </div>
+                  `;
+                }).join("")}
+              ` : ''}
+              
             </div>
           </div>
+          
         </div>
       </div>
     `;

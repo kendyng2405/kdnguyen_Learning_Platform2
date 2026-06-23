@@ -273,3 +273,57 @@ body.auth-active #appFooter { display: none !important; }
   font-size: 0.7rem;
 }
 
+/* ── Brilliant Course Nodes ── */
+.brilliant-path-container {
+  display: flex; flex-direction: column; align-items: center; padding: 2rem 0;
+}
+.brilliant-level-badge {
+  border: 2px solid #ce93d8;
+  border-radius: 20px;
+  padding: 0.5rem 2rem;
+  text-align: center;
+  background: #fff;
+  margin-bottom: 2rem;
+}
+.brilliant-node-wrapper {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  margin-bottom: 1.5rem; width: 100%;
+}
+.brilliant-node {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 2; transition: transform 0.2s;
+  background: #f0f2f5;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.brilliant-node:hover { transform: scale(1.05); }
+.brilliant-node.completed {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  color: white;
+}
+.brilliant-node.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  box-shadow: 0 0 0 8px rgba(155, 81, 224, 0.2), 0 0 0 16px rgba(155, 81, 224, 0.1);
+}
+.brilliant-node.locked {
+  background: #e2e8f0; color: #94a3b8; cursor: not-allowed;
+}
+.brilliant-node-title {
+  font-weight: 700; margin-top: 0.5rem; color: #334155; text-align: center;
+}
+.brilliant-node-active-popover {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  margin-top: 1rem;
+  width: 100%; max-width: 320px;
+  text-align: center;
+  position: relative; z-index: 3;
+}
+
+
