@@ -3988,6 +3988,9 @@ html[data-theme="dark"] .tracking-track {
   gap: 0.65rem;
   margin-top: 0.85rem;
 }
+.q-animation-spec {
+  display: none !important;
+}
 .animation-ready-badge {
   display: inline-flex;
   align-items: center;

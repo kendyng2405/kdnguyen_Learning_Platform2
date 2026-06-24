@@ -518,8 +518,9 @@ export class AdminController {
     this._activeQuizContext = { courseId, quizId: quiz?.id || null };
 
     // Dynamic question builder
-    let questionCount = quiz?.questions?.length || 1;
-    this._renderQuestionForms(quiz?.questions || [{}], lang);
+    const initialQuestions = this._sanitizeQuestionList(quiz?.questions || [{}], lang);
+    let questionCount = initialQuestions.length || 1;
+    this._renderQuestionForms(initialQuestions, lang);
 
     document.getElementById("addQuestionBtn")?.addEventListener("click", () => {
       questionCount++;
@@ -549,6 +550,13 @@ export class AdminController {
         window.__toast.error(lang === "vi" ? "Vui lòng thêm ít nhất 1 câu hỏi." : "Please add at least 1 question.");
         return;
       }
+      const badIndex = questions.findIndex(q => this._isLowQualityGeneratedQuestion(q));
+      if (badIndex >= 0) {
+        window.__toast.error(lang === "vi"
+          ? `Câu ${badIndex + 1} là câu AI kém chất lượng. Hãy xóa câu đó và tạo lại từ nội dung bài học cụ thể hơn.`
+          : `Question ${badIndex + 1} is a low-quality AI draft. Delete it and regenerate from more concrete lesson content.`);
+        return;
+      }
 
       const data = { title, timeLimitMinutes: timeLimit, passingScore, openTime, closeTime, password, questions };
       try {
@@ -571,7 +579,8 @@ export class AdminController {
     const container = document.getElementById("questionsContainer");
     if (!container) return;
 
-    container.innerHTML = questions.map((q, i) => this._questionFormCard(q, i, questions.length, lang)).join("");
+    const safeQuestions = this._sanitizeQuestionList(questions, lang);
+    container.innerHTML = safeQuestions.map((q, i) => this._questionFormCard(q, i, safeQuestions.length, lang)).join("");
 
     container.querySelectorAll(".btn-remove-q").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -606,6 +615,37 @@ export class AdminController {
     container.querySelectorAll(".btn-generate-animation").forEach(btn => {
       btn.addEventListener("click", () => this._generateQuestionAnimation(btn, lang));
     });
+  }
+
+  _sanitizeQuestionList(questions, lang) {
+    const source = Array.isArray(questions) && questions.length ? questions : [{}];
+    const filledCount = source.filter(q => q?.question).length;
+    const cleaned = source.filter(q => !this._isLowQualityGeneratedQuestion(q));
+    if (filledCount && cleaned.length < source.length) {
+      const now = Date.now();
+      if (!this._lastBadQuestionToast || now - this._lastBadQuestionToast > 1500) {
+        this._lastBadQuestionToast = now;
+        setTimeout(() => {
+          window.__toast.warning(lang === "vi"
+            ? "Mình đã loại bỏ câu AI kém chất lượng khỏi form. Hãy tạo lại từ nội dung bài học cụ thể hơn."
+            : "Low-quality AI draft questions were removed. Regenerate from more concrete lesson content.");
+        }, 80);
+      }
+    }
+    return cleaned.length ? cleaned : [{}];
+  }
+
+  _isLowQualityGeneratedQuestion(q) {
+    if (!q?.question) return false;
+    const question = this._normalizeTextForQuality(q.question);
+    const explanation = this._normalizeTextForQuality(q.explanation);
+    const options = Array.isArray(q.options) ? q.options.map(option => this._normalizeTextForQuality(option)) : [];
+
+    if (/which idea best matches|y nao phu hop nhat|true or false video nay|dung hay sai video nay/.test(question)) return true;
+    if (/correct answer follows original lesson sentence|dap an dung bam sat cau goc/.test(explanation)) return true;
+    if (options.some(option => /^(bai hoc gioi thieu|video nay gioi thieu|nguoi huong dan voi|khoa hoc bao gom)$/.test(option))) return true;
+    if (options.length && options.filter(option => option.length < 8).length >= 2) return true;
+    return false;
   }
 
   _collectQuestions() {
@@ -1207,8 +1247,8 @@ export class AdminController {
       return {
         type: "multiple_choice",
         question: lang === "vi"
-          ? `Ý nào phù hợp nhất với nội dung: "${sentence}"?`
-          : `Which idea best matches this content: "${sentence}"?`,
+          ? `Theo nội dung bài học, khái niệm hoặc ý chính nào cần ghi nhớ?`
+          : `Based on the lesson, which key concept should learners remember?`,
         options: [keyword, ...distractors].slice(0, 4),
         correctAnswer: 0,
         explanation: lang === "vi"
