@@ -2,9 +2,9 @@
 //  QuizController.js - Quiz Business Logic
 // ============================================================
 
-import { QuizModel } from "../models/QuizModel.js?v=10";
+import { QuizModel } from "../models/QuizModel.js?v=11";
 import { CourseModel } from "../models/CourseModel.js?v=10";
-import { QuizView } from "../views/QuizView.js?v=10";
+import { QuizView } from "../views/QuizView.js?v=11";
 
 export class QuizController {
   constructor(app) {
@@ -24,6 +24,29 @@ export class QuizController {
     this.audioContext = null;
   }
 
+  async showQuizList() {
+    this._renderPage('<div class="page-loading"><div class="spinner-ring"></div></div>', "quizzes");
+    const lang = window.__i18n.current;
+
+    try {
+      const uid = this.app.getUser()?.uid;
+      const profile = this.app.getUserProfile();
+      const [courses, progressRows] = await Promise.all([
+        this._getCoursesForQuizList(uid),
+        uid ? this.quizModel.getAllProgressForUser(uid) : Promise.resolve([]),
+      ]);
+
+      const progressMap = Object.fromEntries(progressRows.map(row => [row.courseId, row]));
+      const quizRows = await this._buildQuizListRows(courses, progressMap, profile, lang);
+
+      this._renderPage(this.view.renderQuizList(quizRows, lang), "quizzes");
+      this._bindQuizListEvents();
+    } catch (error) {
+      console.error(error);
+      this._renderPage(this.view.renderQuizListError(lang), "quizzes");
+    }
+  }
+
   async showQuiz(courseId, quizId) {
     this._renderPage('<div class="page-loading"><div class="spinner-ring"></div></div>', "quiz");
     const [course, quiz] = await Promise.all([
@@ -33,6 +56,14 @@ export class QuizController {
 
     if (!quiz) {
       window.__toast.error("Quiz not found");
+      this.app.navigate("course", courseId);
+      return;
+    }
+
+    if (!this.app.canManageCourses() && !(await this._learnerHasCourseAccess(courseId))) {
+      window.__toast.info(window.__i18n.current === "vi"
+        ? "Hãy đăng ký khóa học trước khi làm quiz."
+        : "Please enroll in the course before taking this quiz.");
       this.app.navigate("course", courseId);
       return;
     }
@@ -100,6 +131,166 @@ export class QuizController {
     } else {
       renderActualQuiz();
     }
+  }
+
+  async _getCoursesForQuizList(uid) {
+    if (this.app.isSystemAdmin()) {
+      return this.courseModel.getAllCourses();
+    }
+    if (this.app.canManageCourses()) {
+      return this.courseModel.getCoursesForInstructor(uid);
+    }
+    return this.courseModel.getAllCourses();
+  }
+
+  async _buildQuizListRows(courses, progressMap, profile, lang) {
+    const rows = [];
+    await Promise.all(courses.map(async course => {
+      try {
+        const quizzes = await this.quizModel.getQuizzesByCourse(course.id);
+        quizzes.forEach(quiz => {
+          const progress = progressMap[course.id] || null;
+          const access = this._canAccessCourse(course.id, progress, profile);
+          const status = this._quizStatus(quiz, lang);
+          const score = progress?.quizScores?.[quiz.id] || null;
+          const hasQuestions = Array.isArray(quiz.questions) && quiz.questions.length > 0;
+          rows.push({
+            id: quiz.id,
+            courseId: course.id,
+            title: quiz.title || "Quiz",
+            courseTitle: course.title || "",
+            category: course.category || "",
+            questionCount: quiz.questions?.length || 0,
+            timeLimitMinutes: quiz.timeLimitMinutes || 0,
+            durationText: quiz.timeLimitMinutes
+              ? `${quiz.timeLimitMinutes} ${lang === "vi" ? "phút" : "min"}`
+              : (lang === "vi" ? "Không giới hạn" : "No limit"),
+            openText: this._formatDateTime(quiz.openTime, lang, lang === "vi" ? "Mở ngay" : "Open now"),
+            closeText: this._formatDateTime(quiz.closeTime, lang, lang === "vi" ? "Không giới hạn" : "No limit"),
+            status,
+            bestScore: score?.percentage ?? null,
+            scoreText: score ? `${score.percentage}%` : (lang === "vi" ? "Chưa làm" : "Not taken"),
+            hasPassword: !!quiz.password,
+            canStart: access && status.canStart && hasQuestions,
+            needsEnrollment: !access,
+            sortRank: status.rank,
+            sortTime: this._timeValue(quiz.openTime || quiz.closeTime || quiz.createdAt),
+          });
+        });
+      } catch (error) {
+        console.warn("Could not load quizzes for course", course.id, error);
+      }
+    }));
+
+    return rows.sort((a, b) => (
+      a.sortRank - b.sortRank
+      || b.sortTime - a.sortTime
+      || a.title.localeCompare(b.title)
+    ));
+  }
+
+  _bindQuizListEvents() {
+    document.querySelectorAll("[data-start-quiz]").forEach(button => {
+      button.addEventListener("click", () => {
+        this.app.navigate("quiz", button.dataset.courseId, button.dataset.quizId);
+      });
+    });
+
+    document.querySelectorAll("[data-open-course]").forEach(button => {
+      button.addEventListener("click", () => {
+        this.app.navigate("course", button.dataset.openCourse);
+      });
+    });
+
+    const search = document.getElementById("quizListSearch");
+    search?.addEventListener("input", () => {
+      const query = search.value.trim().toLowerCase();
+      document.querySelectorAll("[data-quiz-row]").forEach(row => {
+        const text = row.dataset.search || "";
+        row.classList.toggle("hidden", !!query && !text.includes(query));
+      });
+    });
+  }
+
+  async _learnerHasCourseAccess(courseId) {
+    const uid = this.app.getUser()?.uid;
+    const profile = this.app.getUserProfile();
+    if (Array.isArray(profile?.enrolledCourses) && profile.enrolledCourses.includes(courseId)) {
+      return true;
+    }
+    if (!uid) return false;
+    const progress = await this.quizModel.getProgress(uid, courseId);
+    return this._hasEnrollmentProgress(progress);
+  }
+
+  _canAccessCourse(courseId, progress, profile) {
+    if (this.app.canManageCourses()) return true;
+    if (Array.isArray(profile?.enrolledCourses) && profile.enrolledCourses.includes(courseId)) return true;
+    return this._hasEnrollmentProgress(progress);
+  }
+
+  _hasEnrollmentProgress(progress) {
+    return !!(
+      progress?.enrolledAt ||
+      progress?.lastUpdated ||
+      progress?.completedLessons?.length ||
+      Object.keys(progress?.quizScores || {}).length
+    );
+  }
+
+  _quizStatus(quiz, lang) {
+    const now = new Date();
+    const openDate = this._toDate(quiz.openTime);
+    const closeDate = this._toDate(quiz.closeTime);
+    const labels = lang === "vi"
+      ? {
+          open: "Đang mở",
+          upcoming: "Sắp mở",
+          closed: "Đã đóng",
+          empty: "Chưa có câu hỏi",
+        }
+      : {
+          open: "Open",
+          upcoming: "Upcoming",
+          closed: "Closed",
+          empty: "No questions",
+        };
+
+    if (!Array.isArray(quiz.questions) || quiz.questions.length === 0) {
+      return { key: "empty", label: labels.empty, tone: "muted", canStart: false, rank: 3 };
+    }
+    if (openDate && now < openDate) {
+      return { key: "upcoming", label: labels.upcoming, tone: "warning", canStart: false, rank: 1 };
+    }
+    if (closeDate && now > closeDate) {
+      return { key: "closed", label: labels.closed, tone: "danger", canStart: false, rank: 4 };
+    }
+    return { key: "open", label: labels.open, tone: "success", canStart: true, rank: 0 };
+  }
+
+  _formatDateTime(value, lang, fallback) {
+    const date = this._toDate(value);
+    if (!date) return fallback;
+    return date.toLocaleString(lang === "vi" ? "vi-VN" : "en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  _timeValue(value) {
+    const date = this._toDate(value);
+    return date ? date.getTime() : 0;
+  }
+
+  _toDate(value) {
+    if (!value) return null;
+    if (typeof value.toDate === "function") return value.toDate();
+    if (typeof value.seconds === "number") return new Date(value.seconds * 1000);
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
   }
 
   _bindQuizShellEvents(courseId, quizId) {

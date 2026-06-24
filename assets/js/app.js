@@ -5,7 +5,7 @@
 
 import { AuthController }         from "./controllers/AuthController.js?v=11";
 import { CourseController }       from "./controllers/CourseController.js?v=11";
-import { QuizController }         from "./controllers/QuizController.js?v=10";
+import { QuizController }         from "./controllers/QuizController.js?v=11";
 import { ProgressController }     from "./controllers/ProgressController.js?v=10";
 import { AdminController }        from "./controllers/AdminController.js?v=11";
 import { ChatbotController }      from "./controllers/ChatbotController.js?v=10";
@@ -25,6 +25,7 @@ export class App {
       "/":          () => this.authController.showLandingPage(),
       "/home":      () => this.courseController.showDashboard(),
       "/courses":   () => this.courseController.showCourseList(),
+      "/quizzes":   () => this.quizController.showQuizList(),
       "/progress":  () => this.progressController.showProgress(),
       "/leaderboard": () => this.leaderboardController.showLeaderboard(),
       "/calendar":  () => this.calendarController.showCalendar(),
@@ -172,7 +173,7 @@ export class App {
         this._showAppChrome(false);
         document.getElementById("chatbotWidget")?.classList.add("hidden");
         document.getElementById("chatbotFab")?.classList.add("hidden");
-        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quiz", "/progress", "/leaderboard", "/calendar", "/missions", "/certificate", "/admin", "/profile"];
+        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quizzes", "/quiz", "/progress", "/leaderboard", "/calendar", "/missions", "/certificate", "/admin", "/profile"];
         const cur = this._getCurrentPath();
         if (protectedPaths.some(p => cur.startsWith(p))) {
           this._dispatchRoute("/login", false);
@@ -210,6 +211,7 @@ export class App {
     const pathMap = {
       dashboard: "/home",
       courses:   "/courses",
+      quizzes:   "/quizzes",
       progress:  "/progress",
       leaderboard: "/leaderboard",
       calendar:  "/calendar",
@@ -220,7 +222,7 @@ export class App {
       profile:   "/profile",
       course:    args[0] ? `/course/${args[0]}`   : "/courses",
       lesson:    args[1] ? `/lesson/${args[0]}/${args[1]}` : "/courses",
-      quiz:      args[1] ? `/quiz/${args[0]}/${args[1]}`   : "/courses",
+      quiz:      args[1] ? `/quiz/${args[0]}/${args[1]}`   : "/quizzes",
       certificate: args[0] ? `/certificate/${args[0]}` : "/courses",
     };
 
@@ -236,12 +238,15 @@ export class App {
     // Update sidebar active state
     document.querySelectorAll("#sidenav-main .nav-link").forEach(l => {
       const href = l.getAttribute("href");
-      l.classList.toggle("active", path === href || (path.startsWith(href) && href !== "/" && href !== "#"));
+      const isActive = path === href
+        || (path.startsWith(href) && href !== "/" && href !== "#")
+        || (href === "/quizzes" && path.startsWith("/quiz/"));
+      l.classList.toggle("active", isActive);
     });
 
     // Update top navbar brand text
     const pageNames = {
-      "/": "Brilliant LMS", "/home": "Dashboard", "/courses": "Courses", "/progress": "Progress",
+      "/": "Brilliant LMS", "/home": "Dashboard", "/courses": "Courses", "/quizzes": "Quizzes", "/progress": "Progress",
       "/leaderboard": "Leaderboard", "/calendar": "Calendar", "/missions": "Missions", "/admin": "Admin", "/profile": "Profile",
     };
     const brandText = document.getElementById("navBrandText");

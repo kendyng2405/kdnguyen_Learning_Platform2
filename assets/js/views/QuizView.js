@@ -3,6 +3,127 @@
 // ============================================================
 
 export class QuizView {
+  renderQuizList(rows, lang) {
+    const t = lang === "vi" ? {
+      kicker: "Quiz Center",
+      title: "Tất cả bài quiz",
+      sub: "Xem nhanh quiz đang mở, lịch đóng/mở và vào làm bài trực tiếp mà không cần đi qua từng khóa học.",
+      search: "Tìm quiz hoặc khóa học...",
+      total: "Tổng quiz",
+      open: "Đang mở",
+      done: "Đã làm",
+      quiz: "Quiz",
+      course: "Khóa học",
+      status: "Trạng thái",
+      openTime: "Thời gian mở",
+      closeTime: "Thời gian đóng",
+      duration: "Thời gian làm",
+      best: "Điểm tốt nhất",
+      action: "Hành động",
+      questions: "câu hỏi",
+      start: "Làm bài",
+      openCourse: "Vào khóa học",
+      empty: "Chưa có quiz nào để hiển thị.",
+      emptyHint: "Hãy vào khóa học của bạn hoặc chờ giảng viên tạo quiz mới.",
+      browse: "Xem khóa học",
+      locked: "Cần đăng ký",
+      password: "Có mật khẩu",
+    } : {
+      kicker: "Quiz Center",
+      title: "All quizzes",
+      sub: "See open quizzes, deadlines, durations, and start directly without opening each course first.",
+      search: "Search quizzes or courses...",
+      total: "Total quizzes",
+      open: "Open now",
+      done: "Taken",
+      quiz: "Quiz",
+      course: "Course",
+      status: "Status",
+      openTime: "Open time",
+      closeTime: "Close time",
+      duration: "Duration",
+      best: "Best score",
+      action: "Action",
+      questions: "questions",
+      start: "Start",
+      openCourse: "Open course",
+      empty: "No quizzes to show yet.",
+      emptyHint: "Open your courses or wait for your instructor to create a quiz.",
+      browse: "Browse courses",
+      locked: "Enroll first",
+      password: "Password",
+    };
+
+    const openCount = rows.filter(row => row.status.key === "open").length;
+    const doneCount = rows.filter(row => row.bestScore !== null).length;
+
+    return `
+      <div class="quiz-list-page">
+        <section class="quiz-list-hero">
+          <div>
+            <p class="quiz-list-kicker">${t.kicker}</p>
+            <h1>${t.title}</h1>
+            <p>${t.sub}</p>
+          </div>
+          <div class="quiz-list-stats">
+            <span><strong>${rows.length}</strong>${t.total}</span>
+            <span><strong>${openCount}</strong>${t.open}</span>
+            <span><strong>${doneCount}</strong>${t.done}</span>
+          </div>
+        </section>
+
+        <section class="quiz-list-toolbar">
+          <div class="quiz-list-search">
+            <i class="fas fa-search"></i>
+            <input id="quizListSearch" type="text" placeholder="${t.search}" autocomplete="off" />
+          </div>
+        </section>
+
+        <section class="quiz-list-panel">
+          ${rows.length
+            ? `
+              <div class="quiz-list-head">
+                <span>${t.quiz}</span>
+                <span>${t.course}</span>
+                <span>${t.status}</span>
+                <span>${t.openTime}</span>
+                <span>${t.closeTime}</span>
+                <span>${t.duration}</span>
+                <span>${t.best}</span>
+                <span>${t.action}</span>
+              </div>
+              <div class="quiz-list-body">
+                ${rows.map(row => this._quizListRow(row, t)).join("")}
+              </div>
+            `
+            : `
+              <div class="quiz-list-empty">
+                <span><i class="fas fa-clipboard-list"></i></span>
+                <h3>${t.empty}</h3>
+                <p>${t.emptyHint}</p>
+                <button class="btn btn-primary" type="button" onclick="window.__router.navigate('courses')">${t.browse}</button>
+              </div>
+            `
+          }
+        </section>
+      </div>
+    `;
+  }
+
+  renderQuizListError(lang) {
+    const text = lang === "vi" ? "Không tải được danh sách quiz." : "Could not load quizzes.";
+    return `
+      <div class="quiz-list-page">
+        <section class="quiz-list-hero">
+          <div>
+            <p class="quiz-list-kicker">Quiz Center</p>
+            <h1>${text}</h1>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
   renderQuiz(course, quiz, lang) {
     const questions = quiz.questions || [];
     const t = lang === "vi" ? {
@@ -261,6 +382,37 @@ export class QuizView {
           </div>
         </section>
       </div>
+    `;
+  }
+
+  _quizListRow(row, t) {
+    const search = `${row.title} ${row.courseTitle} ${row.category} ${row.status.label}`.toLowerCase();
+    const action = row.needsEnrollment
+      ? `<button type="button" class="btn btn-sm btn-outline-primary" data-open-course="${this._attr(row.courseId)}">${t.openCourse}</button>`
+      : row.canStart
+        ? `<button type="button" class="btn btn-sm btn-primary" data-start-quiz data-course-id="${this._attr(row.courseId)}" data-quiz-id="${this._attr(row.id)}"><i class="fas fa-play mr-1"></i>${t.start}</button>`
+        : `<button type="button" class="btn btn-sm btn-secondary" disabled>${this._escape(row.status.label)}</button>`;
+
+    return `
+      <article class="quiz-list-row" data-quiz-row data-search="${this._attr(search)}">
+        <div class="quiz-list-title">
+          <span class="quiz-list-icon"><i class="fas fa-clipboard-check"></i></span>
+          <div>
+            <strong>${this._escape(row.title)}</strong>
+            <small>${row.questionCount} ${t.questions} ${row.hasPassword ? `&middot; ${t.password}` : ""}</small>
+          </div>
+        </div>
+        <div class="quiz-list-course">
+          <strong>${this._escape(row.courseTitle)}</strong>
+          <small>${this._escape(row.category || "")}</small>
+        </div>
+        <span class="quiz-status-pill quiz-status-${row.status.tone}">${this._escape(row.status.label)}</span>
+        <span class="quiz-list-time">${this._escape(row.openText)}</span>
+        <span class="quiz-list-time">${this._escape(row.closeText)}</span>
+        <span class="quiz-list-duration"><i class="fas fa-clock mr-1"></i>${this._escape(row.durationText)}</span>
+        <span class="quiz-list-score ${row.bestScore !== null ? "has-score" : ""}">${this._escape(row.scoreText)}</span>
+        <div class="quiz-list-action">${action}</div>
+      </article>
     `;
   }
 

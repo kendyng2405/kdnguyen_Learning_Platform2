@@ -18,7 +18,7 @@
   <!-- Argon Dashboard CSS -->
   <link rel="stylesheet" href="assets/css/argon-dashboard.css" />
   <!-- LMS Custom Overrides -->
-  <link rel="stylesheet" href="assets/css/lms-overrides.css?v=15" />
+  <link rel="stylesheet" href="assets/css/lms-overrides.css?v=16" />
 </head>
 <body>
 
@@ -48,6 +48,11 @@
           <li class="nav-item">
             <a class="nav-link" href="/courses" data-page="courses">
               <i class="fas fa-book-open text-orange"></i> <span data-vi="Khóa học" data-en="Courses">Khóa học</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/quizzes" data-page="quizzes">
+              <i class="fas fa-clipboard-list text-primary"></i> <span data-vi="Quiz" data-en="Quizzes">Quiz</span>
             </a>
           </li>
           <li class="nav-item">
@@ -232,7 +237,7 @@
     window.__firebaseDB      = getFirestore(app);
     window.__firebaseStorage = getStorage(app);
 
-    const { App } = await import("./assets/js/app.js?v=11");
+    const { App } = await import("./assets/js/app.js?v=12");
     window.__app = new App();
     window.__app.init();
   </script>
