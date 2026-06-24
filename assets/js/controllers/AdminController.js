@@ -682,7 +682,7 @@ export class AdminController {
           </div>
         </div>
         <input type="hidden" class="q-id" value="${this._attr(questionId)}" />
-        <textarea class="q-animation-spec hidden">${this._escape(animationSpecText)}</textarea>
+        <input type="hidden" class="q-animation-spec" value="${this._attr(animationSpecText)}" />
         <textarea class="form-control q-text" rows="2" placeholder="${lang === "vi" ? "Nhập câu hỏi..." : "Enter question..."}">${this._escape(q.question || "")}</textarea>
         ${type === "short_answer"
           ? this._shortAnswerForm(q, lang)
@@ -753,6 +753,8 @@ export class AdminController {
     if (type === "short_answer") return typeof answer === "string" ? answer : "";
     if (typeof answer === "boolean") return answer ? 0 : 1;
     const parsed = parseInt(answer, 10);
+    const letter = String(answer ?? "").trim().toUpperCase();
+    if (/^[A-D]$/.test(letter)) return letter.charCodeAt(0) - 65;
     return Number.isNaN(parsed) ? 0 : parsed;
   }
 
@@ -945,7 +947,7 @@ export class AdminController {
         this._renderQuestionForms(questions, lang);
         setTimeout(() => window.__toast.success(t.success), 80);
       } catch (e) {
-        window.__toast.error(lang === "vi" ? "Lỗi tạo câu hỏi AI: " + e.message : "AI Error: " + e.message);
+        window.__toast.error(lang === "vi" ? "AI chưa tạo được câu hỏi đạt chất lượng: " + e.message : "AI could not create valid questions: " + e.message);
       } finally {
         btn.disabled = false;
         btn.innerHTML = oldText;
@@ -955,25 +957,38 @@ export class AdminController {
 
   async _generateQuestionsWithAI(source, count, types, lang) {
     const typeGuide = {
-      multiple_choice: `{"type":"multiple_choice","question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"..."}`,
-      true_false: `{"type":"true_false","question":"...","options":["Đúng","Sai"],"correctAnswer":0,"explanation":"..."}`,
-      short_answer: `{"type":"short_answer","question":"...","options":[],"correctAnswer":"...","explanation":"..."}`,
-      drag_drop: `{"type":"drag_drop","question":"...","options":["Step 1","Step 2","Step 3","Step 4"],"correctAnswer":[0,1,2,3],"explanation":"..."}`,
+      multiple_choice: `{"type":"multiple_choice","question":"Clear question about one concrete fact/concept from the lesson","options":["Correct answer","Plausible wrong option","Plausible wrong option","Plausible wrong option"],"correctAnswer":0,"explanation":"Why the correct answer is supported by the lesson"}`,
+      true_false: `{"type":"true_false","question":"Concrete true/false statement from the lesson","options":["Đúng","Sai"],"correctAnswer":0,"explanation":"Why the statement is true or false"}`,
+      short_answer: `{"type":"short_answer","question":"Ask for a specific term, reason, step, or concept from the lesson","options":[],"correctAnswer":"Short exact answer","explanation":"Short explanation from the lesson"}`,
+      drag_drop: `{"type":"drag_drop","question":"Arrange these lesson steps in the correct order","options":["First concrete step","Second concrete step","Third concrete step","Fourth concrete step"],"correctAnswer":[0,1,2,3],"explanation":"Why this order is correct"}`,
     };
+    const targetLanguage = lang === "vi" ? "Vietnamese" : "English";
+    const sanitizedSource = this._sanitizeQuizSource(source);
     const sysPrompt = [
-      "You are an expert LMS quiz author.",
-      `Create exactly ${count} questions from the lesson content.`,
+      "You are a strict LMS assessment designer. Create useful quiz questions ONLY from the lesson content.",
+      `Create exactly ${count} questions in ${targetLanguage}.`,
       `Allowed question types: ${types.join(", ")}.`,
-      "Return ONLY a JSON array. Do not include markdown fences or commentary.",
+      "Return ONLY valid JSON, no markdown fences, no commentary.",
+      "JSON shape must be: {\"questions\":[ ... ]}.",
       `Each item must match one of these schemas: ${types.map(type => typeGuide[type]).join(" OR ")}.`,
-      "Use clear wording, plausible distractors, and a short explanation for every question.",
-      lang === "vi" ? "Write questions and explanations in Vietnamese when the source is Vietnamese." : "Write questions in English unless the source uses another language.",
+      "Quality rules:",
+      "- Do NOT ask vague questions like 'Which idea best matches this content?'.",
+      "- Do NOT use fragments as answer options.",
+      "- Do NOT ask about the title, transcript, video, or wording of the content itself.",
+      "- Every multiple-choice option must be a complete meaningful answer.",
+      "- The correct answer must be derivable from the lesson content.",
+      "- Explanation must cite the lesson idea briefly.",
+      "- Keep quiz question text in the selected UI language unless the lesson contains a proper noun or technical term.",
     ].join("\n");
 
     const body = {
       system_instruction: { parts: [{ text: sysPrompt }] },
-      contents: [{ role: "user", parts: [{ text: source }] }],
-      generationConfig: { temperature: 0.35 },
+      contents: [{ role: "user", parts: [{ text: `LESSON CONTENT:\n${sanitizedSource}` }] }],
+      generationConfig: {
+        temperature: 0.18,
+        maxOutputTokens: 6500,
+        responseMimeType: "application/json",
+      },
     };
     try {
       const chatbot = this.app.chatbotController;
@@ -987,58 +1002,156 @@ export class AdminController {
       }
       if (!text) throw new Error("Empty response");
       const parsed = this._parseAIQuestions(text);
-      return parsed.slice(0, count).map(q => this._normalizeGeneratedQuestion(q, lang));
+      const normalized = parsed
+        .map(q => this._normalizeGeneratedQuestion(q, lang, types))
+        .filter(q => this._isUsableAIQuestion(q));
+      if (normalized.length < count) {
+        throw new Error(lang === "vi"
+          ? `AI chỉ tạo được ${normalized.length}/${count} câu hợp lệ. Hãy dán nội dung bài học cụ thể hơn.`
+          : `AI only produced ${normalized.length}/${count} valid questions. Paste more concrete lesson content.`);
+      }
+      return normalized.slice(0, count);
     } catch (error) {
-      console.warn("[Admin AI Quiz] Falling back to local generator:", error);
-      return this._fallbackGeneratedQuestions(source, count, types, lang);
+      console.warn("[Admin AI Quiz] Generation rejected:", error);
+      throw error;
     }
   }
 
   _parseAIQuestions(text) {
     const clean = text.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
-    const match = clean.match(/\[[\s\S]*\]/);
-    return JSON.parse(match ? match[0] : clean);
+    let parsed = null;
+    try {
+      parsed = JSON.parse(clean);
+    } catch (error) {
+      const arrayMatch = clean.match(/\[[\s\S]*\]/);
+      const objectMatch = clean.match(/\{[\s\S]*\}/);
+      parsed = JSON.parse(arrayMatch?.[0] || objectMatch?.[0] || clean);
+    }
+    const questions = Array.isArray(parsed)
+      ? parsed
+      : (Array.isArray(parsed?.questions) ? parsed.questions : []);
+    if (!questions.length) {
+      throw new Error("AI returned no questions.");
+    }
+    return questions;
   }
 
-  _normalizeGeneratedQuestion(q, lang) {
+  _normalizeGeneratedQuestion(q, lang, allowedTypes = []) {
     const type = q.type || ((q.options || []).length === 2 ? "true_false" : "multiple_choice");
-    if (type === "short_answer") {
+    const normalizedType = allowedTypes.includes(type) ? type : allowedTypes[0] || "multiple_choice";
+    if (normalizedType === "short_answer") {
       return {
-        type,
-        question: q.question || "",
+        type: normalizedType,
+        question: this._cleanAIText(q.question),
         options: [],
-        correctAnswer: String(q.correctAnswer ?? q.answer ?? ""),
-        explanation: q.explanation || "",
+        correctAnswer: this._cleanAIText(q.correctAnswer ?? q.answer ?? ""),
+        explanation: this._cleanAIText(q.explanation || ""),
       };
     }
-    if (type === "true_false") {
+    if (normalizedType === "true_false") {
       return {
-        type,
-        question: q.question || "",
-        options: q.options?.length >= 2 ? q.options.slice(0, 2) : (lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"]),
-        correctAnswer: this._normalizeCorrectAnswer(q.correctAnswer, type),
-        explanation: q.explanation || "",
+        type: normalizedType,
+        question: this._cleanAIText(q.question),
+        options: lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"],
+        correctAnswer: this._normalizeCorrectAnswer(q.correctAnswer, normalizedType),
+        explanation: this._cleanAIText(q.explanation || ""),
       };
     }
-    if (type === "drag_drop") {
+    if (normalizedType === "drag_drop") {
       const options = Array.isArray(q.options) && q.options.length
-        ? q.options.slice(0, 8)
+        ? q.options.slice(0, 8).map(option => this._cleanAIText(option)).filter(Boolean)
         : [lang === "vi" ? "Bước 1" : "Step 1", lang === "vi" ? "Bước 2" : "Step 2", lang === "vi" ? "Bước 3" : "Step 3", lang === "vi" ? "Bước 4" : "Step 4"];
       return {
-        type,
-        question: q.question || "",
+        type: normalizedType,
+        question: this._cleanAIText(q.question),
         options,
         correctAnswer: options.map((_, index) => index),
-        explanation: q.explanation || "",
+        explanation: this._cleanAIText(q.explanation || ""),
       };
     }
+    const options = [0, 1, 2, 3]
+      .map(i => this._cleanAIText(q.options?.[i] || ""))
+      .filter(Boolean);
     return {
       type: "multiple_choice",
-      question: q.question || "",
-      options: [0, 1, 2, 3].map(i => q.options?.[i] || ""),
-      correctAnswer: this._normalizeCorrectAnswer(q.correctAnswer, "multiple_choice"),
-      explanation: q.explanation || "",
+      question: this._cleanAIText(q.question),
+      options,
+      correctAnswer: this._normalizeChoiceCorrectAnswer(q.correctAnswer, options),
+      explanation: this._cleanAIText(q.explanation || ""),
     };
+  }
+
+  _normalizeChoiceCorrectAnswer(answer, options) {
+    if (typeof answer === "number" && answer >= 0 && answer < options.length) return answer;
+    const raw = String(answer ?? "").trim();
+    const letter = raw.toUpperCase();
+    if (/^[A-D]$/.test(letter)) return letter.charCodeAt(0) - 65;
+    const parsed = parseInt(raw, 10);
+    if (!Number.isNaN(parsed) && parsed >= 0 && parsed < options.length) return parsed;
+    const normalized = this._normalizeTextForQuality(answer);
+    const matched = options.findIndex(option => this._normalizeTextForQuality(option) === normalized);
+    return matched >= 0 ? matched : 0;
+  }
+
+  _sanitizeQuizSource(source) {
+    return String(source || "")
+      .replace(/\r/g, "\n")
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/[#*_>`]/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/[ \t]{2,}/g, " ")
+      .trim()
+      .slice(0, 18000);
+  }
+
+  _cleanAIText(value) {
+    return String(value ?? "")
+      .replace(/\s+/g, " ")
+      .replace(/^["'“”‘’]+|["'“”‘’]+$/g, "")
+      .trim();
+  }
+
+  _isUsableAIQuestion(q) {
+    if (!q?.question || q.question.length < 12) return false;
+    if (/which idea best matches|ý nào phù hợp nhất|true or false:\s*video này|đúng hay sai:\s*video này/i.test(q.question)) return false;
+    if (/lesson content|nội dung bài học|transcript|video này giới thiệu|bài học giới thiệu/i.test(q.question) && q.question.length < 90) return false;
+
+    if (q.type === "short_answer") {
+      return !!q.correctAnswer && String(q.correctAnswer).length >= 2;
+    }
+
+    if (q.type === "drag_drop") {
+      return Array.isArray(q.options)
+        && q.options.length >= 3
+        && q.options.every(option => String(option).trim().length >= 8);
+    }
+
+    if (q.type === "true_false") {
+      return Array.isArray(q.options) && q.options.length === 2 && [0, 1].includes(Number(q.correctAnswer));
+    }
+
+    if (q.type === "multiple_choice") {
+      const options = Array.isArray(q.options) ? q.options : [];
+      const correct = Number(q.correctAnswer);
+      const unique = new Set(options.map(option => this._normalizeTextForQuality(option)));
+      return options.length === 4
+        && unique.size === 4
+        && options.every(option => String(option).trim().length >= 5)
+        && correct >= 0
+        && correct < options.length
+        && !options.some(option => /^(khóa học bao gồm|video này giới thiệu|người hướng dẫn với|bài học giới thiệu)$/i.test(String(option).trim()));
+    }
+
+    return false;
+  }
+
+  _normalizeTextForQuality(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ");
   }
 
   _fallbackGeneratedQuestions(source, count, types, lang) {
