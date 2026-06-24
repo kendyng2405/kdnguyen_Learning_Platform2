@@ -18,7 +18,7 @@
   <!-- Argon Dashboard CSS -->
   <link rel="stylesheet" href="assets/css/argon-dashboard.css" />
   <!-- LMS Custom Overrides -->
-  <link rel="stylesheet" href="assets/css/lms-overrides.css?v=17" />
+  <link rel="stylesheet" href="assets/css/lms-overrides.css?v=19" />
 </head>
 <body>
 
@@ -114,7 +114,7 @@
               <div class="input-group-prepend">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
               </div>
-              <input class="form-control" placeholder="Search" type="text" id="navSearchInput" />
+              <input class="form-control" placeholder="Tìm kiếm" type="text" id="navSearchInput" data-vi-placeholder="Tìm kiếm" data-en-placeholder="Search" />
             </div>
           </div>
         </form>
@@ -201,11 +201,11 @@
     <div class="chatbot-messages" id="chatbotMessages">
       <div class="chat-message chat-message--bot">
         <span class="chat-avatar">🤖</span>
-        <div class="chat-bubble">Xin chào! Tôi là BrilliantBot. Hỏi tôi bất cứ điều gì về bài học nhé! 😊</div>
+        <div class="chat-bubble" data-vi="Xin chào! Tôi là BrilliantBot. Hỏi tôi bất cứ điều gì về bài học nhé!" data-en="Hi! I'm BrilliantBot. Ask me anything about your lesson.">Xin chào! Tôi là BrilliantBot. Hỏi tôi bất cứ điều gì về bài học nhé!</div>
       </div>
     </div>
     <div class="chatbot-input-area">
-      <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Hỏi về bài học..." />
+      <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Hỏi về bài học..." data-vi-placeholder="Hỏi về bài học..." data-en-placeholder="Ask about the lesson..." />
       <button class="chatbot-send" id="chatbotSend">➤</button>
     </div>
   </div>
@@ -242,7 +242,7 @@
     window.__firebaseDB      = getFirestore(app);
     window.__firebaseStorage = getStorage(app);
 
-    const { App } = await import("./assets/js/app.js?v=13");
+    const { App } = await import("./assets/js/app.js?v=15");
     window.__app = new App();
     window.__app.init();
   </script>

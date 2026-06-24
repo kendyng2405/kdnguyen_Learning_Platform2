@@ -436,11 +436,13 @@ export class AdminView {
       titleField: "Tên bài học *", type: "Loại", content: "Nội dung (hỗ trợ Markdown)",
       videoUrl: "URL Video", docUrl: "URL Tài liệu", order: "Thứ tự",
       duration: "Thời lượng", save: isEdit ? "Lưu" : "Tạo", cancel: "Hủy",
+      aiLanguage: "Ngôn ngữ AI",
     } : {
       title: isEdit ? "Edit Lesson" : "Add Lesson",
       titleField: "Lesson Title *", type: "Type", content: "Content (Markdown)",
       videoUrl: "Video URL", docUrl: "Document URL", order: "Order",
       duration: "Duration", save: isEdit ? "Save" : "Create", cancel: "Cancel",
+      aiLanguage: "AI output language",
     };
     const types = ["video", "text", "document"];
 
@@ -474,7 +476,14 @@ export class AdminView {
           <div class="form-group">
             <div class="d-flex justify-content-between align-items-end mb-1">
               <label class="form-control-label mb-0">${t.content}</label>
-              <button class="btn btn-sm btn-outline-primary" id="btnAdminAIGenerateLesson">✨ ${lang === "vi" ? "AI Viết nội dung từ Video" : "AI Generate from Video"}</button>
+              <div class="admin-lesson-ai-tools">
+                <label class="form-control-label mb-0" for="aiLessonLanguage">${t.aiLanguage}</label>
+                <select id="aiLessonLanguage" class="form-control form-control-sm">
+                  <option value="vi" ${lang === "vi" ? "selected" : ""}>Tiếng Việt</option>
+                  <option value="en" ${lang === "en" ? "selected" : ""}>English</option>
+                </select>
+                <button class="btn btn-sm btn-outline-primary" id="btnAdminAIGenerateLesson">✨ ${lang === "vi" ? "AI Viết nội dung từ Video" : "AI Generate from Video"}</button>
+              </div>
             </div>
             <textarea id="lessonContent" class="form-control" rows="8">${lesson?.content || ""}</textarea>
           </div>

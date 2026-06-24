@@ -3946,3 +3946,272 @@ html[data-theme="dark"] .tracking-track {
     width: 100%;
   }
 }
+
+/* Lesson header clarity */
+.page-lesson .lesson-header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
+.page-lesson .lesson-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.78rem;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  color: #ffffff;
+  font-weight: 900;
+  letter-spacing: 0;
+  box-shadow: 0 12px 28px rgba(15,23,42,0.16);
+  backdrop-filter: blur(10px);
+}
+
+/* Admin quiz authoring */
+.admin-lesson-ai-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.admin-lesson-ai-tools select {
+  width: auto;
+  min-width: 130px;
+}
+.admin-animation-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+.animation-ready-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.42rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(45,206,137,0.12);
+  color: #24a46d;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+.admin-drag-author {
+  margin: 0.9rem 0;
+}
+.admin-drag-list {
+  display: grid;
+  gap: 0.55rem;
+}
+.admin-drag-list label {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+}
+.admin-drag-list span {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(94,114,228,0.1);
+  color: #5e72e4;
+  font-weight: 900;
+}
+
+/* Quiz drag-drop */
+.quiz-drag-shell {
+  display: grid;
+  gap: 1rem;
+}
+.quiz-drag-list {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.quiz-drag-item {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #172b4d;
+  box-shadow: 0 10px 26px rgba(15,23,42,0.08);
+  cursor: grab;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.quiz-drag-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(94,114,228,0.45);
+  box-shadow: 0 16px 34px rgba(94,114,228,0.16);
+}
+.quiz-drag-item.dragging {
+  opacity: 0.72;
+  transform: scale(0.98);
+}
+.quiz-drag-item span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(94,114,228,0.1);
+  color: #5e72e4;
+}
+.quiz-drag-check {
+  justify-self: end;
+  min-width: 140px;
+}
+.quiz-drag-readonly {
+  display: grid;
+  gap: 0.65rem;
+}
+.quiz-drag-readonly span {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(94,114,228,0.08);
+  color: #172b4d;
+  font-weight: 800;
+}
+.quiz-drag-readonly b {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #5e72e4;
+  color: #fff;
+}
+
+/* Quiz animation player */
+.quiz-animation-player {
+  position: relative;
+  overflow: hidden;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(94,114,228,0.14);
+}
+.quiz-animation-player.is-correct {
+  background: linear-gradient(135deg, rgba(45,206,137,0.14), rgba(255,255,255,0.76));
+}
+.quiz-animation-player.is-wrong {
+  background: linear-gradient(135deg, rgba(245,54,92,0.12), rgba(255,255,255,0.76));
+}
+.quiz-animation-orbit {
+  position: absolute;
+  right: -38px;
+  top: -42px;
+  width: 132px;
+  height: 132px;
+  border-radius: 999px;
+  border: 12px solid rgba(17,205,239,0.12);
+  animation: quizOrbitPulse 2.4s ease-in-out infinite;
+}
+.quiz-animation-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+  color: #172b4d;
+}
+.quiz-animation-head span {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #5e72e4;
+  color: #fff;
+}
+.quiz-animation-stage {
+  position: relative;
+  display: grid;
+  gap: 0.7rem;
+}
+.quiz-animation-step {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.76);
+  box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+  animation: quizStepFlow 1.8s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+.quiz-animation-step-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #5e72e4, #11cdef);
+  color: #fff;
+  font-weight: 900;
+}
+.quiz-animation-step strong,
+.quiz-animation-step small {
+  display: block;
+}
+.quiz-animation-step strong {
+  color: #172b4d;
+}
+.quiz-animation-step small {
+  margin-top: 0.18rem;
+  color: #5f6f87;
+  font-weight: 700;
+}
+.quiz-animation-player--code_trace .quiz-animation-step-icon {
+  background: linear-gradient(135deg, #172b4d, #5e72e4);
+}
+.quiz-animation-player--equation_steps .quiz-animation-step-icon {
+  background: linear-gradient(135deg, #fb6340, #fbb140);
+}
+.quiz-animation-player--physics_motion .quiz-animation-step-icon {
+  background: linear-gradient(135deg, #11cdef, #2dce89);
+}
+.quiz-animation-player--concept_flow .quiz-animation-step-icon {
+  background: linear-gradient(135deg, #2dce89, #5e72e4);
+}
+
+html[data-theme="dark"] .quiz-drag-item,
+html[data-theme="dark"] .quiz-animation-player,
+html[data-theme="dark"] .quiz-animation-step {
+  background: rgba(17,24,39,0.88);
+  border-color: #243044;
+  color: #f8fafc;
+}
+html[data-theme="dark"] .quiz-drag-readonly span,
+html[data-theme="dark"] .quiz-animation-step strong,
+html[data-theme="dark"] .quiz-animation-head {
+  color: #f8fafc;
+}
+html[data-theme="dark"] .quiz-animation-step small {
+  color: #cbd5e1;
+}
+
+@keyframes quizStepFlow {
+  0%, 100% { transform: translateX(0); box-shadow: 0 12px 30px rgba(15,23,42,0.08); }
+  45% { transform: translateX(8px); box-shadow: 0 16px 34px rgba(94,114,228,0.18); }
+}
+@keyframes quizOrbitPulse {
+  0%, 100% { transform: scale(0.95); opacity: 0.55; }
+  50% { transform: scale(1.08); opacity: 0.9; }
+}

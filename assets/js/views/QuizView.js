@@ -2,6 +2,8 @@
 //  QuizView.js - Quiz Page Templates (Argon Style)
 // ============================================================
 
+import { QuizAnimationPlayer } from "../components/QuizAnimationPlayer.js?v=10";
+
 export class QuizView {
   renderQuizList(rows, lang) {
     const t = lang === "vi" ? {
@@ -180,6 +182,7 @@ export class QuizView {
     const t = lang === "vi" ? {
       question: "Câu",
       choose: "Chọn một đáp án",
+      drag: "Kéo thả để sắp xếp đúng thứ tự",
       short: "Nhập câu trả lời",
       check: "Kiểm tra",
       correct: "Chính xác",
@@ -190,6 +193,7 @@ export class QuizView {
     } : {
       question: "Question",
       choose: "Choose one answer",
+      drag: "Drag to arrange the correct order",
       short: "Type your answer",
       check: "Check",
       correct: "Correct",
@@ -206,13 +210,8 @@ export class QuizView {
           <span class="quiz-question-type">${this._typeLabel(type, lang)}</span>
         </div>
         <h2>${this._escape(question.question || "")}</h2>
-        <p class="quiz-question-hint">${type === "short_answer" ? t.short : t.choose}</p>
-        ${type === "short_answer"
-          ? this._shortAnswerInput(result, t, lang)
-          : `<div class="quiz-play-options">
-              ${options.map((option, optionIndex) => this._optionButton(option, optionIndex, result)).join("")}
-            </div>`
-        }
+        <p class="quiz-question-hint">${type === "short_answer" ? t.short : type === "drag_drop" ? t.drag : t.choose}</p>
+        ${this._answerInput(question, type, options, result, t, lang)}
         ${answered ? this._feedbackBlock(question, result, t, lang) : ""}
       </article>
     `;
@@ -416,6 +415,50 @@ export class QuizView {
     `;
   }
 
+  _answerInput(question, type, options, result, t, lang) {
+    if (type === "short_answer") {
+      return this._shortAnswerInput(result, t, lang);
+    }
+    if (type === "drag_drop") {
+      return this._dragDropInput(question, options, result, t, lang);
+    }
+    return `
+      <div class="quiz-play-options">
+        ${options.map((option, optionIndex) => this._optionButton(option, optionIndex, result)).join("")}
+      </div>
+    `;
+  }
+
+  _dragDropInput(question, options, result, t, lang) {
+    const items = options.length ? options : (question.items || []);
+    if (result) {
+      const order = Array.isArray(result.userAnswerOrder) ? result.userAnswerOrder : [];
+      const ordered = order.map(index => items[index]).filter(Boolean);
+      return `
+        <div class="quiz-drag-readonly">
+          ${ordered.map((item, index) => `
+            <span><b>${index + 1}</b>${this._escape(item)}</span>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    const shuffled = items.map((item, index) => ({ item, index })).reverse();
+    return `
+      <div class="quiz-drag-shell">
+        <ul class="quiz-drag-list" id="quizDragList">
+          ${shuffled.map(({ item, index }) => `
+            <li class="quiz-drag-item" draggable="true" data-drag-value="${index}">
+              <span><i class="fas fa-grip-vertical"></i></span>
+              <strong>${this._escape(item)}</strong>
+            </li>
+          `).join("")}
+        </ul>
+        <button class="btn btn-primary quiz-drag-check" type="button" id="dragDropCheckBtn">${t.check}</button>
+      </div>
+    `;
+  }
+
   _optionButton(option, optionIndex, result) {
     const selected = result && String(result.userAnswer) === String(optionIndex);
     const correct = result && String(result.correct) === String(optionIndex);
@@ -450,6 +493,7 @@ export class QuizView {
   _feedbackBlock(question, result, t, lang) {
     const title = result.isCorrect ? t.correct : t.wrong;
     const explanation = question.explanation || result.explanation || "";
+    const animation = QuizAnimationPlayer.render(question.animation_spec || question.animationSpec, result.isCorrect ? "correct" : "wrong", lang);
     return `
       <div class="quiz-feedback ${result.isCorrect ? "is-correct" : "is-wrong"}">
         <div class="quiz-feedback-title">
@@ -461,6 +505,7 @@ export class QuizView {
         <button class="btn btn-sm btn-outline-primary quiz-ai-explain-current">
           <i class="fas fa-robot mr-1"></i>${t.explain}
         </button>
+        ${animation}
       </div>
     `;
   }
@@ -472,6 +517,9 @@ export class QuizView {
   }
 
   _questionOptions(question, lang) {
+    if (this._questionType(question) === "drag_drop") {
+      return Array.isArray(question.options) && question.options.length ? question.options : (question.items || []);
+    }
     if (this._questionType(question) === "true_false" && (!question.options || question.options.length < 2)) {
       return lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"];
     }
@@ -483,11 +531,13 @@ export class QuizView {
       multiple_choice: "Trắc nghiệm",
       true_false: "Đúng / Sai",
       short_answer: "Trả lời ngắn",
+      drag_drop: "Kéo thả",
     };
     const en = {
       multiple_choice: "Multiple choice",
       true_false: "True / False",
       short_answer: "Short answer",
+      drag_drop: "Drag & drop",
     };
     return (lang === "vi" ? vi : en)[type] || type;
   }

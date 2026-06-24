@@ -377,9 +377,9 @@ export class CourseView {
           <button class="btn btn-sm btn-neutral mb-3" id="backToCourse">${t.back}</button>
           <p class="text-white mb-0" style="opacity:0.7">${course?.title || ""}</p>
           <h1 class="text-white">${lesson.title}</h1>
-          <div class="d-flex" style="gap:0.5rem;">
-            <span class="badge badge-default">${this._lessonTypeIcon(lesson.type)} ${lesson.type || 'lesson'}</span>
-            ${lesson.duration ? `<span class="badge badge-default">⏱ ${lesson.duration}</span>` : ""}
+          <div class="lesson-header-meta">
+            <span class="lesson-meta-badge">${this._lessonTypeIcon(lesson.type)} ${lesson.type || 'lesson'}</span>
+            ${lesson.duration ? `<span class="lesson-meta-badge">⏱ ${lesson.duration}</span>` : ""}
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@
 
 import { QuizModel } from "../models/QuizModel.js?v=11";
 import { CourseModel } from "../models/CourseModel.js?v=10";
-import { QuizView } from "../views/QuizView.js?v=11";
+import { QuizView } from "../views/QuizView.js?v=12";
 
 export class QuizController {
   constructor(app) {
@@ -342,9 +342,43 @@ export class QuizController {
       }
     });
 
+    this._bindDragDropQuestion();
+
     document.querySelector(".quiz-ai-explain-current")?.addEventListener("click", () => {
       const result = this.results[this.currentQuestionIndex];
       if (result) this._askAIToExplain(result);
+    });
+  }
+
+  _bindDragDropQuestion() {
+    const list = document.getElementById("quizDragList");
+    const check = document.getElementById("dragDropCheckBtn");
+    if (!list || !check) return;
+
+    let dragged = null;
+    list.querySelectorAll(".quiz-drag-item").forEach(item => {
+      item.addEventListener("dragstart", () => {
+        dragged = item;
+        item.classList.add("dragging");
+      });
+      item.addEventListener("dragend", () => {
+        item.classList.remove("dragging");
+        dragged = null;
+      });
+      item.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        if (!dragged || dragged === item) return;
+        const box = item.getBoundingClientRect();
+        const after = event.clientY > box.top + box.height / 2;
+        list.insertBefore(dragged, after ? item.nextSibling : item);
+      });
+    });
+
+    check.addEventListener("click", () => {
+      const order = Array.from(list.querySelectorAll("[data-drag-value]"))
+        .map(item => item.dataset.dragValue)
+        .join(",");
+      this._answerCurrentQuestion(order);
     });
   }
 
@@ -371,6 +405,29 @@ export class QuizController {
   _evaluateQuestion(question, answerValue, lang) {
     const type = this._questionType(question);
     const options = this._questionOptions(question, lang);
+
+    if (type === "drag_drop") {
+      const userOrder = String(answerValue || "")
+        .split(",")
+        .map(item => parseInt(item, 10))
+        .filter(item => !Number.isNaN(item));
+      const correctOrder = this._dragCorrectOrder(question, options);
+      const isCorrect = userOrder.length === correctOrder.length
+        && userOrder.every((item, index) => item === correctOrder[index]);
+      return {
+        type,
+        question: question.question || "",
+        options,
+        userAnswer: userOrder.join(","),
+        userAnswerOrder: userOrder,
+        correctOrder,
+        userAnswerLabel: userOrder.map(index => options[index]).filter(Boolean).join(" → "),
+        correct: correctOrder.join(","),
+        correctAnswerLabel: correctOrder.map(index => options[index]).filter(Boolean).join(" → "),
+        isCorrect,
+        explanation: question.explanation || "",
+      };
+    }
 
     if (type === "short_answer") {
       const correctRaw = String(question.correctAnswer ?? question.answer ?? "").trim();
@@ -429,6 +486,22 @@ export class QuizController {
   _unansweredResult(question, lang) {
     const type = this._questionType(question);
     const options = this._questionOptions(question, lang);
+    if (type === "drag_drop") {
+      const correctOrder = this._dragCorrectOrder(question, options);
+      return {
+        type,
+        question: question.question || "",
+        options,
+        userAnswer: null,
+        userAnswerOrder: [],
+        correctOrder,
+        userAnswerLabel: "",
+        correct: correctOrder.join(","),
+        correctAnswerLabel: correctOrder.map(index => options[index]).filter(Boolean).join(" → "),
+        isCorrect: false,
+        explanation: question.explanation || "",
+      };
+    }
     const correctIndex = this._correctIndex(question);
     const correctRaw = type === "short_answer"
       ? String(question.correctAnswer ?? question.answer ?? "").trim()
@@ -552,19 +625,41 @@ export class QuizController {
 
       const ctx = this.audioContext;
       if (ctx.state === "suspended") ctx.resume();
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
       const now = ctx.currentTime;
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(isCorrect ? 660 : 180, now);
-      oscillator.frequency.exponentialRampToValueAtTime(isCorrect ? 880 : 120, now + 0.14);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
-      oscillator.connect(gain);
-      gain.connect(ctx.destination);
-      oscillator.start(now);
-      oscillator.stop(now + 0.2);
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.72, now);
+      master.connect(ctx.destination);
+
+      const tones = isCorrect
+        ? [
+            { frequency: 523.25, start: 0, duration: 0.12, type: "triangle", gain: 0.18 },
+            { frequency: 659.25, start: 0.07, duration: 0.13, type: "sine", gain: 0.16 },
+            { frequency: 987.77, start: 0.16, duration: 0.18, type: "triangle", gain: 0.14 },
+          ]
+        : [
+            { frequency: 220, start: 0, duration: 0.14, type: "sawtooth", gain: 0.14 },
+            { frequency: 155.56, start: 0.09, duration: 0.18, type: "square", gain: 0.11 },
+          ];
+
+      tones.forEach(tone => {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = now + tone.start;
+        oscillator.type = tone.type;
+        oscillator.frequency.setValueAtTime(tone.frequency, start);
+        if (!isCorrect) {
+          oscillator.frequency.exponentialRampToValueAtTime(Math.max(80, tone.frequency * 0.68), start + tone.duration);
+        }
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(tone.gain, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + tone.duration);
+        oscillator.connect(gain);
+        gain.connect(master);
+        oscillator.start(start);
+        oscillator.stop(start + tone.duration + 0.03);
+      });
+
+      setTimeout(() => master.disconnect(), 600);
     } catch (e) {
       // Sound is optional; browser autoplay/audio policies may block it.
     }
@@ -577,10 +672,23 @@ export class QuizController {
   }
 
   _questionOptions(question, lang) {
+    if (this._questionType(question) === "drag_drop") {
+      return Array.isArray(question.options) && question.options.length ? question.options : (question.items || []);
+    }
     if (this._questionType(question) === "true_false" && (!question.options || question.options.length < 2)) {
       return lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"];
     }
     return question.options || [];
+  }
+
+  _dragCorrectOrder(question, options) {
+    if (Array.isArray(question.correctAnswer)) {
+      return question.correctAnswer.map(item => parseInt(item, 10)).filter(item => !Number.isNaN(item));
+    }
+    if (typeof question.correctAnswer === "string" && question.correctAnswer.includes(",")) {
+      return question.correctAnswer.split(",").map(item => parseInt(item, 10)).filter(item => !Number.isNaN(item));
+    }
+    return options.map((_, index) => index);
   }
 
   _correctIndex(question) {

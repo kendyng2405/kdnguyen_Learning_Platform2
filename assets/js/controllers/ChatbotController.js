@@ -136,6 +136,10 @@ export class ChatbotController {
     systemPrompt = lang === "vi"
       ? `Bạn là BrilliantBot của Brilliant LMS. Trả lời đúng trọng tâm, dễ hiểu, tối đa 4 ý ngắn. Nếu giải thích quiz: nêu đáp án đúng, vì sao đúng, vì sao lựa chọn của học viên sai, và 1 mẹo nhớ. Không lan man, không hỏi ngược trừ khi thiếu dữ liệu. Luôn dùng Context nếu có. ${contextStr}`
       : `You are BrilliantBot for Brilliant LMS. Reply concisely in at most 4 short points. For quiz explanations: state the correct answer, why it is correct, why the learner's choice is wrong, and one memory tip. Do not ramble or ask back unless data is missing. Always use Context when provided. ${contextStr}`;
+    const languageLock = lang === "vi"
+      ? "BẮT BUỘC: Trả lời hoàn toàn bằng tiếng Việt. Chỉ giữ nguyên ngôn ngữ gốc của câu hỏi quiz, lựa chọn quiz, tên riêng và code khi trích dẫn. Không xen tiếng Anh nếu người dùng không yêu cầu."
+      : "REQUIRED: Answer entirely in English. Keep the original language only for quoted quiz questions, quiz options, names, and code. Do not switch to Vietnamese unless the user asks.";
+    systemPrompt = `${languageLock}\n${systemPrompt}`;
 
     this.history.push({ role: "user", parts: [{ text: userMessage }] });
     if (this.history.length > 20) this.history = this.history.slice(-20);
@@ -164,7 +168,7 @@ export class ChatbotController {
     const body = {
       system_instruction: { parts: [{ text: systemPrompt }] },
       contents: finalHistory,
-      generationConfig: { temperature: 0.45, maxOutputTokens: 900 },
+      generationConfig: { temperature: 0.35, maxOutputTokens: 520 },
     };
 
     return await this._fetchModel(null, body);

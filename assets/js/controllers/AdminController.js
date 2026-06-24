@@ -347,6 +347,7 @@ export class AdminController {
     document.getElementById("btnAdminAIGenerateLesson")?.addEventListener("click", async () => {
       const videoUrl = document.getElementById("lessonVideoUrl").value.trim();
       const title = document.getElementById("lessonTitle").value.trim() || "Bài học mới";
+      const targetLang = document.getElementById("aiLessonLanguage")?.value || lang;
       if (!videoUrl) {
         window.__toast.error(lang === "vi" ? "Vui lòng nhập URL Video trước." : "Please enter Video URL first.");
         return;
@@ -390,12 +391,12 @@ export class AdminController {
       let parts = [];
       if (transcript && transcript.length > 50) {
         if (transcript.length > 15000) transcript = transcript.substring(0, 15000) + "...";
-        const msg = lang === "vi"
+        const msg = targetLang === "vi"
           ? `Dựa vào phụ đề của video "${title}" dưới đây, hãy viết nội dung bài học bằng Markdown chi tiết gồm: 1. Tóm tắt ngắn gọn. 2. Timeline sự kiện. 3. Các khái niệm chính. 4. Tạo 3 câu trắc nghiệm. 5. Tạo 3 flashcards.\n\nTranscript: ${transcript}`
           : `Based on the transcript of "${title}", write a detailed Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. 3-question quiz. 5. 3 flashcards.\n\nTranscript: ${transcript}`;
         parts.push({ text: msg });
       } else {
-        const msg = lang === "vi" 
+        const msg = targetLang === "vi"
           ? `Hãy xem video YouTube đính kèm và viết một bài học Markdown chi tiết gồm: 1. Tóm tắt ngắn gọn. 2. Timeline. 3. Khái niệm chính. 4. 3 câu hỏi trắc nghiệm. 5. 3 thẻ ghi nhớ.\nNẾU BẠN KHÔNG XEM ĐƯỢC VIDEO NÀY, HÃY TRẢ LỜI: "ERROR_CANNOT_ACCESS_VIDEO".`
           : `Please watch the attached YouTube video and write a Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. 3-question quiz. 5. 3 flashcards.\nIF YOU CANNOT WATCH THIS VIDEO, REPLY: "ERROR_CANNOT_ACCESS_VIDEO".`;
         
@@ -514,6 +515,7 @@ export class AdminController {
     const modal  = this.view.renderQuizFormModal(quiz, course, lang);
     const overlay = this._openAdminModal(modal);
     this._bindModalClose(overlay);
+    this._activeQuizContext = { courseId, quizId: quiz?.id || null };
 
     // Dynamic question builder
     let questionCount = quiz?.questions?.length || 1;
@@ -593,8 +595,16 @@ export class AdminController {
           qs[idx].options = [];
           qs[idx].correctAnswer = "";
         }
+        if (select.value === "drag_drop") {
+          qs[idx].options = qs[idx].options?.length ? qs[idx].options : ["", "", "", ""];
+          qs[idx].correctAnswer = qs[idx].options.map((_, index) => index);
+        }
         this._renderQuestionForms(qs, lang);
       });
+    });
+
+    container.querySelectorAll(".btn-generate-animation").forEach(btn => {
+      btn.addEventListener("click", () => this._generateQuestionAnimation(btn, lang));
     });
   }
 
@@ -604,25 +614,46 @@ export class AdminController {
       const question = card.querySelector(".q-text")?.value.trim() || "";
       const type = card.querySelector(".q-type")?.value || "multiple_choice";
       const explanation = card.querySelector(".q-explanation")?.value.trim() || "";
+      const id = card.querySelector(".q-id")?.value || this._questionId();
+      const animation_spec = this._readAnimationSpec(card);
 
       if (type === "short_answer") {
         return {
+          id,
           type,
           question,
           options: [],
           correctAnswer: card.querySelector(".q-correct-text")?.value.trim() || "",
           explanation,
+          animation_spec,
+        };
+      }
+
+      if (type === "drag_drop") {
+        const opts = Array.from(card.querySelectorAll(".q-drag-item-input"))
+          .map(o => o.value.trim())
+          .filter(Boolean);
+        return {
+          id,
+          type,
+          question,
+          options: opts,
+          correctAnswer: opts.map((_, index) => index),
+          explanation,
+          animation_spec,
         };
       }
 
       const opts = Array.from(card.querySelectorAll(".q-option")).map(o => o.value.trim());
       const radio = card.querySelector(`input[name="correct_${i}"]:checked`);
       return {
+        id,
         type,
         question,
         options: opts,
         correctAnswer: radio ? parseInt(radio.value) : 0,
         explanation,
+        animation_spec,
       };
     });
   }
@@ -630,9 +661,11 @@ export class AdminController {
   _questionFormCard(q, i, total, lang) {
     const type = q.type || ((q.options || []).length === 2 ? "true_false" : "multiple_choice");
     const correctAnswer = this._normalizeCorrectAnswer(q.correctAnswer, type);
+    const questionId = q.id || this._questionId();
+    const animationSpecText = q.animation_spec ? JSON.stringify(q.animation_spec) : "";
     const typeLabels = lang === "vi"
-      ? { multiple_choice: "Trắc nghiệm", true_false: "Đúng / Sai", short_answer: "Trả lời ngắn" }
-      : { multiple_choice: "Multiple choice", true_false: "True / False", short_answer: "Short answer" };
+      ? { multiple_choice: "Trắc nghiệm", true_false: "Đúng / Sai", short_answer: "Trả lời ngắn", drag_drop: "Kéo thả" }
+      : { multiple_choice: "Multiple choice", true_false: "True / False", short_answer: "Short answer", drag_drop: "Drag & drop" };
 
     return `
       <div class="question-form-card admin-question-card" data-qidx="${i}">
@@ -648,11 +681,21 @@ export class AdminController {
             ${total > 1 ? `<button type="button" class="btn-remove-q" data-idx="${i}" title="${lang === "vi" ? "Xóa câu hỏi" : "Remove question"}"><i class="fas fa-trash"></i></button>` : ""}
           </div>
         </div>
+        <input type="hidden" class="q-id" value="${this._attr(questionId)}" />
+        <textarea class="q-animation-spec hidden">${this._escape(animationSpecText)}</textarea>
         <textarea class="form-control q-text" rows="2" placeholder="${lang === "vi" ? "Nhập câu hỏi..." : "Enter question..."}">${this._escape(q.question || "")}</textarea>
         ${type === "short_answer"
           ? this._shortAnswerForm(q, lang)
-          : this._choiceAnswerForm(q, i, type, correctAnswer, lang)}
+          : type === "drag_drop"
+            ? this._dragDropAnswerForm(q, lang)
+            : this._choiceAnswerForm(q, i, type, correctAnswer, lang)}
         <textarea class="form-control q-explanation" rows="2" placeholder="${lang === "vi" ? "Giải thích đáp án để học viên hiểu nhanh hơn..." : "Explain the answer for learners..."}">${this._escape(q.explanation || "")}</textarea>
+        <div class="admin-animation-tools">
+          <button type="button" class="btn btn-sm btn-outline-primary btn-generate-animation" data-idx="${i}">
+            <i class="fas fa-wand-magic-sparkles mr-1"></i>${lang === "vi" ? "Generate AI Animation" : "Generate AI Animation"}
+          </button>
+          ${q.animation_spec ? `<span class="animation-ready-badge"><i class="fas fa-check-circle mr-1"></i>${lang === "vi" ? "Đã có animation" : "Animation ready"}</span>` : ""}
+        </div>
       </div>
     `;
   }
@@ -685,11 +728,114 @@ export class AdminController {
     `;
   }
 
+  _dragDropAnswerForm(q, lang) {
+    const items = (Array.isArray(q.options) && q.options.length ? q.options : (q.items || ["", "", "", ""])).slice(0, 8);
+    const padded = items.length ? items : ["", "", "", ""];
+    while (padded.length < 4) padded.push("");
+    return `
+      <div class="admin-drag-author">
+        <label class="form-control-label">${lang === "vi" ? "Các mục đúng theo thứ tự" : "Items in the correct order"}</label>
+        <div class="admin-drag-list">
+          ${padded.map((item, index) => `
+            <label>
+              <span>${index + 1}</span>
+              <input class="form-control q-drag-item-input" placeholder="${lang === "vi" ? "Bước / ý" : "Step / item"} ${index + 1}" value="${this._attr(item)}" />
+            </label>
+          `).join("")}
+        </div>
+        <p class="hint-text">${lang === "vi" ? "Học viên sẽ kéo thả để sắp xếp lại đúng thứ tự này." : "Learners will drag the shuffled items back into this order."}</p>
+      </div>
+    `;
+  }
+
   _normalizeCorrectAnswer(answer, type) {
+    if (type === "drag_drop") return Array.isArray(answer) ? answer : [0, 1, 2, 3];
     if (type === "short_answer") return typeof answer === "string" ? answer : "";
     if (typeof answer === "boolean") return answer ? 0 : 1;
     const parsed = parseInt(answer, 10);
     return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  _questionId() {
+    return `q_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  _readAnimationSpec(card) {
+    const raw = card.querySelector(".q-animation-spec")?.value.trim();
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async _generateQuestionAnimation(button, lang) {
+    const idx = parseInt(button.dataset.idx, 10);
+    const questions = this._collectQuestions();
+    const question = questions[idx];
+    if (!question?.question) {
+      window.__toast.error(lang === "vi" ? "Nhập câu hỏi trước khi tạo animation." : "Enter the question before generating animation.");
+      return;
+    }
+
+    const oldText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `<span class="spinner-sm"></span> ${lang === "vi" ? "Đang tạo..." : "Generating..."}`;
+
+    try {
+      let spec = null;
+      try {
+        const res = await fetch("/api/quiz-animation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "generate",
+            questionId: question.id,
+            question,
+            uiLanguage: lang,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+        spec = data.animation_spec || data.animationSpec;
+      } catch (error) {
+        console.warn("[Quiz Animation] API fallback:", error);
+        spec = this._fallbackAnimationSpec(question, lang);
+      }
+
+      questions[idx] = { ...question, animation_spec: spec || this._fallbackAnimationSpec(question, lang) };
+      this._renderQuestionForms(questions, lang);
+      window.__toast.success(lang === "vi" ? "Đã tạo animation cho câu hỏi." : "Question animation generated.");
+    } finally {
+      button.disabled = false;
+      button.innerHTML = oldText;
+    }
+  }
+
+  _fallbackAnimationSpec(question, lang) {
+    const isVi = lang === "vi";
+    const type = question.type || "multiple_choice";
+    const template = type === "drag_drop" ? "concept_flow" : "generic_steps";
+    return {
+      template,
+      correctTitle: isVi ? "Bạn đã chọn đúng" : "You got it right",
+      wrongTitle: isVi ? "Xem lại cách làm" : "Review the idea",
+      correctAnimation: {
+        steps: [
+          { text: isVi ? "Xác định yêu cầu" : "Read the prompt", detail: question.question || "" },
+          { text: isVi ? "Đối chiếu đáp án" : "Match the answer", detail: isVi ? "Lựa chọn khớp với dữ kiện chính." : "The choice matches the key evidence." },
+          { text: isVi ? "Ghi nhớ ý chính" : "Remember the key idea", detail: question.explanation || "" },
+        ],
+      },
+      wrongAnimation: {
+        steps: [
+          { text: isVi ? "Khoanh vùng lỗi" : "Find the mismatch", detail: isVi ? "So sánh lựa chọn với dữ kiện trong câu hỏi." : "Compare your choice with the prompt evidence." },
+          { text: isVi ? "Quay lại khái niệm" : "Return to the concept", detail: question.explanation || "" },
+          { text: isVi ? "Chọn theo bằng chứng" : "Choose by evidence", detail: isVi ? "Ưu tiên đáp án bám sát nội dung đã học." : "Prefer the option that directly follows the lesson." },
+        ],
+      },
+    };
   }
 
   _openAIQuizGenerator(lang) {
@@ -702,6 +848,7 @@ export class AdminController {
       mc: "Trắc nghiệm",
       tf: "Đúng / Sai",
       short: "Trả lời ngắn",
+      drag: "Kéo thả",
       cancel: "Hủy",
       generate: "Tạo câu hỏi",
       empty: "Vui lòng nhập nội dung bài học.",
@@ -717,6 +864,7 @@ export class AdminController {
       mc: "Multiple choice",
       tf: "True / False",
       short: "Short answer",
+      drag: "Drag & drop",
       cancel: "Cancel",
       generate: "Generate questions",
       empty: "Please enter lesson content.",
@@ -753,6 +901,7 @@ export class AdminController {
                 <label><input type="checkbox" value="multiple_choice" checked /> <span>${t.mc}</span></label>
                 <label><input type="checkbox" value="true_false" checked /> <span>${t.tf}</span></label>
                 <label><input type="checkbox" value="short_answer" /> <span>${t.short}</span></label>
+                <label><input type="checkbox" value="drag_drop" /> <span>${t.drag}</span></label>
               </div>
             </div>
           </div>
@@ -809,6 +958,7 @@ export class AdminController {
       multiple_choice: `{"type":"multiple_choice","question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"..."}`,
       true_false: `{"type":"true_false","question":"...","options":["Đúng","Sai"],"correctAnswer":0,"explanation":"..."}`,
       short_answer: `{"type":"short_answer","question":"...","options":[],"correctAnswer":"...","explanation":"..."}`,
+      drag_drop: `{"type":"drag_drop","question":"...","options":["Step 1","Step 2","Step 3","Step 4"],"correctAnswer":[0,1,2,3],"explanation":"..."}`,
     };
     const sysPrompt = [
       "You are an expert LMS quiz author.",
@@ -870,6 +1020,18 @@ export class AdminController {
         explanation: q.explanation || "",
       };
     }
+    if (type === "drag_drop") {
+      const options = Array.isArray(q.options) && q.options.length
+        ? q.options.slice(0, 8)
+        : [lang === "vi" ? "Bước 1" : "Step 1", lang === "vi" ? "Bước 2" : "Step 2", lang === "vi" ? "Bước 3" : "Step 3", lang === "vi" ? "Bước 4" : "Step 4"];
+      return {
+        type,
+        question: q.question || "",
+        options,
+        correctAnswer: options.map((_, index) => index),
+        explanation: q.explanation || "",
+      };
+    }
     return {
       type: "multiple_choice",
       question: q.question || "",
@@ -910,6 +1072,22 @@ export class AdminController {
           explanation: lang === "vi"
             ? `Từ khóa "${keyword}" là trọng tâm được rút ra từ câu trong bài học.`
             : `"${keyword}" is the focus extracted from the lesson sentence.`,
+        };
+      }
+      if (type === "drag_drop") {
+        const steps = sentences.slice(index, index + 4);
+        const items = (steps.length >= 3 ? steps : [sentence, ...sentences]).slice(0, 4);
+        while (items.length < 4) items.push(lang === "vi" ? `Ý ${items.length + 1}` : `Idea ${items.length + 1}`);
+        return {
+          type,
+          question: lang === "vi"
+            ? "Sắp xếp các ý sau theo thứ tự hợp lý."
+            : "Arrange these ideas in a logical order.",
+          options: items,
+          correctAnswer: items.map((_, itemIndex) => itemIndex),
+          explanation: lang === "vi"
+            ? "Thứ tự đúng đi từ ý nền tảng đến ý triển khai chi tiết."
+            : "The correct order moves from foundation to supporting detail.",
         };
       }
       const distractors = this._distractors(keyword, sentences, lang);

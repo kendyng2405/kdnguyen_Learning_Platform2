@@ -4,11 +4,11 @@
 // ============================================================
 
 import { AuthController }         from "./controllers/AuthController.js?v=11";
-import { CourseController }       from "./controllers/CourseController.js?v=11";
-import { QuizController }         from "./controllers/QuizController.js?v=11";
+import { CourseController }       from "./controllers/CourseController.js?v=12";
+import { QuizController }         from "./controllers/QuizController.js?v=12";
 import { ProgressController }     from "./controllers/ProgressController.js?v=10";
-import { AdminController }        from "./controllers/AdminController.js?v=11";
-import { ChatbotController }      from "./controllers/ChatbotController.js?v=10";
+import { AdminController }        from "./controllers/AdminController.js?v=12";
+import { ChatbotController }      from "./controllers/ChatbotController.js?v=11";
 import { ProfileController }      from "./controllers/ProfileController.js?v=10";
 import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=10";
 import { MissionsController }     from "./controllers/MissionsController.js?v=10";
@@ -249,10 +249,16 @@ export class App {
     });
 
     // Update top navbar brand text
-    const pageNames = {
-      "/": "Brilliant LMS", "/home": "Dashboard", "/courses": "Courses", "/quizzes": "Quizzes", "/progress": "Progress",
-      "/leaderboard": "Leaderboard", "/calendar": "Calendar", "/missions": "Missions", "/tracking": "Tracking", "/admin": "Admin", "/profile": "Profile",
-    };
+    const lang = this.i18n?.current || "vi";
+    const pageNames = lang === "vi"
+      ? {
+          "/": "Brilliant LMS", "/home": "Trang chủ", "/courses": "Khóa học", "/quizzes": "Quiz", "/progress": "Tiến độ",
+          "/leaderboard": "Bảng xếp hạng", "/calendar": "Lịch học", "/missions": "Nhiệm vụ", "/tracking": "Theo dõi", "/admin": this.isSystemAdmin() ? "Admin hệ thống" : "Giảng dạy", "/profile": "Hồ sơ",
+        }
+      : {
+          "/": "Brilliant LMS", "/home": "Dashboard", "/courses": "Courses", "/quizzes": "Quizzes", "/progress": "Progress",
+          "/leaderboard": "Leaderboard", "/calendar": "Calendar", "/missions": "Missions", "/tracking": "Tracking", "/admin": this.isSystemAdmin() ? "System Admin" : "Teaching", "/profile": "Profile",
+        };
     const brandText = document.getElementById("navBrandText");
     if (brandText) {
       brandText.textContent = pageNames[path] || "Brilliant LMS";
@@ -451,8 +457,15 @@ export class App {
   // ── Update all data-vi / data-en elements ────────────────
   _updateAllI18nTexts() {
     const lang = this.i18n.current;
+    document.documentElement.lang = lang;
     document.querySelectorAll("[data-vi][data-en]").forEach(el => {
       el.textContent = lang === "vi" ? el.dataset.vi : el.dataset.en;
+    });
+    document.querySelectorAll("[data-vi-placeholder][data-en-placeholder]").forEach(el => {
+      el.setAttribute("placeholder", lang === "vi" ? el.dataset.viPlaceholder : el.dataset.enPlaceholder);
+    });
+    document.querySelectorAll("[data-vi-title][data-en-title]").forEach(el => {
+      el.setAttribute("title", lang === "vi" ? el.dataset.viTitle : el.dataset.enTitle);
     });
     const langBtn = document.getElementById("langBtnText");
     const langIcon = document.getElementById("langBtnIcon");
