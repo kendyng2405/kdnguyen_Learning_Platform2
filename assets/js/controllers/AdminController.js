@@ -643,8 +643,8 @@ export class AdminController {
 
     if (/which idea best matches|y nao phu hop nhat|true or false video nay|dung hay sai video nay/.test(question)) return true;
     if (/correct answer follows original lesson sentence|dap an dung bam sat cau goc/.test(explanation)) return true;
-    if (options.some(option => /^(bai hoc gioi thieu|video nay gioi thieu|nguoi huong dan voi|khoa hoc bao gom)$/.test(option))) return true;
-    if (options.length && options.filter(option => option.length < 8).length >= 2) return true;
+    if (q.type === "multiple_choice" && options.some(option => /^(bai hoc gioi thieu|video nay gioi thieu|nguoi huong dan voi|khoa hoc bao gom)$/.test(option))) return true;
+    if (q.type === "multiple_choice" && options.length && options.filter(option => option.length < 8).length >= 2) return true;
     return false;
   }
 
@@ -983,9 +983,18 @@ export class AdminController {
 
       try {
         const questions = await this._generateQuestionsWithAI(source, count, types, lang);
+        const usedFallback = this._lastAIQuizUsedFallback;
         close();
         this._renderQuestionForms(questions, lang);
-        setTimeout(() => window.__toast.success(t.success), 80);
+        setTimeout(() => {
+          if (usedFallback) {
+            window.__toast.warning(lang === "vi"
+              ? "Gemini đang trả rỗng, mình đã tạo câu hỏi dự phòng từ nội dung bài học."
+              : "Gemini returned an empty response, so fallback questions were generated from the lesson.");
+          } else {
+            window.__toast.success(t.success);
+          }
+        }, 80);
       } catch (e) {
         window.__toast.error(lang === "vi" ? "AI chưa tạo được câu hỏi đạt chất lượng: " + e.message : "AI could not create valid questions: " + e.message);
       } finally {
@@ -996,6 +1005,7 @@ export class AdminController {
   }
 
   async _generateQuestionsWithAI(source, count, types, lang) {
+    this._lastAIQuizUsedFallback = false;
     const typeGuide = {
       multiple_choice: `{"type":"multiple_choice","question":"Clear question about one concrete fact/concept from the lesson","options":["Correct answer","Plausible wrong option","Plausible wrong option","Plausible wrong option"],"correctAnswer":0,"explanation":"Why the correct answer is supported by the lesson"}`,
       true_false: `{"type":"true_false","question":"Concrete true/false statement from the lesson","options":["Đúng","Sai"],"correctAnswer":0,"explanation":"Why the statement is true or false"}`,
@@ -1019,41 +1029,70 @@ export class AdminController {
       "- The correct answer must be derivable from the lesson content.",
       "- Explanation must cite the lesson idea briefly.",
       "- Keep quiz question text in the selected UI language unless the lesson contains a proper noun or technical term.",
+      "- If the lesson content already contains Q&A pairs, rewrite them into clean quiz questions and answers.",
     ].join("\n");
 
-    const body = {
-      system_instruction: { parts: [{ text: sysPrompt }] },
-      contents: [{ role: "user", parts: [{ text: `LESSON CONTENT:\n${sanitizedSource}` }] }],
-      generationConfig: {
-        temperature: 0.18,
-        maxOutputTokens: 6500,
-        responseMimeType: "application/json",
+    const attempts = [
+      {
+        system_instruction: { parts: [{ text: sysPrompt }] },
+        contents: [{ role: "user", parts: [{ text: `LESSON CONTENT:\n${sanitizedSource}` }] }],
+        generationConfig: {
+          temperature: 0.18,
+          maxOutputTokens: 6500,
+          responseMimeType: "application/json",
+        },
       },
-    };
-    try {
-      const chatbot = this.app.chatbotController;
-      if (!chatbot?._fetchModel) throw new Error("AI service unavailable");
-      const previousHistory = [...chatbot.history];
-      let text = "";
+      {
+        system_instruction: { parts: [{ text: `${sysPrompt}\nReturn a compact JSON object. Do not include markdown.` }] },
+        contents: [{ role: "user", parts: [{ text: `Build quiz questions from these notes:\n${sanitizedSource.slice(0, 9000)}` }] }],
+        generationConfig: {
+          temperature: 0.12,
+          maxOutputTokens: 4200,
+        },
+      },
+    ];
+    let lastError = null;
+    for (const body of attempts) {
       try {
-        text = await chatbot._fetchModel(null, body);
-      } finally {
-        chatbot.history = previousHistory;
-      }
-      if (!text) throw new Error("Empty response");
-      const parsed = this._parseAIQuestions(text);
-      const normalized = parsed
-        .map(q => this._normalizeGeneratedQuestion(q, lang, types))
-        .filter(q => this._isUsableAIQuestion(q));
-      if (normalized.length < count) {
+        const text = await this._callQuizAI(body);
+        const parsed = this._parseAIQuestions(text);
+        const normalized = parsed
+          .map(q => this._normalizeGeneratedQuestion(q, lang, types))
+          .filter(q => this._isUsableAIQuestion(q) && !this._isLowQualityGeneratedQuestion(q));
+        if (normalized.length >= count) {
+          return normalized.slice(0, count);
+        }
         throw new Error(lang === "vi"
-          ? `AI chỉ tạo được ${normalized.length}/${count} câu hợp lệ. Hãy dán nội dung bài học cụ thể hơn.`
-          : `AI only produced ${normalized.length}/${count} valid questions. Paste more concrete lesson content.`);
+          ? `AI chỉ tạo được ${normalized.length}/${count} câu hợp lệ.`
+          : `AI only produced ${normalized.length}/${count} valid questions.`);
+      } catch (error) {
+        lastError = error;
+        console.warn("[Admin AI Quiz] Generation attempt rejected:", error);
       }
-      return normalized.slice(0, count);
-    } catch (error) {
-      console.warn("[Admin AI Quiz] Generation rejected:", error);
-      throw error;
+    }
+
+    const fallback = this._fallbackGeneratedQuestions(sanitizedSource, count, types, lang)
+      .map(q => this._normalizeGeneratedQuestion(q, lang, types))
+      .filter(q => this._isUsableAIQuestion(q) && !this._isLowQualityGeneratedQuestion(q));
+
+    if (fallback.length >= Math.min(count, 1)) {
+      this._lastAIQuizUsedFallback = true;
+      return fallback.slice(0, count);
+    }
+
+    throw lastError || new Error(lang === "vi"
+      ? "Không tạo được câu hỏi từ nội dung này."
+      : "Could not generate questions from this content.");
+  }
+
+  async _callQuizAI(body) {
+    const chatbot = this.app.chatbotController;
+    if (!chatbot?._fetchModel) throw new Error("AI service unavailable");
+    const previousHistory = [...chatbot.history];
+    try {
+      return await chatbot._fetchModel(null, body);
+    } finally {
+      chatbot.history = previousHistory;
     }
   }
 
@@ -1195,22 +1234,59 @@ export class AdminController {
   }
 
   _fallbackGeneratedQuestions(source, count, types, lang) {
-    const sentences = this._sourceSentences(source);
-    const fallbackTypes = types.length ? types : ["multiple_choice"];
+    const qaPairs = this._qaPairsFromSource(source);
+    const sentences = this._sourceSentences(source).map(sentence => this._compactSentence(sentence, 170));
+    const fallbackTypes = Array.isArray(types) && types.length ? types : ["multiple_choice"];
     return Array.from({ length: count }).map((_, index) => {
       const type = fallbackTypes[index % fallbackTypes.length];
-      const sentence = sentences[index % sentences.length] || source.slice(0, 180);
+      const qa = qaPairs[index % qaPairs.length];
+      if (qa && type !== "drag_drop") {
+        if (type === "true_false") {
+          return {
+            type,
+            question: lang === "vi"
+              ? `Theo bài học, đáp án sau có đúng cho câu hỏi "${qa.question}" không? "${qa.answer}"`
+              : `According to the lesson, is this answer correct for "${qa.question}"? "${qa.answer}"`,
+            options: lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"],
+            correctAnswer: 0,
+            explanation: lang === "vi"
+              ? `Bài học trả lời: "${qa.answer}"`
+              : `The lesson answer is: "${qa.answer}"`,
+          };
+        }
+        if (type === "short_answer") {
+          return {
+            type,
+            question: qa.question,
+            options: [],
+            correctAnswer: qa.answer,
+            explanation: lang === "vi"
+              ? `Đáp án được lấy trực tiếp từ phần trả lời trong bài học: "${qa.answer}"`
+              : `The answer is taken directly from the lesson: "${qa.answer}"`,
+          };
+        }
+        return {
+          type: "multiple_choice",
+          question: qa.question,
+          options: this._answerOptionSet(qa.answer, qaPairs, sentences, lang),
+          correctAnswer: 0,
+          explanation: lang === "vi"
+            ? `Bài học trả lời: "${qa.answer}"`
+            : `The lesson answer is: "${qa.answer}"`,
+        };
+      }
+      const sentence = sentences[index % sentences.length] || this._compactSentence(source, 170);
       const keyword = this._keywordFrom(sentence, lang);
       if (type === "true_false") {
         return {
           type,
           question: lang === "vi"
-            ? `Đúng hay sai: ${sentence}`
+            ? `Theo bài học, nhận định sau đúng hay sai: "${sentence}"`
             : `True or false: ${sentence}`,
           options: lang === "vi" ? ["Đúng", "Sai"] : ["True", "False"],
           correctAnswer: 0,
           explanation: lang === "vi"
-            ? "Mệnh đề này được tạo trực tiếp từ nội dung bài học đã cung cấp."
+            ? `Bài học có nêu ý này: "${sentence}"`
             : "This statement is generated directly from the provided lesson content.",
         };
       }
@@ -1218,7 +1294,7 @@ export class AdminController {
         return {
           type,
           question: lang === "vi"
-            ? `Từ khóa hoặc ý chính nào nổi bật trong nội dung sau: "${sentence}"?`
+            ? `Bài học nhấn mạnh khái niệm hoặc công cụ nào trong ý sau: "${sentence}"?`
             : `What key term or main idea appears in this content: "${sentence}"?`,
           options: [],
           correctAnswer: keyword,
@@ -1228,13 +1304,11 @@ export class AdminController {
         };
       }
       if (type === "drag_drop") {
-        const steps = sentences.slice(index, index + 4);
-        const items = (steps.length >= 3 ? steps : [sentence, ...sentences]).slice(0, 4);
-        while (items.length < 4) items.push(lang === "vi" ? `Ý ${items.length + 1}` : `Idea ${items.length + 1}`);
+        const items = this._orderedLessonItems(sentences, sentence, index, lang);
         return {
           type,
           question: lang === "vi"
-            ? "Sắp xếp các ý sau theo thứ tự hợp lý."
+            ? "Sắp xếp các ý chính sau theo mạch nội dung bài học."
             : "Arrange these ideas in a logical order.",
           options: items,
           correctAnswer: items.map((_, itemIndex) => itemIndex),
@@ -1243,19 +1317,145 @@ export class AdminController {
             : "The correct order moves from foundation to supporting detail.",
         };
       }
-      const distractors = this._distractors(keyword, sentences, lang);
+      const options = this._sentenceOptionSet(sentence, sentences, lang);
       return {
         type: "multiple_choice",
         question: lang === "vi"
-          ? `Theo nội dung bài học, khái niệm hoặc ý chính nào cần ghi nhớ?`
-          : `Based on the lesson, which key concept should learners remember?`,
-        options: [keyword, ...distractors].slice(0, 4),
+          ? "Chi tiết nào sau đây được nêu trong bài học?"
+          : "Which detail is stated in the lesson?",
+        options,
         correctAnswer: 0,
         explanation: lang === "vi"
-          ? `Đáp án đúng bám sát câu gốc trong nội dung bài học.`
-          : "The correct answer follows the original lesson sentence.",
+          ? `Bài học nêu: "${sentence}"`
+          : `The lesson states: "${sentence}"`,
       };
     });
+  }
+
+  _qaPairsFromSource(source) {
+    const lines = String(source || "").replace(/\r/g, "\n").split("\n");
+    const pairs = [];
+    let current = null;
+    const afterColon = (value) => {
+      const first = value.indexOf(":");
+      const second = value.indexOf("：");
+      const index = first >= 0 && second >= 0 ? Math.min(first, second) : Math.max(first, second);
+      return index >= 0 ? value.slice(index + 1).trim() : "";
+    };
+    const commit = () => {
+      if (!current) return;
+      const question = this._compactSentence(current.question, 180);
+      const answer = this._compactSentence(current.answer, 180);
+      if (question.length >= 8 && answer.length >= 2) {
+        pairs.push({ question, answer });
+      }
+      current = null;
+    };
+
+    lines.forEach(rawLine => {
+      const line = rawLine.trim();
+      if (!line || /^---+$/.test(line)) return;
+      const withoutNumber = line.replace(/^\d+\.\s*/, "");
+      const normalized = this._normalizeTextForQuality(withoutNumber);
+      if (/^(cau hoi|question)\s*\d*\s*[:：]/.test(normalized)) {
+        commit();
+        current = { question: afterColon(withoutNumber), answer: "", mode: "question" };
+        return;
+      }
+      if (/^(tra loi|answer)\s*[:：]/.test(normalized)) {
+        if (!current) current = { question: "", answer: "", mode: "answer" };
+        current.answer = [current.answer, afterColon(withoutNumber)].filter(Boolean).join(" ");
+        current.mode = "answer";
+        return;
+      }
+      if (current?.mode === "question") {
+        current.question = [current.question, line].filter(Boolean).join(" ");
+      } else if (current?.mode === "answer") {
+        current.answer = [current.answer, line].filter(Boolean).join(" ");
+      }
+    });
+
+    commit();
+    return pairs.slice(0, 20);
+  }
+
+  _answerOptionSet(answer, qaPairs, sentences, lang) {
+    const defaults = lang === "vi"
+      ? [
+        "Chỉ học lý thuyết mà không cần thực hành",
+        "Không có công cụ hoặc kỹ năng cụ thể nào",
+        "Chỉ áp dụng cho người học nâng cao",
+      ]
+      : [
+        "Only studying theory without practice",
+        "No specific tool or skill is mentioned",
+        "Only applies to advanced learners",
+      ];
+    const options = [];
+    const add = (value) => {
+      const clean = this._compactSentence(value, 135);
+      const normalized = this._normalizeTextForQuality(clean);
+      if (clean.length >= 5 && !options.some(item => this._normalizeTextForQuality(item) === normalized)) {
+        options.push(clean);
+      }
+    };
+    add(answer);
+    qaPairs.forEach(pair => add(pair.answer));
+    sentences.forEach(sentence => add(sentence));
+    defaults.forEach(add);
+    while (options.length < 4) add(lang === "vi" ? `Đáp án nhiễu ${options.length + 1}` : `Distractor ${options.length + 1}`);
+    return options.slice(0, 4);
+  }
+
+  _compactSentence(sentence, max = 150) {
+    const clean = String(sentence || "").replace(/\s+/g, " ").trim();
+    if (clean.length <= max) return clean;
+    return clean.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
+  }
+
+  _sentenceOptionSet(sentence, sentences, lang) {
+    const correct = this._compactSentence(sentence, 135);
+    const defaults = lang === "vi"
+      ? [
+        "Chỉ học lý thuyết mà không cần thực hành",
+        "Không đề cập đến quy trình kiểm thử phần mềm",
+        "Chỉ phù hợp với người đã có nhiều năm kinh nghiệm nâng cao",
+      ]
+      : [
+        "Only studying theory without practice",
+        "Not covering the software testing process",
+        "Only suitable for highly experienced learners",
+      ];
+    const options = [];
+    const add = (value) => {
+      const clean = this._compactSentence(value, 135);
+      const normalized = this._normalizeTextForQuality(clean);
+      if (clean.length >= 8 && !options.some(item => this._normalizeTextForQuality(item) === normalized)) {
+        options.push(clean);
+      }
+    };
+    add(correct);
+    sentences.forEach(item => {
+      if (this._normalizeTextForQuality(item) !== this._normalizeTextForQuality(correct)) add(item);
+    });
+    defaults.forEach(add);
+    while (options.length < 4) add(lang === "vi" ? `Ý phụ ${options.length + 1} không được nêu rõ` : `Unstated supporting idea ${options.length + 1}`);
+    return options.slice(0, 4);
+  }
+
+  _orderedLessonItems(sentences, sentence, index, lang) {
+    let items = sentences.slice(index, index + 4);
+    if (items.length < 3) items = sentences.slice(0, 4);
+    if (items.length < 3) {
+      items = String(sentence || "")
+        .split(/[,;:]+/)
+        .map(item => this._compactSentence(item, 110))
+        .filter(item => item.length >= 8);
+    }
+    while (items.length < 3) {
+      items.push(lang === "vi" ? `Ý chính ${items.length + 1}` : `Main idea ${items.length + 1}`);
+    }
+    return items.slice(0, 4).map(item => this._compactSentence(item, 120));
   }
 
   _sourceSentences(source) {
