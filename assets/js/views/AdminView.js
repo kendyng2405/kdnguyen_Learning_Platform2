@@ -83,7 +83,6 @@ export class AdminView {
       edit: "Sửa",
       delete: "Xóa",
       enrolled: "Người học",
-      learnersReport: "Theo dõi",
       owner: "Giảng viên",
       role: "Vai trò",
       save: "Lưu",
@@ -100,7 +99,6 @@ export class AdminView {
       edit: "Edit",
       delete: "Delete",
       enrolled: "Learners",
-      learnersReport: "Track",
       owner: "Teacher",
       role: "Role",
       save: "Save",
@@ -156,7 +154,6 @@ export class AdminView {
                           <td>
                             <button class="btn btn-sm btn-outline-primary btn-manage-lessons" data-course-id="${c.id}"><i class="fas fa-book-open mr-1"></i>${t.lessons}</button>
                             <button class="btn btn-sm btn-outline-info btn-manage-quizzes" data-course-id="${c.id}"><i class="fas fa-clipboard-list mr-1"></i>${t.quizzes}</button>
-                            <button class="btn btn-sm btn-outline-success btn-view-learners" data-course-id="${c.id}"><i class="fas fa-chart-line mr-1"></i>${t.learnersReport}</button>
                             <button class="btn btn-sm btn-outline-default btn-edit-course" data-course-id="${c.id}"><i class="fas fa-pen mr-1"></i>${t.edit}</button>
                             <button class="btn btn-sm btn-outline-danger btn-delete-course" data-course-id="${c.id}"><i class="fas fa-trash mr-1"></i>${t.delete}</button>
                           </td>

@@ -207,13 +207,13 @@ export class AuthView {
                   <div class="text-center text-muted mb-4">
                     <small>${t.title}</small>
                   </div>
-                  <form id="loginForm" novalidate>
+                  <form id="loginForm" autocomplete="on" novalidate>
                     <div class="form-group mb-3">
                       <div class="input-group input-group-alternative">
                         <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                         </div>
-                        <input class="form-control" placeholder="${t.identifierPh}" type="text" id="loginIdentifier" required autocomplete="username" />
+                        <input class="form-control" placeholder="${t.identifierPh}" type="text" id="loginIdentifier" name="username" required autocomplete="username" />
                       </div>
                     </div>
                     <div class="form-group">
@@ -221,11 +221,11 @@ export class AuthView {
                         <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fas fa-lock"></i></span>
                         </div>
-                        <input class="form-control" placeholder="${t.passPh}" type="password" id="loginPassword" required autocomplete="current-password" />
+                        <input class="form-control" placeholder="${t.passPh}" type="password" id="loginPassword" name="password" required autocomplete="current-password" />
                       </div>
                     </div>
                     <div class="text-center">
-                      <button type="submit" class="btn btn-primary my-4">${t.submit}</button>
+                      <button type="submit" class="btn btn-primary my-4 auth-submit-btn">${t.submit}</button>
                     </div>
                   </form>
                 </div>
@@ -310,14 +310,14 @@ export class AuthView {
                   <div class="text-center text-muted mb-4">
                     <small>${isTeacher ? (lang === "vi" ? "Tạo tài khoản giảng viên" : "Create Teacher Account") : t.title}</small>
                   </div>
-                  <form id="registerForm" novalidate>
+                  <form id="registerForm" autocomplete="on" novalidate>
                     <input type="hidden" id="registerRole" value="${isTeacher ? "teacher" : "student"}" />
                     <div class="form-group">
                       <div class="input-group input-group-alternative mb-3">
                         <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fas fa-graduation-cap"></i></span>
                         </div>
-                        <input class="form-control" placeholder="${t.usernamePh}" type="text" id="registerUsername" required autocomplete="username" pattern="[a-z0-9_]+" />
+                        <input class="form-control" placeholder="${t.usernamePh}" type="text" id="registerUsername" name="username" required autocomplete="username" pattern="[a-z0-9_]+" />
                       </div>
                       <small class="text-muted">${t.usernameHint}</small>
                     </div>
@@ -326,7 +326,7 @@ export class AuthView {
                         <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
-                        <input class="form-control" placeholder="${t.fullnamePh}" type="text" id="registerFullname" required />
+                        <input class="form-control" placeholder="${t.fullnamePh}" type="text" id="registerFullname" name="name" required autocomplete="name" />
                       </div>
                     </div>
                     <div class="form-group">
@@ -334,7 +334,7 @@ export class AuthView {
                         <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                         </div>
-                        <input class="form-control" placeholder="${t.emailPh}" type="email" id="registerEmail" required autocomplete="email" />
+                        <input class="form-control" placeholder="${t.emailPh}" type="email" id="registerEmail" name="email" required autocomplete="email" />
                       </div>
                     </div>
                     <div class="form-group">
@@ -342,7 +342,7 @@ export class AuthView {
                         <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fas fa-lock"></i></span>
                         </div>
-                        <input class="form-control" placeholder="${t.passPh}" type="password" id="registerPassword" required autocomplete="new-password" />
+                        <input class="form-control" placeholder="${t.passPh}" type="password" id="registerPassword" name="new-password" required autocomplete="new-password" />
                       </div>
                       <small class="text-muted">${t.passwordHint}</small>
                     </div>
@@ -351,11 +351,11 @@ export class AuthView {
                         <div class="input-group-prepend">
                           <span class="input-group-text"><i class="fas fa-lock"></i></span>
                         </div>
-                        <input class="form-control" placeholder="${t.confirmPh}" type="password" id="registerConfirm" required autocomplete="new-password" />
+                        <input class="form-control" placeholder="${t.confirmPh}" type="password" id="registerConfirm" name="confirm-password" required autocomplete="new-password" />
                       </div>
                     </div>
                     <div class="text-center">
-                      <button type="submit" class="btn btn-primary my-4">${t.submit}</button>
+                      <button type="submit" class="btn btn-primary my-4 auth-submit-btn">${t.submit}</button>
                     </div>
                   </form>
                 </div>

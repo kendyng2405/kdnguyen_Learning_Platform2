@@ -30,7 +30,7 @@ export class AdminController {
     const uid = this.app.getUser()?.uid;
     const isSystemAdmin = this.app.isSystemAdmin();
     const [courses, users, enrollmentCounts] = await Promise.all([
-      isSystemAdmin ? this.courseModel.getAllCourses() : this.courseModel.getCoursesForInstructor(uid, true),
+      isSystemAdmin ? this.courseModel.getAllCourses() : this.courseModel.getCoursesForInstructor(uid, false),
       isSystemAdmin ? this.app.authModel.getAllUsers() : Promise.resolve([]),
       this.quizModel.getEnrollmentCountsByCourse(),
     ]);
@@ -89,18 +89,6 @@ export class AdminController {
             this.showAdmin();
           } catch (err) {
             alert("Error deleting course: " + err.message);
-          }
-          return;
-        }
-
-        const learnersBtn = e.target.closest(".btn-view-learners");
-        if (learnersBtn) {
-          e.stopPropagation();
-          const courseId = learnersBtn.dataset.courseId;
-          try {
-            await this._showLearnersReport(courseId);
-          } catch (err) {
-            window.__toast.error(err.message);
           }
           return;
         }

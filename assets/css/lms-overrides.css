@@ -312,6 +312,23 @@
 .page-register .row.mt-3 a {
   color: #5e72e4 !important;
 }
+.auth-submit-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 132px;
+  min-height: 44px;
+  border-radius: 10px;
+  font-weight: 800;
+  transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+.auth-submit-btn.is-loading {
+  opacity: 0.78;
+  cursor: wait;
+  pointer-events: none;
+  transform: none !important;
+}
 
 /* ── Progress page bar tweaks ── */
 .progress-lms { height: 0.5rem; border-radius: 0.25rem; }
@@ -592,6 +609,7 @@ body.auth-active #appFooter { display: none !important; }
 .page-lesson,
 .page-quiz,
 .page-quizzes,
+.page-tracking,
 .page-profile {
   max-width: none;
   margin: 0;
@@ -615,6 +633,7 @@ body.auth-active #appFooter { display: none !important; }
 .page-lesson > .header,
 .page-quiz > .header,
 .page-quizzes > .header,
+.page-tracking > .header,
 .page-profile > .header {
   min-height: auto !important;
   margin-bottom: 1.5rem;
@@ -630,6 +649,7 @@ body.auth-active #appFooter { display: none !important; }
 .page-progress > .header .container-fluid,
 .page-lesson > .header .container-fluid,
 .page-quiz > .header .container-fluid,
+.page-tracking > .header .container-fluid,
 .page-profile > .header .container-fluid {
   padding-right: 0;
   padding-left: 0;
@@ -638,6 +658,7 @@ body.auth-active #appFooter { display: none !important; }
 .page-progress > .container-fluid,
 .page-lesson > .container-fluid,
 .page-quiz > .container-fluid,
+.page-tracking > .container-fluid,
 .page-profile > .container-fluid {
   padding-right: 0;
   padding-left: 0;
@@ -647,6 +668,7 @@ body.auth-active #appFooter { display: none !important; }
 .page-lesson > .container-fluid.mt--7,
 .page-quiz > .container-fluid.mt--7,
 .page-quiz > .container-fluid.mt--6,
+.page-tracking > .container-fluid.mt--7,
 .page-profile > .container-fluid.mt--7 {
   margin-top: 0 !important;
 }
@@ -654,6 +676,7 @@ body.auth-active #appFooter { display: none !important; }
 .page-progress .card,
 .page-lesson .card,
 .page-quiz .card,
+.page-tracking .card,
 .page-profile .card,
 .page-courses .card,
 .page-course-detail .brilliant-card {
@@ -665,6 +688,7 @@ body.auth-active #appFooter { display: none !important; }
 .page-admin .card-header,
 .page-progress .card-header,
 .page-quiz .card-header,
+.page-tracking .card-header,
 .page-profile .card-header {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #eef1f3 !important;
@@ -673,6 +697,7 @@ body.auth-active #appFooter { display: none !important; }
 .page-admin .card-header h3,
 .page-progress .card-header h3,
 .page-quiz .card-header h3,
+.page-tracking .card-header h3,
 .page-profile .card-header h3 {
   color: #172b4d;
   font-size: 1rem;
@@ -706,7 +731,7 @@ body.auth-active #appFooter { display: none !important; }
   font-weight: 800;
 }
 .page-admin .table td:last-child {
-  min-width: 390px;
+  min-width: 320px;
   white-space: nowrap;
 }
 .page-admin .table td:last-child .btn {
@@ -736,6 +761,7 @@ body.auth-active #appFooter { display: none !important; }
 .page-courses .card-body,
 .page-lesson .card-body,
 .page-quiz .card-body,
+.page-tracking .card-body,
 .page-profile .card-body {
   padding: 1.5rem;
 }
@@ -3522,5 +3548,401 @@ html[data-theme="dark"] .bg-secondary {
   .toast-exit {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* Course placeholders and teacher tracking */
+.dashboard-empty-course {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  gap: 0.9rem;
+  padding: 2rem;
+  color: #8898aa;
+  text-align: center;
+}
+.dashboard-empty-course span,
+.course-thumb-placeholder {
+  width: 96px;
+  height: 96px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(94,114,228,0.12), rgba(17,205,239,0.12));
+  color: #5e72e4;
+  font-size: 2.2rem;
+}
+.dashboard-empty-course h2,
+.dashboard-empty-course h3 {
+  margin: 0;
+  color: #172b4d;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+.dashboard-empty-course p {
+  max-width: 420px;
+  margin: 0;
+}
+.course-thumb-placeholder {
+  width: 250px;
+  height: 250px;
+  margin: 1.5rem auto;
+  border-radius: 18px;
+  font-size: 4rem;
+  box-shadow: 0 10px 24px rgba(50,50,93,0.08);
+}
+.course-thumb-placeholder--sm {
+  width: 96px;
+  height: 96px;
+  margin: 0;
+  font-size: 2rem;
+}
+.tracking-page {
+  min-height: calc(100vh - 120px);
+  padding: 2rem;
+  background: #f7f9fa;
+}
+.tracking-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding: 2rem;
+  border-radius: 22px;
+  color: #fff;
+  background: linear-gradient(135deg, #172b4d 0%, #5e72e4 52%, #2dce89 100%);
+  box-shadow: 0 20px 50px rgba(23,43,77,0.18);
+  overflow: hidden;
+}
+.tracking-kicker {
+  margin: 0 0 0.55rem;
+  color: rgba(255,255,255,0.78);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.tracking-hero h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.08;
+}
+.tracking-hero p {
+  max-width: 680px;
+  margin: 0.75rem 0 0;
+  color: rgba(255,255,255,0.82);
+}
+.tracking-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+.tracking-stat-card {
+  min-height: 128px;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.92);
+  color: #172b4d;
+  box-shadow: 0 16px 34px rgba(23,43,77,0.12);
+  animation: trackingCardIn 0.55s ease both;
+}
+.tracking-stat-card span {
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #f6f9fc;
+}
+.tracking-stat-card strong {
+  display: block;
+  margin-top: 0.85rem;
+  color: #172b4d;
+  font-size: 1.85rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.tracking-stat-card small {
+  color: #8898aa;
+  font-weight: 800;
+}
+.tracking-chart-panel,
+.tracking-course-card,
+.tracking-empty {
+  border: 1px solid #eef1f3;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(50,50,93,0.08);
+}
+.tracking-chart-panel {
+  padding: 1.4rem;
+  margin-bottom: 1.5rem;
+}
+.tracking-section-head span,
+.tracking-course-kicker {
+  color: #5e72e4;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.tracking-section-head h2 {
+  margin: 0.15rem 0 0;
+  color: #172b4d;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+.tracking-bars {
+  min-height: 260px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 0.9rem;
+  align-items: end;
+  padding-top: 1rem;
+}
+.tracking-bars article {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+  min-width: 0;
+}
+.tracking-bar {
+  width: 58px;
+  height: 190px;
+  display: flex;
+  align-items: end;
+  padding: 5px;
+  border-radius: 999px;
+  background: #f6f9fc;
+  overflow: hidden;
+}
+.tracking-bar span {
+  width: 100%;
+  height: var(--bar);
+  border-radius: inherit;
+  background: linear-gradient(180deg, #11cdef, #2dce89);
+  box-shadow: 0 0 18px rgba(17,205,239,0.28);
+  animation: trackingBarRise 0.85s cubic-bezier(.2,.8,.2,1) both;
+  animation-delay: var(--delay);
+}
+.tracking-bars strong {
+  max-width: 100%;
+  color: #172b4d;
+  font-size: 0.85rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tracking-bars small {
+  color: #2dce89;
+  font-weight: 900;
+}
+.tracking-course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1rem;
+}
+.tracking-course-card {
+  padding: 1.25rem;
+}
+.tracking-course-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+.tracking-course-card h3 {
+  margin: 0.18rem 0 0;
+  color: #172b4d;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+.tracking-course-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+.tracking-course-metrics span {
+  min-height: 76px;
+  display: grid;
+  place-items: center;
+  padding: 0.65rem;
+  border-radius: 14px;
+  background: #f6f9fc;
+  color: #8898aa;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+.tracking-course-metrics strong {
+  display: block;
+  color: #172b4d;
+  font-size: 1.35rem;
+}
+.tracking-mini-charts {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.tracking-progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: #8898aa;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.tracking-progress-label b {
+  color: #172b4d;
+}
+.tracking-track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9ecef;
+}
+.tracking-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2dce89, #5e72e4);
+  animation: trackingTrackFill 0.8s cubic-bezier(.2,.8,.2,1) both;
+}
+.tracking-track--score span {
+  background: linear-gradient(90deg, #fb6340, #11cdef);
+}
+.tracking-table-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid #eef1f3;
+}
+.tracking-table {
+  min-width: 760px;
+  margin: 0;
+}
+.tracking-table th,
+.tracking-table td {
+  padding: 0.85rem 1rem;
+  vertical-align: middle;
+}
+.tracking-table th {
+  border-top: 0;
+  background: #f6f9fc;
+  color: #8898aa;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tracking-table td strong,
+.tracking-table td small {
+  display: block;
+}
+.tracking-table td strong {
+  color: #172b4d;
+}
+.tracking-table td small,
+.tracking-no-learners {
+  color: #8898aa;
+}
+.tracking-no-learners,
+.tracking-empty {
+  padding: 2.5rem;
+  text-align: center;
+  font-weight: 800;
+}
+.tracking-empty span {
+  width: 72px;
+  height: 72px;
+  display: inline-grid;
+  place-items: center;
+  margin-bottom: 1rem;
+  border-radius: 20px;
+  background: rgba(94,114,228,0.1);
+  color: #5e72e4;
+  font-size: 1.8rem;
+}
+.tracking-empty h2 {
+  color: #172b4d;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+html[data-theme="dark"] .dashboard-empty-course h2,
+html[data-theme="dark"] .dashboard-empty-course h3,
+html[data-theme="dark"] .tracking-section-head h2,
+html[data-theme="dark"] .tracking-course-card h3,
+html[data-theme="dark"] .tracking-course-metrics strong,
+html[data-theme="dark"] .tracking-progress-label b,
+html[data-theme="dark"] .tracking-bars strong,
+html[data-theme="dark"] .tracking-table td strong,
+html[data-theme="dark"] .tracking-empty h2 {
+  color: #f8fafc;
+}
+html[data-theme="dark"] .tracking-page {
+  background: #0f172a;
+}
+html[data-theme="dark"] .tracking-chart-panel,
+html[data-theme="dark"] .tracking-course-card,
+html[data-theme="dark"] .tracking-empty,
+html[data-theme="dark"] .tracking-table-wrap {
+  background: #111827;
+  border-color: #243044;
+}
+html[data-theme="dark"] .tracking-stat-card,
+html[data-theme="dark"] .tracking-course-metrics span,
+html[data-theme="dark"] .tracking-bar,
+html[data-theme="dark"] .tracking-table th,
+html[data-theme="dark"] .course-thumb-placeholder,
+html[data-theme="dark"] .dashboard-empty-course span {
+  background: #1e293b;
+  color: #cbd5e1;
+}
+html[data-theme="dark"] .tracking-track {
+  background: #243044;
+}
+@keyframes trackingCardIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes trackingBarRise {
+  from { height: 0; }
+  to { height: var(--bar); }
+}
+@keyframes trackingTrackFill {
+  from { width: 0; }
+}
+@media (max-width: 991.98px) {
+  .tracking-hero {
+    grid-template-columns: 1fr;
+  }
+  .tracking-stat-grid,
+  .tracking-course-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 575.98px) {
+  .tracking-page {
+    padding: 1rem;
+  }
+  .tracking-hero {
+    padding: 1.35rem;
+  }
+  .tracking-stat-grid,
+  .tracking-course-metrics,
+  .tracking-course-grid {
+    grid-template-columns: 1fr;
+  }
+  .tracking-course-card header {
+    flex-direction: column;
+  }
+  .tracking-course-card header .btn {
+    width: 100%;
   }
 }

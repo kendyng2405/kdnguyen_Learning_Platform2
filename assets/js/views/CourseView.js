@@ -16,9 +16,9 @@ export class CourseView {
     
     // Find the recommended course (first enrolled or first available)
     const recommended = this._pickRecommendedCourse(courses, profile);
-    const courseTitle = recommended ? recommended.title : "Introduction to Programming";
-    const courseLevel = recommended ? (recommended.level || "LEVEL 1").toUpperCase() : "LEVEL 1";
-    const courseThumb = recommended && recommended.thumbnail ? recommended.thumbnail : "https://cdn-icons-png.flaticon.com/512/4144/4144682.png";
+    const courseTitle = recommended ? recommended.title : "";
+    const courseLevel = recommended ? (recommended.level || "LEVEL 1").toUpperCase() : "";
+    const courseThumb = recommended?.thumbnail || "";
     const startAction = recommended ? `window.__router.navigate('course', '${recommended.id}')` : "window.__router.navigate('courses')";
     
     const t = lang === "vi" ? {
@@ -32,6 +32,9 @@ export class CourseView {
       lessons: "bài học",
       recommended: "ĐỀ XUẤT",
       start: "Bắt đầu",
+      noCourseTitle: "Chưa có khóa học nào",
+      noCourseSub: "Khi giảng viên tạo khóa học, khối đề xuất sẽ hiển thị tại đây.",
+      browse: "Xem khóa học",
       days: ["T3", "T4", "T5", "T6", "T7"]
     } : {
       solve: "Solve 3 problems to start a streak",
@@ -44,6 +47,9 @@ export class CourseView {
       lessons: "lessons",
       recommended: "RECOMMENDED",
       start: "Start",
+      noCourseTitle: "No courses yet",
+      noCourseSub: "When teachers create courses, recommendations will appear here.",
+      browse: "Browse courses",
       days: ["T", "W", "Th", "F", "S"]
     };
 
@@ -101,12 +107,13 @@ export class CourseView {
           <!-- RIGHT COLUMN: RECOMMENDED COURSE -->
           <div class="col-lg-8">
             <div class="brilliant-card text-center p-5">
+              ${recommended ? `
               <span class="brilliant-recommended-badge text-uppercase mb-3 d-inline-block">${t.recommended}</span>
               <h2 class="display-4 font-weight-bold mb-1 text-dark">${courseTitle}</h2>
               <p class="text-muted font-weight-bold text-uppercase mb-4" style="letter-spacing: 1px;">${courseLevel}</p>
               
               <div class="brilliant-course-thumb mx-auto mb-4" style="max-width: 250px;">
-                <img src="${courseThumb}" alt="Course" class="img-fluid" />
+                ${courseThumb ? `<img src="${courseThumb}" alt="Course" class="img-fluid" />` : `<div class="course-thumb-placeholder"><i class="fas fa-book-open"></i></div>`}
               </div>
               
               <div class="dashboard-course-meta mb-4">
@@ -118,6 +125,14 @@ export class CourseView {
               <button class="brilliant-btn-gradient btn-block btn-lg shadow" onclick="${startAction}">
                 ${t.start}
               </button>
+              ` : `
+              <div class="dashboard-empty-course">
+                <span><i class="fas fa-book-open"></i></span>
+                <h2>${t.noCourseTitle}</h2>
+                <p>${t.noCourseSub}</p>
+                <button class="btn btn-primary" onclick="${startAction}">${t.browse}</button>
+              </div>
+              `}
             </div>
           </div>
           
@@ -192,7 +207,9 @@ export class CourseView {
           <div class="col-lg-4 mb-4">
             <div class="brilliant-card" style="position: sticky; top: 100px;">
               <div class="brilliant-course-thumb mb-4" style="max-width: 100px; box-shadow: none;">
-                <img src="${course.thumbnail || 'https://cdn-icons-png.flaticon.com/512/4144/4144682.png'}" alt="Course" class="img-fluid" />
+                ${course.thumbnail
+                  ? `<img src="${course.thumbnail}" alt="Course" class="img-fluid" />`
+                  : `<div class="course-thumb-placeholder course-thumb-placeholder--sm"><i class="fas fa-book-open"></i></div>`}
               </div>
               <h2 class="font-weight-bold text-dark mb-3">${course.title}</h2>
               <p class="text-muted mb-4" style="font-size: 1.05rem; line-height: 1.6;">${course.description || ""}</p>

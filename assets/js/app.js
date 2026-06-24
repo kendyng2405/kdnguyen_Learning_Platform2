@@ -14,6 +14,7 @@ import { LeaderboardController }  from "./controllers/LeaderboardController.js?v
 import { MissionsController }     from "./controllers/MissionsController.js?v=10";
 import { CalendarController }     from "./controllers/CalendarController.js?v=10";
 import { CertificateController }  from "./controllers/CertificateController.js?v=10";
+import { TrackingController }     from "./controllers/TrackingController.js?v=10";
 import { AuthModel }              from "./models/AuthModel.js?v=10";
 import { I18nService }            from "./services/I18nService.js?v=10";
 import { ThemeService }           from "./services/ThemeService.js?v=10";
@@ -30,6 +31,7 @@ export class App {
       "/leaderboard": () => this.leaderboardController.showLeaderboard(),
       "/calendar":  () => this.calendarController.showCalendar(),
       "/missions":  () => this.missionsController.showMissions(),
+      "/tracking":  () => this.trackingController.showTracking(),
       "/admin":     () => this.adminController.showAdmin(),
       "/login":     () => this.authController.showLoginPage(),
       "/register":  () => this.authController.showRegisterPage("student"),
@@ -132,6 +134,7 @@ export class App {
     this.missionsController = new MissionsController(this);
     this.calendarController = new CalendarController(this);
     this.certificateController = new CertificateController(this);
+    this.trackingController = new TrackingController(this);
 
     this._bindNavEvents();
     this._bindCourseSearch();
@@ -173,7 +176,7 @@ export class App {
         this._showAppChrome(false);
         document.getElementById("chatbotWidget")?.classList.add("hidden");
         document.getElementById("chatbotFab")?.classList.add("hidden");
-        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quizzes", "/quiz", "/progress", "/leaderboard", "/calendar", "/missions", "/certificate", "/admin", "/profile"];
+        const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quizzes", "/quiz", "/progress", "/leaderboard", "/calendar", "/missions", "/tracking", "/certificate", "/admin", "/profile"];
         const cur = this._getCurrentPath();
         if (protectedPaths.some(p => cur.startsWith(p))) {
           this._dispatchRoute("/login", false);
@@ -216,6 +219,7 @@ export class App {
       leaderboard: "/leaderboard",
       calendar:  "/calendar",
       missions:  "/missions",
+      tracking:  "/tracking",
       admin:     "/admin",
       login:     "/login",
       register:  args[0] ? `/register/${args[0]}` : "/register",
@@ -247,7 +251,7 @@ export class App {
     // Update top navbar brand text
     const pageNames = {
       "/": "Brilliant LMS", "/home": "Dashboard", "/courses": "Courses", "/quizzes": "Quizzes", "/progress": "Progress",
-      "/leaderboard": "Leaderboard", "/calendar": "Calendar", "/missions": "Missions", "/admin": "Admin", "/profile": "Profile",
+      "/leaderboard": "Leaderboard", "/calendar": "Calendar", "/missions": "Missions", "/tracking": "Tracking", "/admin": "Admin", "/profile": "Profile",
     };
     const brandText = document.getElementById("navBrandText");
     if (brandText) {
@@ -459,6 +463,7 @@ export class App {
   // ── Navbar update ────────────────────────────────────────
   _updateNavbar(user) {
     const adminItem = document.querySelector(".nav-item--admin");
+    const trackingItem = document.querySelector(".nav-item--tracking");
     const welcomeText = document.getElementById("welcomeText");
     const avatar    = document.getElementById("navAvatar");
     const streakBadge = document.getElementById("navStreak");
@@ -488,6 +493,7 @@ export class App {
 
       if (this.canManageCourses()) {
         adminItem?.style && (adminItem.style.display = "");
+        trackingItem?.style && (trackingItem.style.display = "");
         const adminLabel = adminItem?.querySelector("[data-vi][data-en]");
         if (adminLabel) {
           adminLabel.dataset.vi = this.isSystemAdmin() ? "Admin hệ thống" : "Giảng dạy";
@@ -496,6 +502,7 @@ export class App {
         }
       } else {
         adminItem?.style && (adminItem.style.display = "none");
+        trackingItem?.style && (trackingItem.style.display = "none");
       }
     }
 

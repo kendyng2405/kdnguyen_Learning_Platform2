@@ -280,9 +280,13 @@ export class AuthController {
     btn.disabled = isLoading;
     const lang = window.__i18n.current;
     if (isLoading) {
-      btn.dataset.original = btn.textContent;
-      btn.innerHTML = '<span class="spinner-sm"></span>';
+      btn.dataset.original = btn.dataset.original || btn.textContent.trim();
+      btn.style.minWidth = `${Math.ceil(btn.getBoundingClientRect().width)}px`;
+      btn.classList.add("is-loading");
+      btn.innerHTML = `<span class="spinner-sm"></span><span>${lang === "vi" ? "Đang xử lý..." : "Processing..."}</span>`;
     } else {
+      btn.classList.remove("is-loading");
+      btn.style.minWidth = "";
       btn.textContent = btn.dataset.original || (lang === "vi" ? "Xác nhận" : "Submit");
     }
   }
