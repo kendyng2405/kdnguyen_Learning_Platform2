@@ -114,11 +114,15 @@ export class AdminController {
         const manageLessonsBtn = e.target.closest(".btn-manage-lessons");
         if (manageLessonsBtn) {
           e.stopPropagation();
+          if (manageLessonsBtn.disabled) return;
           const courseId = manageLessonsBtn.dataset.courseId;
+          manageLessonsBtn.disabled = true;
           try {
             await this._showLessonsManager(courseId);
           } catch(err) {
             alert("Error loading lessons: " + err.message);
+          } finally {
+            manageLessonsBtn.disabled = false;
           }
           return;
         }
@@ -127,11 +131,15 @@ export class AdminController {
         const manageQuizzesBtn = e.target.closest(".btn-manage-quizzes");
         if (manageQuizzesBtn) {
           e.stopPropagation();
+          if (manageQuizzesBtn.disabled) return;
           const courseId = manageQuizzesBtn.dataset.courseId;
+          manageQuizzesBtn.disabled = true;
           try {
             await this._showQuizzesManager(courseId);
           } catch(err) {
             alert("Error loading quizzes: " + err.message);
+          } finally {
+            manageQuizzesBtn.disabled = false;
           }
           return;
         }
@@ -192,23 +200,16 @@ export class AdminController {
 
     const lang = window.__i18n.current;
     const modal = this.view.renderLearnersReportModal(course, report, { totalLessons, quizzes }, lang);
-    document.body.insertAdjacentHTML("beforeend", modal);
-    document.getElementById("modalOverlay")?.addEventListener("click", (e) => {
-      if (e.target.id === "modalOverlay") this._closeModal();
-    });
-    document.getElementById("cancelModal")?.addEventListener("click", () => this._closeModal());
+    const overlay = this._openAdminModal(modal);
+    this._bindModalClose(overlay);
   }
 
   _showCourseModal(course = null) {
     const lang = window.__i18n.current;
     const isEdit = !!course;
     const modal = this.view.renderCourseModal(course, lang);
-    document.body.insertAdjacentHTML("beforeend", modal);
-
-    document.getElementById("modalOverlay").addEventListener("click", (e) => {
-      if (e.target.id === "modalOverlay") this._closeModal();
-    });
-    document.getElementById("cancelModal")?.addEventListener("click", () => this._closeModal());
+    const overlay = this._openAdminModal(modal);
+    this._bindModalClose(overlay);
 
     document.getElementById("courseThumbnailFile")?.addEventListener("change", (e) => {
       const file = e.target.files[0];
@@ -303,19 +304,15 @@ export class AdminController {
     ]);
     const lang  = window.__i18n.current;
     const modal = this.view.renderLessonsModal(course, lessons, lang);
-    document.body.insertAdjacentHTML("beforeend", modal);
+    const overlay = this._openAdminModal(modal);
+    this._bindModalClose(overlay);
 
-    document.getElementById("modalOverlay").addEventListener("click", (e) => {
-      if (e.target.id === "modalOverlay") this._closeModal();
-    });
-    document.getElementById("cancelModal")?.addEventListener("click", () => this._closeModal());
-
-    document.getElementById("addLessonBtn")?.addEventListener("click", () => {
+    overlay.querySelector("#addLessonBtn")?.addEventListener("click", () => {
       this._closeModal();
       this._showLessonForm(courseId, null, course);
-    });
+    }, { once: true });
 
-    document.querySelectorAll(".btn-edit-lesson").forEach(btn => {
+    overlay.querySelectorAll(".btn-edit-lesson").forEach(btn => {
       btn.addEventListener("click", async () => {
         const lessonId = btn.dataset.lessonId;
         const lesson   = lessons.find(l => l.id === lessonId);
@@ -324,7 +321,7 @@ export class AdminController {
       });
     });
 
-    document.querySelectorAll(".btn-delete-lesson").forEach(btn => {
+    overlay.querySelectorAll(".btn-delete-lesson").forEach(btn => {
       btn.addEventListener("click", async () => {
         const lessonId = btn.dataset.lessonId;
         if (!confirm(lang === "vi" ? "Xóa bài học này?" : "Delete this lesson?")) return;
@@ -344,12 +341,8 @@ export class AdminController {
     const lang   = window.__i18n.current;
     const isEdit = !!lesson;
     const modal  = this.view.renderLessonFormModal(lesson, course, lang);
-    document.body.insertAdjacentHTML("beforeend", modal);
-
-    document.getElementById("modalOverlay").addEventListener("click", (e) => {
-      if (e.target.id === "modalOverlay") this._closeModal();
-    });
-    document.getElementById("cancelModal")?.addEventListener("click", () => this._closeModal());
+    const overlay = this._openAdminModal(modal);
+    this._bindModalClose(overlay);
 
     document.getElementById("btnAdminAIGenerateLesson")?.addEventListener("click", async () => {
       const videoUrl = document.getElementById("lessonVideoUrl").value.trim();
@@ -482,19 +475,15 @@ export class AdminController {
     ]);
     const lang  = window.__i18n.current;
     const modal = this.view.renderQuizzesModal(course, quizzes, lang);
-    document.body.insertAdjacentHTML("beforeend", modal);
+    const overlay = this._openAdminModal(modal);
+    this._bindModalClose(overlay);
 
-    document.getElementById("modalOverlay").addEventListener("click", (e) => {
-      if (e.target.id === "modalOverlay") this._closeModal();
-    });
-    document.getElementById("cancelModal")?.addEventListener("click", () => this._closeModal());
-
-    document.getElementById("addQuizBtn")?.addEventListener("click", () => {
+    overlay.querySelector("#addQuizBtn")?.addEventListener("click", () => {
       this._closeModal();
       this._showQuizForm(courseId, null, course);
-    });
+    }, { once: true });
 
-    document.querySelectorAll(".btn-edit-quiz").forEach(btn => {
+    overlay.querySelectorAll(".btn-edit-quiz").forEach(btn => {
       btn.addEventListener("click", async () => {
         const quizId = btn.dataset.quizId;
         const quiz   = quizzes.find(q => q.id === quizId);
@@ -503,7 +492,7 @@ export class AdminController {
       });
     });
 
-    document.querySelectorAll(".btn-delete-quiz").forEach(btn => {
+    overlay.querySelectorAll(".btn-delete-quiz").forEach(btn => {
       btn.addEventListener("click", async () => {
         const quizId = btn.dataset.quizId;
         if (!confirm(lang === "vi" ? "Xóa quiz này?" : "Delete this quiz?")) return;
@@ -523,12 +512,8 @@ export class AdminController {
     const lang   = window.__i18n.current;
     const isEdit = !!quiz;
     const modal  = this.view.renderQuizFormModal(quiz, course, lang);
-    document.body.insertAdjacentHTML("beforeend", modal);
-
-    document.getElementById("modalOverlay").addEventListener("click", (e) => {
-      if (e.target.id === "modalOverlay") this._closeModal();
-    });
-    document.getElementById("cancelModal")?.addEventListener("click", () => this._closeModal());
+    const overlay = this._openAdminModal(modal);
+    this._bindModalClose(overlay);
 
     // Dynamic question builder
     let questionCount = quiz?.questions?.length || 1;
@@ -740,6 +725,7 @@ export class AdminController {
       success: "AI questions generated.",
     };
 
+    document.getElementById("aiQuizOverlay")?.remove();
     document.body.insertAdjacentHTML("beforeend", `
       <div id="aiQuizOverlay" class="modal-overlay admin-ai-overlay">
         <div class="modal admin-ai-modal">
@@ -984,8 +970,24 @@ export class AdminController {
     return this._escape(value).replace(/"/g, "&quot;");
   }
 
+  _openAdminModal(html) {
+    this._closeModal();
+    document.body.insertAdjacentHTML("beforeend", html);
+    return document.body.lastElementChild?.id === "modalOverlay"
+      ? document.body.lastElementChild
+      : document.getElementById("modalOverlay");
+  }
+
+  _bindModalClose(overlay) {
+    if (!overlay) return;
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) this._closeModal();
+    });
+    overlay.querySelector("#cancelModal")?.addEventListener("click", () => this._closeModal());
+  }
+
   _closeModal() {
-    document.getElementById("modalOverlay")?.remove();
+    document.querySelectorAll("#modalOverlay").forEach(overlay => overlay.remove());
   }
 
   _renderPage(html, name) {

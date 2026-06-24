@@ -188,8 +188,14 @@ async _fetchModel(model, body) {
   }
 
   const data = await res.json();
-  
-  console.log("[BrilliantBot] Full Gemini Response:", JSON.stringify(data, null, 2));
+  if (window.__BRILLIANT_DEBUG_AI) {
+    console.debug("[BrilliantBot] Gemini response", {
+      finishReason: data.candidates?.[0]?.finishReason,
+      usageMetadata: data.usageMetadata,
+      modelVersion: data.modelVersion,
+      responseId: data.responseId,
+    });
+  }
 
   const candidate = data.candidates?.[0];
   if (!candidate?.content?.parts?.[0]?.text) {
