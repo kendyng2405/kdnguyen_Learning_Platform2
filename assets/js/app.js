@@ -5,9 +5,9 @@
 
 import { AuthController }         from "./controllers/AuthController.js?v=11";
 import { CourseController }       from "./controllers/CourseController.js?v=12";
-import { QuizController }         from "./controllers/QuizController.js?v=16";
+import { QuizController }         from "./controllers/QuizController.js?v=17";
 import { ProgressController }     from "./controllers/ProgressController.js?v=10";
-import { AdminController }        from "./controllers/AdminController.js?v=17";
+import { AdminController }        from "./controllers/AdminController.js?v=18";
 import { ChatbotController }      from "./controllers/ChatbotController.js?v=11";
 import { ProfileController }      from "./controllers/ProfileController.js?v=10";
 import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=10";

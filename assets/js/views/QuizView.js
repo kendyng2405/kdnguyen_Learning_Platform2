@@ -499,10 +499,136 @@ export class QuizView {
         </div>
         ${result.isCorrect ? "" : `<p>${t.correctAnswer}: <strong>${this._escape(result.correctAnswerLabel || "")}</strong></p>`}
         ${explanation ? `<p>${this._escape(explanation)}</p>` : `<p>${t.nextHint}</p>`}
+        ${this._conceptLab(question, result, t, lang)}
         <button class="btn btn-sm btn-outline-primary quiz-ai-explain-current">
           <i class="fas fa-robot mr-1"></i>${t.explain}
         </button>
       </div>
+    `;
+  }
+
+  _conceptLab(question, result, t, lang) {
+    const type = this._questionType(question);
+    if (type === "drag_drop") return this._dragConceptLab(question, result, lang);
+    if (type === "short_answer") return this._shortConceptLab(question, result, lang);
+    return this._choiceConceptLab(question, result, lang);
+  }
+
+  _choiceConceptLab(question, result, lang) {
+    const isVi = lang === "vi";
+    const prompt = this._shortText(question.question, 64);
+    const chosen = this._shortText(result.userAnswerLabel || (isVi ? "Chưa chọn" : "No answer"), 54);
+    const correct = this._shortText(result.correctAnswerLabel || "", 54);
+    const title = result.isCorrect ? (isVi ? "Luồng trả lời khớp" : "Answer flow matched") : (isVi ? "So lại lựa chọn" : "Compare the choice");
+    const subtitle = result.isCorrect
+      ? (isVi ? "Lựa chọn của bạn đi đúng tới ý chính." : "Your choice lands on the core idea.")
+      : (isVi ? "Đường đỏ là lựa chọn của bạn, đường xanh là ý đúng." : "Red shows your choice, green shows the correct idea.");
+    const labels = isVi
+      ? { prompt: "Câu hỏi", chosen: "Bạn chọn", correct: "Ý đúng", map: "Bản đồ ý tưởng" }
+      : { prompt: "Prompt", chosen: "Your pick", correct: "Correct idea", map: "Concept map" };
+
+    return `
+      <div class="quiz-concept-lab ${result.isCorrect ? "is-correct" : "is-wrong"}">
+        ${this._conceptLabHead(labels.map, title, subtitle)}
+        <div class="quiz-lab-canvas quiz-lab-choice">
+          ${this._conceptSvg(result.isCorrect)}
+          <div class="quiz-lab-node node-prompt">
+            <span>A</span><strong>${labels.prompt}</strong><small>${this._escape(prompt)}</small>
+          </div>
+          <div class="quiz-lab-node node-answer ${result.isCorrect ? "node-good" : "node-bad"}">
+            <span>B</span><strong>${labels.chosen}</strong><small>${this._escape(chosen)}</small>
+          </div>
+          <div class="quiz-lab-node node-correct node-good">
+            <span>C</span><strong>${labels.correct}</strong><small>${this._escape(correct)}</small>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  _shortConceptLab(question, result, lang) {
+    const isVi = lang === "vi";
+    const typed = this._shortText(result.userAnswerLabel || (isVi ? "Trống" : "Blank"), 48);
+    const correct = this._shortText(result.correctAnswerLabel || "", 48);
+    const title = result.isCorrect ? (isVi ? "Từ khóa mở đúng" : "Keyword unlocked") : (isVi ? "Khớp lại từ khóa" : "Match the keyword");
+    const subtitle = result.isCorrect
+      ? (isVi ? "Câu trả lời ngắn đã khớp với ý cần nhớ." : "The short answer matches the target idea.")
+      : (isVi ? "So từ bạn nhập với đáp án chuẩn." : "Compare your term with the target answer.");
+    const labels = isVi
+      ? { map: "Bộ khóa kiến thức", typed: "Bạn nhập", target: "Đáp án" }
+      : { map: "Knowledge lock", typed: "Typed", target: "Target" };
+
+    return `
+      <div class="quiz-concept-lab quiz-lab-short ${result.isCorrect ? "is-correct" : "is-wrong"}">
+        ${this._conceptLabHead(labels.map, title, subtitle)}
+        <div class="quiz-lab-canvas quiz-lab-keyword">
+          ${this._conceptSvg(result.isCorrect)}
+          <div class="quiz-lab-lock ${result.isCorrect ? "node-good" : "node-bad"}"><i class="fas ${result.isCorrect ? "fa-unlock" : "fa-lock"}"></i></div>
+          <div class="quiz-lab-node node-answer ${result.isCorrect ? "node-good" : "node-bad"}">
+            <span>1</span><strong>${labels.typed}</strong><small>${this._escape(typed)}</small>
+          </div>
+          <div class="quiz-lab-node node-correct node-good">
+            <span>2</span><strong>${labels.target}</strong><small>${this._escape(correct)}</small>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  _dragConceptLab(question, result, lang) {
+    const isVi = lang === "vi";
+    const options = this._questionOptions(question, lang);
+    const order = result.isCorrect ? result.userAnswerOrder : result.correctOrder;
+    const ordered = (Array.isArray(order) ? order : [])
+      .map(index => options[index])
+      .filter(Boolean)
+      .slice(0, 5);
+    const title = result.isCorrect ? (isVi ? "Dòng chảy đã đúng" : "Flow is correct") : (isVi ? "Dòng chảy đúng" : "Correct flow");
+    const subtitle = result.isCorrect
+      ? (isVi ? "Thứ tự bạn kéo thả đã khớp với logic bài học." : "Your order follows the lesson logic.")
+      : (isVi ? "Canvas đang hiển thị thứ tự chuẩn để bạn nhớ lại." : "The canvas shows the target order to remember.");
+    const labels = isVi
+      ? { map: "Flow builder", empty: "Chưa có bước" }
+      : { map: "Flow builder", empty: "No step" };
+
+    return `
+      <div class="quiz-concept-lab quiz-lab-drag ${result.isCorrect ? "is-correct" : "is-wrong"}">
+        ${this._conceptLabHead(labels.map, title, subtitle)}
+        <div class="quiz-lab-canvas quiz-lab-flow">
+          <div class="quiz-lab-flow-track">
+            ${ordered.length ? ordered.map((item, index) => `
+              <div class="quiz-lab-flow-item" style="--i:${index}">
+                <span>${index + 1}</span>
+                <strong>${this._escape(this._shortText(item, 46))}</strong>
+              </div>
+            `).join(`<b class="quiz-lab-flow-arrow">&rarr;</b>`) : `<div class="quiz-lab-flow-item"><strong>${labels.empty}</strong></div>`}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  _conceptLabHead(kicker, title, subtitle) {
+    return `
+      <div class="quiz-lab-head">
+        <span><i class="fas fa-diagram-project"></i></span>
+        <div>
+          <small>${this._escape(kicker)}</small>
+          <strong>${this._escape(title)}</strong>
+          <p>${this._escape(subtitle)}</p>
+        </div>
+      </div>
+      <div class="quiz-lab-segments"><i></i><i></i><i></i></div>
+    `;
+  }
+
+  _conceptSvg(isCorrect) {
+    return `
+      <svg class="quiz-lab-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <line class="quiz-lab-path path-main" x1="18" y1="45" x2="50" y2="58"></line>
+        <line class="quiz-lab-path ${isCorrect ? "path-main" : "path-wrong"}" x1="50" y1="58" x2="82" y2="45"></line>
+        ${isCorrect ? "" : `<line class="quiz-lab-path path-correct" x1="18" y1="45" x2="82" y2="45"></line>`}
+      </svg>
     `;
   }
 
@@ -536,6 +662,12 @@ export class QuizView {
       drag_drop: "Drag & drop",
     };
     return (lang === "vi" ? vi : en)[type] || type;
+  }
+
+  _shortText(value, max = 70) {
+    const clean = String(value || "").replace(/\s+/g, " ").trim();
+    if (clean.length <= max) return clean;
+    return `${clean.slice(0, max - 1).replace(/\s+\S*$/, "")}...`;
   }
 
   _escape(value) {

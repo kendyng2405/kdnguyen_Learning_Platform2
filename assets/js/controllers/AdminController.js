@@ -848,8 +848,8 @@ export class AdminController {
               <div class="ai-type-grid">
                 <label><input type="checkbox" value="multiple_choice" checked /> <span>${t.mc}</span></label>
                 <label><input type="checkbox" value="true_false" checked /> <span>${t.tf}</span></label>
-                <label><input type="checkbox" value="short_answer" /> <span>${t.short}</span></label>
-                <label><input type="checkbox" value="drag_drop" /> <span>${t.drag}</span></label>
+                <label><input type="checkbox" value="short_answer" checked /> <span>${t.short}</span></label>
+                <label><input type="checkbox" value="drag_drop" checked /> <span>${t.drag}</span></label>
               </div>
             </div>
           </div>
@@ -921,12 +921,19 @@ export class AdminController {
     const targetLanguage = lang === "vi" ? "Vietnamese" : "English";
     const sanitizedSource = this._sanitizeQuizSource(source);
     const sysPrompt = [
-      "You are a strict LMS assessment designer. Create useful quiz questions ONLY from the lesson content.",
+      "You are a strict LMS assessment designer. Create useful, varied quiz questions ONLY from the lesson content.",
       `Create exactly ${count} questions in ${targetLanguage}.`,
       `Allowed question types: ${types.join(", ")}.`,
+      "Use a balanced mix of the allowed question types. Do not put the same type twice in a row unless there are more questions than available types.",
       "Return ONLY valid JSON, no markdown fences, no commentary.",
       "JSON shape must be: {\"questions\":[ ... ]}.",
       `Each item must match one of these schemas: ${types.map(type => typeGuide[type]).join(" OR ")}.`,
+      "Question variety rules:",
+      "- Mix factual recall, concept understanding, application scenarios, cause/effect, misconception checks, compare/contrast, and order/sequence when the content supports it.",
+      "- Multiple-choice questions should have plausible distractors, not random fragments.",
+      "- True/false questions must test a meaningful claim, not whether a sentence exists.",
+      "- Short-answer questions should ask for a concrete term, tool, step, reason, or result.",
+      "- Drag & drop questions should arrange real process steps or related concepts in a logical order.",
       "Quality rules:",
       "- Do NOT ask vague questions like 'Which idea best matches this content?'.",
       "- Do NOT use fragments as answer options.",
@@ -965,8 +972,9 @@ export class AdminController {
         const normalized = parsed
           .map(q => this._normalizeGeneratedQuestion(q, lang, types))
           .filter(q => this._isUsableAIQuestion(q) && !this._isLowQualityGeneratedQuestion(q));
-        if (normalized.length >= count) {
-          return normalized.slice(0, count);
+        const mixed = this._ensureQuestionTypeMix(normalized, sanitizedSource, count, types, lang);
+        if (mixed.length >= count) {
+          return mixed.slice(0, count);
         }
         throw new Error(lang === "vi"
           ? `AI chỉ tạo được ${normalized.length}/${count} câu hợp lệ.`
@@ -1076,6 +1084,43 @@ export class AdminController {
     const normalized = this._normalizeTextForQuality(answer);
     const matched = options.findIndex(option => this._normalizeTextForQuality(option) === normalized);
     return matched >= 0 ? matched : 0;
+  }
+
+  _ensureQuestionTypeMix(questions, source, count, types, lang) {
+    const allowed = Array.isArray(types) && types.length ? types : ["multiple_choice"];
+    if (allowed.length <= 1 || count <= 1) return questions;
+
+    const fallback = this._fallbackGeneratedQuestions(source, count, allowed, lang)
+      .map(q => this._normalizeGeneratedQuestion(q, lang, allowed))
+      .filter(q => this._isUsableAIQuestion(q) && !this._isLowQualityGeneratedQuestion(q));
+    const pool = [...questions, ...fallback];
+    const picked = [];
+    const used = new Set();
+    const answerOf = (q) => q.type === "multiple_choice"
+      ? (q.options?.[Number(q.correctAnswer)] ?? q.correctAnswer ?? "")
+      : (Array.isArray(q.correctAnswer) ? q.correctAnswer.join(",") : (q.correctAnswer ?? ""));
+    const keyOf = (q) => `${q.type}|${this._normalizeTextForQuality(q.question)}|${this._normalizeTextForQuality(answerOf(q))}`;
+    const add = (candidate) => {
+      if (!candidate || picked.length >= count) return false;
+      const key = keyOf(candidate);
+      if (used.has(key)) return false;
+      used.add(key);
+      picked.push(candidate);
+      return true;
+    };
+
+    const requiredTypes = allowed.slice(0, Math.min(allowed.length, count));
+    requiredTypes.forEach(type => add(pool.find(q => q.type === type)));
+
+    let cursor = 0;
+    while (picked.length < count && pool.length) {
+      const preferredType = allowed[cursor % allowed.length];
+      add(pool.find(q => q.type === preferredType && !used.has(keyOf(q)))) || add(pool.find(q => !used.has(keyOf(q))));
+      cursor += 1;
+      if (cursor > pool.length + count + allowed.length) break;
+    }
+
+    return picked.length ? picked : questions;
   }
 
   _sanitizeQuizSource(source) {
