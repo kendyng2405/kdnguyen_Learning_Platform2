@@ -612,9 +612,6 @@ export class AdminController {
       });
     });
 
-    container.querySelectorAll(".btn-generate-animation").forEach(btn => {
-      btn.addEventListener("click", () => this._generateQuestionAnimation(btn, lang));
-    });
   }
 
   _sanitizeQuestionList(questions, lang) {
@@ -655,8 +652,6 @@ export class AdminController {
       const type = card.querySelector(".q-type")?.value || "multiple_choice";
       const explanation = card.querySelector(".q-explanation")?.value.trim() || "";
       const id = card.querySelector(".q-id")?.value || this._questionId();
-      const animation_spec = this._readAnimationSpec(card);
-
       if (type === "short_answer") {
         return {
           id,
@@ -665,7 +660,6 @@ export class AdminController {
           options: [],
           correctAnswer: card.querySelector(".q-correct-text")?.value.trim() || "",
           explanation,
-          animation_spec,
         };
       }
 
@@ -680,7 +674,6 @@ export class AdminController {
           options: opts,
           correctAnswer: opts.map((_, index) => index),
           explanation,
-          animation_spec,
         };
       }
 
@@ -693,7 +686,6 @@ export class AdminController {
         options: opts,
         correctAnswer: radio ? parseInt(radio.value) : 0,
         explanation,
-        animation_spec,
       };
     });
   }
@@ -702,7 +694,6 @@ export class AdminController {
     const type = q.type || ((q.options || []).length === 2 ? "true_false" : "multiple_choice");
     const correctAnswer = this._normalizeCorrectAnswer(q.correctAnswer, type);
     const questionId = q.id || this._questionId();
-    const animationSpecText = q.animation_spec ? JSON.stringify(q.animation_spec) : "";
     const typeLabels = lang === "vi"
       ? { multiple_choice: "Trắc nghiệm", true_false: "Đúng / Sai", short_answer: "Trả lời ngắn", drag_drop: "Kéo thả" }
       : { multiple_choice: "Multiple choice", true_false: "True / False", short_answer: "Short answer", drag_drop: "Drag & drop" };
@@ -722,7 +713,6 @@ export class AdminController {
           </div>
         </div>
         <input type="hidden" class="q-id" value="${this._attr(questionId)}" />
-        <input type="hidden" class="q-animation-spec" value="${this._attr(animationSpecText)}" />
         <textarea class="form-control q-text" rows="2" placeholder="${lang === "vi" ? "Nhập câu hỏi..." : "Enter question..."}">${this._escape(q.question || "")}</textarea>
         ${type === "short_answer"
           ? this._shortAnswerForm(q, lang)
@@ -730,12 +720,6 @@ export class AdminController {
             ? this._dragDropAnswerForm(q, lang)
             : this._choiceAnswerForm(q, i, type, correctAnswer, lang)}
         <textarea class="form-control q-explanation" rows="2" placeholder="${lang === "vi" ? "Giải thích đáp án để học viên hiểu nhanh hơn..." : "Explain the answer for learners..."}">${this._escape(q.explanation || "")}</textarea>
-        <div class="admin-animation-tools">
-          <button type="button" class="btn btn-sm btn-outline-primary btn-generate-animation" data-idx="${i}">
-            <i class="fas fa-wand-magic-sparkles mr-1"></i>${lang === "vi" ? "Generate AI Animation" : "Generate AI Animation"}
-          </button>
-          ${q.animation_spec ? `<span class="animation-ready-badge"><i class="fas fa-check-circle mr-1"></i>${lang === "vi" ? "Đã có animation" : "Animation ready"}</span>` : ""}
-        </div>
       </div>
     `;
   }
@@ -800,121 +784,6 @@ export class AdminController {
 
   _questionId() {
     return `q_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-  }
-
-  _readAnimationSpec(card) {
-    const raw = card.querySelector(".q-animation-spec")?.value.trim();
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch (error) {
-      return null;
-    }
-  }
-
-  async _generateQuestionAnimation(button, lang) {
-    const idx = parseInt(button.dataset.idx, 10);
-    const questions = this._collectQuestions();
-    const question = questions[idx];
-    if (!question?.question) {
-      window.__toast.error(lang === "vi" ? "Nhập câu hỏi trước khi tạo animation." : "Enter the question before generating animation.");
-      return;
-    }
-
-    const oldText = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = `<span class="spinner-sm"></span> ${lang === "vi" ? "Đang tạo..." : "Generating..."}`;
-
-    try {
-      let spec = null;
-      try {
-        const res = await fetch("/api/quiz-animation", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "generate",
-            questionId: question.id,
-            question,
-            uiLanguage: lang,
-          }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-        spec = data.animation_spec || data.animationSpec;
-      } catch (error) {
-        console.warn("[Quiz Animation] API fallback:", error);
-        spec = this._fallbackAnimationSpec(question, lang);
-      }
-
-      questions[idx] = { ...question, animation_spec: spec || this._fallbackAnimationSpec(question, lang) };
-      this._renderQuestionForms(questions, lang);
-      window.__toast.success(lang === "vi" ? "Đã tạo animation cho câu hỏi." : "Question animation generated.");
-    } finally {
-      button.disabled = false;
-      button.innerHTML = oldText;
-    }
-  }
-
-  _fallbackAnimationSpec(question, lang) {
-    const isVi = lang === "vi";
-    const type = question.type || "multiple_choice";
-    const template = type === "drag_drop" ? "concept_flow" : "generic_steps";
-    const prompt = this._clipAnimationText(question.question, 190);
-    const answer = this._animationAnswerLabel(question);
-    const focus = this._animationQuestionFocus(question, isVi);
-    const explanation = this._clipAnimationText(question.explanation, 190) || (isVi
-      ? "Giải thích dựa trực tiếp trên nội dung bài học của câu hỏi này."
-      : "The explanation follows the lesson content for this question.");
-    return {
-      template,
-      correctTitle: isVi ? "Animation câu hỏi" : "Question animation",
-      wrongTitle: isVi ? "Giải thích câu hỏi" : "Question explanation",
-      correctAnimation: {
-        steps: [
-          { text: focus, detail: prompt },
-          { text: answer ? (isVi ? `Đáp án: ${this._clipAnimationText(answer, 55)}` : `Answer: ${this._clipAnimationText(answer, 55)}`) : (isVi ? "Ý chính của câu hỏi" : "Question key idea"), detail: answer || explanation },
-          { text: isVi ? "Vì sao đúng" : "Why it is correct", detail: explanation },
-        ],
-      },
-      wrongAnimation: {
-        steps: [
-          { text: focus, detail: prompt },
-          { text: answer ? (isVi ? `Đáp án đúng: ${this._clipAnimationText(answer, 48)}` : `Correct answer: ${this._clipAnimationText(answer, 48)}`) : (isVi ? "Khái niệm đúng" : "Correct concept"), detail: answer || explanation },
-          { text: isVi ? "Giải thích kiến thức" : "Concept explanation", detail: explanation },
-        ],
-      },
-    };
-  }
-
-  _animationAnswerLabel(question = {}) {
-    if (question.type === "drag_drop") {
-      const options = Array.isArray(question.options) ? question.options : [];
-      const order = Array.isArray(question.correctAnswer) ? question.correctAnswer : options.map((_, index) => index);
-      return order.map(index => options[index]).filter(Boolean).join(" → ");
-    }
-    if (question.type === "short_answer") {
-      return this._clipAnimationText(question.correctAnswer, 150);
-    }
-    const options = Array.isArray(question.options) ? question.options : [];
-    const index = Number(question.correctAnswer);
-    if (Number.isInteger(index) && options[index]) return this._clipAnimationText(options[index], 150);
-    return typeof question.correctAnswer === "string" ? this._clipAnimationText(question.correctAnswer, 150) : "";
-  }
-
-  _animationQuestionFocus(question = {}, isVi = true) {
-    const raw = this._clipAnimationText(question.question, 80);
-    if (!raw) return isVi ? "Nội dung câu hỏi" : "Question concept";
-    const cleaned = raw
-      .replace(/^(theo bài học|according to the lesson|true or false|đúng hay sai)[:,\s]*/i, "")
-      .replace(/\?+$/, "")
-      .trim();
-    return this._clipAnimationText(cleaned || raw, 58);
-  }
-
-  _clipAnimationText(value, max = 120) {
-    const clean = String(value || "").replace(/\s+/g, " ").trim();
-    if (clean.length <= max) return clean;
-    return `${clean.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
   }
 
   _openAIQuizGenerator(lang) {
