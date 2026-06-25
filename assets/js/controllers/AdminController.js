@@ -859,25 +859,62 @@ export class AdminController {
     const isVi = lang === "vi";
     const type = question.type || "multiple_choice";
     const template = type === "drag_drop" ? "concept_flow" : "generic_steps";
+    const prompt = this._clipAnimationText(question.question, 190);
+    const answer = this._animationAnswerLabel(question);
+    const focus = this._animationQuestionFocus(question, isVi);
+    const explanation = this._clipAnimationText(question.explanation, 190) || (isVi
+      ? "Giải thích dựa trực tiếp trên nội dung bài học của câu hỏi này."
+      : "The explanation follows the lesson content for this question.");
     return {
       template,
-      correctTitle: isVi ? "Bạn đã chọn đúng" : "You got it right",
-      wrongTitle: isVi ? "Xem lại cách làm" : "Review the idea",
+      correctTitle: isVi ? "Animation câu hỏi" : "Question animation",
+      wrongTitle: isVi ? "Giải thích câu hỏi" : "Question explanation",
       correctAnimation: {
         steps: [
-          { text: isVi ? "Xác định yêu cầu" : "Read the prompt", detail: question.question || "" },
-          { text: isVi ? "Đối chiếu đáp án" : "Match the answer", detail: isVi ? "Lựa chọn khớp với dữ kiện chính." : "The choice matches the key evidence." },
-          { text: isVi ? "Ghi nhớ ý chính" : "Remember the key idea", detail: question.explanation || "" },
+          { text: focus, detail: prompt },
+          { text: answer ? (isVi ? `Đáp án: ${this._clipAnimationText(answer, 55)}` : `Answer: ${this._clipAnimationText(answer, 55)}`) : (isVi ? "Ý chính của câu hỏi" : "Question key idea"), detail: answer || explanation },
+          { text: isVi ? "Vì sao đúng" : "Why it is correct", detail: explanation },
         ],
       },
       wrongAnimation: {
         steps: [
-          { text: isVi ? "Khoanh vùng lỗi" : "Find the mismatch", detail: isVi ? "So sánh lựa chọn với dữ kiện trong câu hỏi." : "Compare your choice with the prompt evidence." },
-          { text: isVi ? "Quay lại khái niệm" : "Return to the concept", detail: question.explanation || "" },
-          { text: isVi ? "Chọn theo bằng chứng" : "Choose by evidence", detail: isVi ? "Ưu tiên đáp án bám sát nội dung đã học." : "Prefer the option that directly follows the lesson." },
+          { text: focus, detail: prompt },
+          { text: answer ? (isVi ? `Đáp án đúng: ${this._clipAnimationText(answer, 48)}` : `Correct answer: ${this._clipAnimationText(answer, 48)}`) : (isVi ? "Khái niệm đúng" : "Correct concept"), detail: answer || explanation },
+          { text: isVi ? "Giải thích kiến thức" : "Concept explanation", detail: explanation },
         ],
       },
     };
+  }
+
+  _animationAnswerLabel(question = {}) {
+    if (question.type === "drag_drop") {
+      const options = Array.isArray(question.options) ? question.options : [];
+      const order = Array.isArray(question.correctAnswer) ? question.correctAnswer : options.map((_, index) => index);
+      return order.map(index => options[index]).filter(Boolean).join(" → ");
+    }
+    if (question.type === "short_answer") {
+      return this._clipAnimationText(question.correctAnswer, 150);
+    }
+    const options = Array.isArray(question.options) ? question.options : [];
+    const index = Number(question.correctAnswer);
+    if (Number.isInteger(index) && options[index]) return this._clipAnimationText(options[index], 150);
+    return typeof question.correctAnswer === "string" ? this._clipAnimationText(question.correctAnswer, 150) : "";
+  }
+
+  _animationQuestionFocus(question = {}, isVi = true) {
+    const raw = this._clipAnimationText(question.question, 80);
+    if (!raw) return isVi ? "Nội dung câu hỏi" : "Question concept";
+    const cleaned = raw
+      .replace(/^(theo bài học|according to the lesson|true or false|đúng hay sai)[:,\s]*/i, "")
+      .replace(/\?+$/, "")
+      .trim();
+    return this._clipAnimationText(cleaned || raw, 58);
+  }
+
+  _clipAnimationText(value, max = 120) {
+    const clean = String(value || "").replace(/\s+/g, " ").trim();
+    if (clean.length <= max) return clean;
+    return `${clean.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
   }
 
   _openAIQuizGenerator(lang) {

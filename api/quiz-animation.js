@@ -46,10 +46,15 @@ export default async function handler(req, res) {
               {
                 type: "input_text",
                 text: [
-                  "Create an LMS quiz explanation animation_spec as strict JSON.",
+                  "Create an LMS quiz animation_spec as strict JSON.",
                   "Do not create video. Do not include markdown.",
                   "Required shape: {\"template\":\"code_trace|equation_steps|physics_motion|concept_flow|generic_steps\",\"correctTitle\":\"...\",\"wrongTitle\":\"...\",\"correctAnimation\":{\"steps\":[{\"text\":\"...\",\"detail\":\"...\"}]},\"wrongAnimation\":{\"steps\":[{\"text\":\"...\",\"detail\":\"...\"}]}}.",
                   "Use 3 to 4 short steps for each animation.",
+                  "The animation must visualize the specific concept, fact, sequence, or process in this quiz question.",
+                  "This is NOT answer-selection advice. Do not write generic coaching steps.",
+                  "Never use phrases like 'Find the mismatch', 'Return to the concept', 'Choose by evidence', 'Read the prompt', or 'Match the evidence'.",
+                  "Use concrete words from the question, correct answer, options, and explanation.",
+                  "wrongAnimation is shown after a wrong answer; explain the correct concept for this exact question instead of giving hints.",
                   "Match the UI language unless the quiz question text itself is quoted.",
                 ].join("\n"),
               },
@@ -112,17 +117,50 @@ function normalizeSpec(spec, fallback) {
   const template = allowedTemplates.has(spec?.template) ? spec.template : fallback.template;
   const correctSteps = normalizeSteps(spec?.correctAnimation?.steps || spec?.correctAnimation);
   const wrongSteps = normalizeSteps(spec?.wrongAnimation?.steps || spec?.wrongAnimation);
+  const useCorrectFallback = !correctSteps.length || isGenericSteps(correctSteps, spec?.correctTitle);
+  const useWrongFallback = !wrongSteps.length || isGenericSteps(wrongSteps, spec?.wrongTitle);
   return {
     template,
-    correctTitle: stringOr(spec?.correctTitle, fallback.correctTitle),
-    wrongTitle: stringOr(spec?.wrongTitle, fallback.wrongTitle),
+    correctTitle: isGenericText(spec?.correctTitle) ? fallback.correctTitle : stringOr(spec?.correctTitle, fallback.correctTitle),
+    wrongTitle: isGenericText(spec?.wrongTitle) ? fallback.wrongTitle : stringOr(spec?.wrongTitle, fallback.wrongTitle),
     correctAnimation: {
-      steps: correctSteps.length ? correctSteps : fallback.correctAnimation.steps,
+      steps: useCorrectFallback ? fallback.correctAnimation.steps : correctSteps,
     },
     wrongAnimation: {
-      steps: wrongSteps.length ? wrongSteps : fallback.wrongAnimation.steps,
+      steps: useWrongFallback ? fallback.wrongAnimation.steps : wrongSteps,
     },
   };
+}
+
+function isGenericSteps(steps, title = "") {
+  return isGenericText([
+    title,
+    ...steps.map(step => `${step.text || ""} ${step.detail || ""}`),
+  ].join(" "));
+}
+
+function isGenericText(value = "") {
+  const text = String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  return [
+    "find the mismatch",
+    "compare your choice",
+    "return to the concept",
+    "choose by evidence",
+    "prefer the answer",
+    "read the prompt",
+    "match the evidence",
+    "review the idea",
+    "tim diem lech",
+    "khoanh vung loi",
+    "quay lai khai niem",
+    "chon theo bang chung",
+    "doi chieu du kien",
+    "xac dinh yeu cau",
+    "ghi nho y chinh",
+  ].some(phrase => text.includes(phrase));
 }
 
 function normalizeSteps(value) {
@@ -142,43 +180,74 @@ function stringOr(value, fallback) {
 function fallbackAnimationSpec(question = {}, lang = "vi") {
   const isVi = lang === "vi";
   const isDrag = question?.type === "drag_drop";
+  const prompt = trim(question?.question, 190);
+  const answer = answerLabel(question);
+  const focus = questionFocus(question, isVi);
+  const explanation = trim(question?.explanation, 190) || (isVi
+    ? "Giải thích dựa trực tiếp trên nội dung bài học của câu hỏi này."
+    : "The explanation follows the lesson content for this question.");
   return {
     template: isDrag ? "concept_flow" : "generic_steps",
-    correctTitle: isVi ? "Bạn đã chọn đúng" : "You got it right",
-    wrongTitle: isVi ? "Xem lại cách làm" : "Review the idea",
+    correctTitle: isVi ? "Animation câu hỏi" : "Question animation",
+    wrongTitle: isVi ? "Giải thích câu hỏi" : "Question explanation",
     correctAnimation: {
       steps: [
         {
-          text: isVi ? "Đọc yêu cầu" : "Read the prompt",
-          detail: trim(question?.question, 180),
+          text: focus,
+          detail: prompt,
         },
         {
-          text: isVi ? "Đối chiếu dữ kiện" : "Match the evidence",
-          detail: isVi ? "Đáp án đúng bám sát dữ kiện chính." : "The correct answer follows the key evidence.",
+          text: answer ? (isVi ? `Đáp án: ${trim(answer, 55)}` : `Answer: ${trim(answer, 55)}`) : (isVi ? "Ý chính của câu hỏi" : "Question key idea"),
+          detail: answer || explanation,
         },
         {
-          text: isVi ? "Ghi nhớ" : "Remember",
-          detail: trim(question?.explanation, 180) || (isVi ? "Giữ lại ý chính để áp dụng ở câu sau." : "Keep the main idea for the next question."),
+          text: isVi ? "Vì sao đúng" : "Why it is correct",
+          detail: explanation,
         },
       ],
     },
     wrongAnimation: {
       steps: [
         {
-          text: isVi ? "Tìm điểm lệch" : "Find the mismatch",
-          detail: isVi ? "So sánh lựa chọn với nội dung câu hỏi." : "Compare the selected choice with the prompt.",
+          text: focus,
+          detail: prompt,
         },
         {
-          text: isVi ? "Quay lại khái niệm" : "Return to the concept",
-          detail: trim(question?.explanation, 180) || (isVi ? "Đọc lại phần giải thích ngắn." : "Review the short explanation."),
+          text: answer ? (isVi ? `Đáp án đúng: ${trim(answer, 48)}` : `Correct answer: ${trim(answer, 48)}`) : (isVi ? "Khái niệm đúng" : "Correct concept"),
+          detail: answer || explanation,
         },
         {
-          text: isVi ? "Chọn theo bằng chứng" : "Choose by evidence",
-          detail: isVi ? "Ưu tiên đáp án khớp trực tiếp với bài học." : "Prefer the answer directly supported by the lesson.",
+          text: isVi ? "Giải thích kiến thức" : "Concept explanation",
+          detail: explanation,
         },
       ],
     },
   };
+}
+
+function answerLabel(question = {}) {
+  if (question.type === "drag_drop") {
+    const options = Array.isArray(question.options) ? question.options : [];
+    const order = Array.isArray(question.correctAnswer) ? question.correctAnswer : options.map((_, index) => index);
+    return order.map(index => options[index]).filter(Boolean).join(" → ");
+  }
+  if (question.type === "short_answer") {
+    return trim(question.correctAnswer, 150);
+  }
+  const options = Array.isArray(question.options) ? question.options : [];
+  const index = Number(question.correctAnswer);
+  if (Number.isInteger(index) && options[index]) return trim(options[index], 150);
+  return typeof question.correctAnswer === "string" ? trim(question.correctAnswer, 150) : "";
+}
+
+function questionFocus(question = {}, isVi = true) {
+  const raw = trim(question?.question, 80);
+  if (!raw) return isVi ? "Nội dung câu hỏi" : "Question concept";
+  const cleaned = raw
+    .replace(/^(theo bài học|according to the lesson|true or false|đúng hay sai)[:,\s]*/i, "")
+    .replace(/\?+$/, "")
+    .trim();
+  return trim(cleaned || raw, 58);
 }
 
 function trim(value, max = 160) {

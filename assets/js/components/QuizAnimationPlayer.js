@@ -3,8 +3,8 @@
 // ============================================================
 
 export class QuizAnimationPlayer {
-  static render(animationSpec, result = "correct", lang = "vi") {
-    const spec = this._normalizeSpec(animationSpec);
+  static render(animationSpec, result = "correct", lang = "vi", question = null) {
+    const spec = this._normalizeSpec(animationSpec, question, lang);
     if (!spec) return "";
 
     const template = this._template(spec.template);
@@ -35,16 +35,22 @@ export class QuizAnimationPlayer {
     `;
   }
 
-  static _normalizeSpec(animationSpec) {
+  static _normalizeSpec(animationSpec, question = null, lang = "vi") {
     if (!animationSpec) return null;
+    let spec = null;
     if (typeof animationSpec === "string") {
       try {
-        return JSON.parse(animationSpec);
+        spec = JSON.parse(animationSpec);
       } catch (error) {
         return null;
       }
+    } else {
+      spec = typeof animationSpec === "object" ? animationSpec : null;
     }
-    return typeof animationSpec === "object" ? animationSpec : null;
+    if (spec && question && this._isGenericSpec(spec)) {
+      return this._fallbackSpec(question, lang);
+    }
+    return spec;
   }
 
   static _steps(animation) {
@@ -143,6 +149,120 @@ export class QuizAnimationPlayer {
         </div>
       </article>
     `;
+  }
+
+  static _isGenericSpec(spec) {
+    const text = [
+      spec?.correctTitle,
+      spec?.wrongTitle,
+      ...(spec?.correctAnimation?.steps || []),
+      ...(spec?.wrongAnimation?.steps || []),
+    ].map(item => {
+      if (typeof item === "string") return item;
+      return `${item?.text || ""} ${item?.detail || ""}`;
+    }).join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    return [
+      "find the mismatch",
+      "compare your choice",
+      "return to the concept",
+      "choose by evidence",
+      "prefer the answer",
+      "read the prompt",
+      "match the evidence",
+      "review the idea",
+      "tim diem lech",
+      "khoanh vung loi",
+      "quay lai khai niem",
+      "chon theo bang chung",
+      "doi chieu du kien",
+      "xac dinh yeu cau",
+      "ghi nho y chinh",
+    ].some(phrase => text.includes(phrase));
+  }
+
+  static _fallbackSpec(question, lang = "vi") {
+    const isVi = lang === "vi";
+    const answer = this._answerLabel(question, lang);
+    const focus = this._questionFocus(question, isVi);
+    const explanation = this._clip(question?.explanation, 190) || (isVi
+      ? "Giải thích dựa trực tiếp trên nội dung bài học của câu hỏi này."
+      : "The explanation follows the lesson content for this question.");
+    const prompt = this._clip(question?.question, 190);
+    const isDrag = question?.type === "drag_drop";
+
+    return {
+      template: isDrag ? "concept_flow" : "generic_steps",
+      correctTitle: isVi ? "Animation câu hỏi" : "Question animation",
+      wrongTitle: isVi ? "Giải thích câu hỏi" : "Question explanation",
+      correctAnimation: {
+        steps: [
+          {
+            text: focus,
+            detail: prompt,
+          },
+          {
+            text: answer ? (isVi ? `Đáp án: ${this._clip(answer, 55)}` : `Answer: ${this._clip(answer, 55)}`) : (isVi ? "Ý chính của câu hỏi" : "Question key idea"),
+            detail: answer || explanation,
+          },
+          {
+            text: isVi ? "Vì sao đúng" : "Why it is correct",
+            detail: explanation,
+          },
+        ],
+      },
+      wrongAnimation: {
+        steps: [
+          {
+            text: focus,
+            detail: prompt,
+          },
+          {
+            text: answer ? (isVi ? `Đáp án đúng: ${this._clip(answer, 48)}` : `Correct answer: ${this._clip(answer, 48)}`) : (isVi ? "Khái niệm đúng" : "Correct concept"),
+            detail: answer || explanation,
+          },
+          {
+            text: isVi ? "Giải thích kiến thức" : "Concept explanation",
+            detail: explanation,
+          },
+        ],
+      },
+    };
+  }
+
+  static _answerLabel(question, lang = "vi") {
+    if (!question) return "";
+    if (question.type === "drag_drop") {
+      const options = Array.isArray(question.options) ? question.options : [];
+      const order = Array.isArray(question.correctAnswer) ? question.correctAnswer : options.map((_, index) => index);
+      return order.map(index => options[index]).filter(Boolean).join(" → ");
+    }
+    if (question.type === "short_answer") {
+      return this._clip(question.correctAnswer, 150);
+    }
+    const options = Array.isArray(question.options) ? question.options : [];
+    const index = Number(question.correctAnswer);
+    if (Number.isInteger(index) && options[index]) return this._clip(options[index], 150);
+    if (typeof question.correctAnswer === "string" && question.correctAnswer.trim()) {
+      return this._clip(question.correctAnswer, 150);
+    }
+    return "";
+  }
+
+  static _questionFocus(question, isVi) {
+    const raw = this._clip(question?.question, 80);
+    if (!raw) return isVi ? "Nội dung câu hỏi" : "Question concept";
+    const cleaned = raw
+      .replace(/^(theo bài học|according to the lesson|true or false|đúng hay sai)[:,\s]*/i, "")
+      .replace(/\?+$/, "")
+      .trim();
+    return this._clip(cleaned || raw, 58);
+  }
+
+  static _clip(value, max = 120) {
+    const clean = String(value || "").replace(/\s+/g, " ").trim();
+    if (clean.length <= max) return clean;
+    return `${clean.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
   }
 
   static _template(template) {

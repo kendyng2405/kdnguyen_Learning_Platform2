@@ -2,7 +2,7 @@
 //  QuizView.js - Quiz Page Templates (Argon Style)
 // ============================================================
 
-import { QuizAnimationPlayer } from "../components/QuizAnimationPlayer.js?v=11";
+import { QuizAnimationPlayer } from "../components/QuizAnimationPlayer.js?v=12";
 
 export class QuizView {
   renderQuizList(rows, lang) {
@@ -493,7 +493,7 @@ export class QuizView {
   _feedbackBlock(question, result, t, lang) {
     const title = result.isCorrect ? t.correct : t.wrong;
     const explanation = question.explanation || result.explanation || "";
-    const animation = QuizAnimationPlayer.render(question.animation_spec || question.animationSpec, result.isCorrect ? "correct" : "wrong", lang);
+    const animation = QuizAnimationPlayer.render(question.animation_spec || question.animationSpec, result.isCorrect ? "correct" : "wrong", lang, question);
     return `
       <div class="quiz-feedback ${result.isCorrect ? "is-correct" : "is-wrong"}">
         <div class="quiz-feedback-title">
