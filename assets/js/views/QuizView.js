@@ -2,7 +2,7 @@
 //  QuizView.js - Quiz Page Templates (Argon Style)
 // ============================================================
 
-import { QuizAnimationPlayer } from "../components/QuizAnimationPlayer.js?v=12";
+import { QuizAnimationPlayer } from "../components/QuizAnimationPlayer.js?v=13";
 
 export class QuizView {
   renderQuizList(rows, lang) {

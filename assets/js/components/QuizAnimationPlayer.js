@@ -1,262 +1,277 @@
 // ============================================================
-//  QuizAnimationPlayer.js - Lightweight CSS animation renderer
+//  QuizAnimationPlayer.js - One-shot illustrative quiz scenes
 // ============================================================
 
 export class QuizAnimationPlayer {
   static render(animationSpec, result = "correct", lang = "vi", question = null) {
-    const spec = this._normalizeSpec(animationSpec, question, lang);
-    if (!spec) return "";
+    const spec = this._normalizeSpec(animationSpec);
+    const illustration = this._illustration(spec, question, lang);
+    if (!illustration) return "";
 
-    const template = this._template(spec.template);
-    const animation = result === "correct" ? spec.correctAnimation : spec.wrongAnimation;
-    const steps = this._steps(animation);
-    if (!steps.length) return "";
-
-    const title = result === "correct"
-      ? (spec.correctTitle || (lang === "vi" ? "Vì sao đúng?" : "Why it is correct"))
-      : (spec.wrongTitle || (lang === "vi" ? "Cách sửa lỗi" : "How to fix it"));
-    const visibleSteps = steps.slice(0, 4);
-    const cycle = Math.max(visibleSteps.length, 1) * 2.4;
+    const sceneType = this._sceneType(illustration.type, question);
+    const title = illustration.title || (lang === "vi" ? "Ví dụ minh họa" : "Illustrative example");
+    const subtitle = illustration.caption || illustration.example || this._defaultCaption(question, lang);
 
     return `
-      <div class="quiz-animation-player quiz-animation-player--${template} is-${result}" style="--step-count:${visibleSteps.length}; --cycle:${cycle}s; --cursor-travel:${Math.max(visibleSteps.length - 1, 0) * 43}px" aria-live="polite">
-        <div class="quiz-animation-orbit" aria-hidden="true"></div>
-        <div class="quiz-animation-head">
-          <span><i class="fas fa-wand-magic-sparkles"></i></span>
+      <div class="quiz-animation-player quiz-illustration-player quiz-illustration-player--${sceneType} is-${result}" aria-live="polite">
+        <div class="quiz-animation-head quiz-illustration-head">
+          <span><i class="fas fa-clapperboard"></i></span>
           <strong>${this._escape(title)}</strong>
         </div>
-        <div class="quiz-animation-stage">
-          ${this._scene(template, visibleSteps, result)}
-          <div class="quiz-animation-caption-stack">
-            ${visibleSteps.map((step, index) => this._caption(step, index)).join("")}
-          </div>
+        <div class="quiz-illustration-stage">
+          ${this._scene(sceneType, illustration, question, result, lang)}
+          <article class="quiz-illustration-note">
+            <span>${lang === "vi" ? "Ví dụ tương tự" : "Similar example"}</span>
+            <strong>${this._escape(this._clip(subtitle, 110))}</strong>
+            <small>${this._escape(this._clip(illustration.takeaway || this._answerLabel(question) || "", 180))}</small>
+          </article>
         </div>
       </div>
     `;
   }
 
-  static _normalizeSpec(animationSpec, question = null, lang = "vi") {
+  static _normalizeSpec(animationSpec) {
     if (!animationSpec) return null;
-    let spec = null;
     if (typeof animationSpec === "string") {
       try {
-        spec = JSON.parse(animationSpec);
-      } catch (error) {
+        return JSON.parse(animationSpec);
+      } catch {
         return null;
       }
-    } else {
-      spec = typeof animationSpec === "object" ? animationSpec : null;
     }
-    if (spec && question && this._isGenericSpec(spec)) {
-      return this._fallbackSpec(question, lang);
+    return typeof animationSpec === "object" ? animationSpec : null;
+  }
+
+  static _illustration(spec, question, lang) {
+    const fromSpec = spec?.illustration || spec?.exampleScene || spec?.scene;
+    if (fromSpec && typeof fromSpec === "object") {
+      return {
+        ...fromSpec,
+        title: fromSpec.title || (lang === "vi" ? "Ví dụ minh họa" : "Illustrative example"),
+      };
     }
-    return spec;
+    return this._deriveIllustration(question, lang);
   }
 
-  static _steps(animation) {
-    if (Array.isArray(animation)) return animation;
-    if (Array.isArray(animation?.steps)) return animation.steps;
-    return [];
-  }
+  static _deriveIllustration(question, lang) {
+    if (!question) return null;
+    const answer = this._answerLabel(question);
+    const haystack = [question.question, answer, question.explanation, ...(question.options || [])].join(" ");
+    const equation = this._deriveEquation(haystack);
+    if (equation) {
+      return {
+        type: "equation",
+        title: lang === "vi" ? "Hoạt cảnh phép tính tương tự" : "Similar equation scene",
+        example: equation.label,
+        formula: equation.label,
+        leftCount: equation.left,
+        rightCount: equation.right,
+        total: equation.total,
+        takeaway: lang === "vi"
+          ? "Hai nhóm giá trị nhập lại thành tổng cuối cùng."
+          : "Two value groups merge into the final total.",
+      };
+    }
 
-  static _scene(template, steps, result) {
-    if (template === "code_trace") return this._codeTraceScene(steps, result);
-    if (template === "equation_steps") return this._equationScene(steps, result);
-    if (template === "physics_motion") return this._physicsScene(steps, result);
-    return this._flowScene(steps, template, result);
-  }
+    if (question.type === "drag_drop") {
+      const items = (question.options || []).slice(0, 4);
+      return {
+        type: "sorting",
+        title: lang === "vi" ? "Hoạt cảnh sắp xếp tương tự" : "Similar sorting scene",
+        example: lang === "vi" ? "Các thẻ được đưa vào đúng vị trí" : "Cards move into their correct slots",
+        items,
+        takeaway: this._clip(items.join(" → "), 180),
+      };
+    }
 
-  static _flowScene(steps, template, result) {
-    return `
-      <div class="quiz-animation-scene quiz-animation-scene--flow">
-        <div class="quiz-animation-flow-line"></div>
-        <div class="quiz-animation-runner"></div>
-        ${steps.map((step, index) => {
-          const pos = steps.length <= 1 ? 50 : 12 + ((76 * index) / (steps.length - 1));
-          return `
-          <span class="quiz-animation-node" style="--idx:${index}; --pos:${pos}%">
-            <b>${this._icon(template, index)}</b>
-            <small>${this._escape(this._shortText(step, 18))}</small>
-          </span>`;
-        }).join("")}
-        <div class="quiz-animation-pulse-core">
-          <i class="fas ${result === "correct" ? "fa-check" : "fa-rotate-right"}"></i>
-        </div>
-      </div>
-    `;
-  }
-
-  static _codeTraceScene(steps, result) {
-    const labels = steps.length ? steps : ["Read input", "Check logic", "Return result"];
-    return `
-      <div class="quiz-animation-scene quiz-animation-scene--code">
-        <div class="quiz-code-window">
-          <div class="quiz-code-dots"><span></span><span></span><span></span></div>
-          <pre>${labels.map((step, index) => `<code style="--idx:${index}">${this._escape(this._shortText(step, 42))}</code>`).join("")}</pre>
-          <span class="quiz-code-cursor"></span>
-        </div>
-        <div class="quiz-animation-pulse-core">
-          <i class="fas ${result === "correct" ? "fa-check" : "fa-bug"}"></i>
-        </div>
-      </div>
-    `;
-  }
-
-  static _equationScene(steps, result) {
-    return `
-      <div class="quiz-animation-scene quiz-animation-scene--equation">
-        ${steps.map((step, index) => `
-          <span class="quiz-equation-tile" style="--idx:${index}">
-            <b>${index + 1}</b>
-            <small>${this._escape(this._shortText(step, 22))}</small>
-          </span>
-        `).join("")}
-        <span class="quiz-equation-equals">=</span>
-        <span class="quiz-equation-result"><i class="fas ${result === "correct" ? "fa-check" : "fa-xmark"}"></i></span>
-      </div>
-    `;
-  }
-
-  static _physicsScene(steps, result) {
-    const coords = [
-      { x: 10, y: 65 },
-      { x: 34, y: 24 },
-      { x: 62, y: 48 },
-      { x: 84, y: 25 },
-    ];
-    return `
-      <div class="quiz-animation-scene quiz-animation-scene--physics">
-        <svg class="quiz-physics-path" viewBox="0 0 360 180" aria-hidden="true">
-          <path d="M35 135 C95 30, 170 30, 225 95 S300 155, 335 55"></path>
-        </svg>
-        <span class="quiz-physics-ball"><i class="fas ${result === "correct" ? "fa-check" : "fa-exclamation"}"></i></span>
-        ${steps.map((step, index) => `
-          <span class="quiz-physics-marker" style="--idx:${index}; --x:${coords[index % coords.length].x}%; --y:${coords[index % coords.length].y}%">${index + 1}</span>
-        `).join("")}
-      </div>
-    `;
-  }
-
-  static _caption(step, index) {
-    const text = typeof step === "string" ? step : (step.text || step.title || "");
-    const detail = typeof step === "string" ? "" : (step.detail || step.description || "");
-    return `
-      <article class="quiz-animation-caption" style="--idx:${index}">
-        <span>${index + 1}</span>
-        <div>
-          <strong>${this._escape(text)}</strong>
-          ${detail ? `<small>${this._escape(detail)}</small>` : ""}
-        </div>
-      </article>
-    `;
-  }
-
-  static _isGenericSpec(spec) {
-    const text = [
-      spec?.correctTitle,
-      spec?.wrongTitle,
-      ...(spec?.correctAnimation?.steps || []),
-      ...(spec?.wrongAnimation?.steps || []),
-    ].map(item => {
-      if (typeof item === "string") return item;
-      return `${item?.text || ""} ${item?.detail || ""}`;
-    }).join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    return [
-      "find the mismatch",
-      "compare your choice",
-      "return to the concept",
-      "choose by evidence",
-      "prefer the answer",
-      "read the prompt",
-      "match the evidence",
-      "review the idea",
-      "tim diem lech",
-      "khoanh vung loi",
-      "quay lai khai niem",
-      "chon theo bang chung",
-      "doi chieu du kien",
-      "xac dinh yeu cau",
-      "ghi nho y chinh",
-    ].some(phrase => text.includes(phrase));
-  }
-
-  static _fallbackSpec(question, lang = "vi") {
-    const isVi = lang === "vi";
-    const answer = this._answerLabel(question, lang);
-    const focus = this._questionFocus(question, isVi);
-    const explanation = this._clip(question?.explanation, 190) || (isVi
-      ? "Giải thích dựa trực tiếp trên nội dung bài học của câu hỏi này."
-      : "The explanation follows the lesson content for this question.");
-    const prompt = this._clip(question?.question, 190);
-    const isDrag = question?.type === "drag_drop";
-
+    const items = this._conceptItems(answer || question.explanation || question.question, question.options);
     return {
-      template: isDrag ? "concept_flow" : "generic_steps",
-      correctTitle: isVi ? "Animation câu hỏi" : "Question animation",
-      wrongTitle: isVi ? "Giải thích câu hỏi" : "Question explanation",
-      correctAnimation: {
-        steps: [
-          {
-            text: focus,
-            detail: prompt,
-          },
-          {
-            text: answer ? (isVi ? `Đáp án: ${this._clip(answer, 55)}` : `Answer: ${this._clip(answer, 55)}`) : (isVi ? "Ý chính của câu hỏi" : "Question key idea"),
-            detail: answer || explanation,
-          },
-          {
-            text: isVi ? "Vì sao đúng" : "Why it is correct",
-            detail: explanation,
-          },
-        ],
-      },
-      wrongAnimation: {
-        steps: [
-          {
-            text: focus,
-            detail: prompt,
-          },
-          {
-            text: answer ? (isVi ? `Đáp án đúng: ${this._clip(answer, 48)}` : `Correct answer: ${this._clip(answer, 48)}`) : (isVi ? "Khái niệm đúng" : "Correct concept"),
-            detail: answer || explanation,
-          },
-          {
-            text: isVi ? "Giải thích kiến thức" : "Concept explanation",
-            detail: explanation,
-          },
-        ],
-      },
+      type: "concept",
+      title: lang === "vi" ? "Hoạt cảnh ví dụ minh họa" : "Illustrative example scene",
+      example: this._conceptExample(items, lang),
+      items,
+      target: this._conceptTarget(question, lang),
+      takeaway: answer || question.explanation || "",
     };
   }
 
-  static _answerLabel(question, lang = "vi") {
+  static _sceneType(type, question) {
+    const normalized = String(type || "").toLowerCase();
+    if (["equation", "math", "equation_steps"].includes(normalized)) return "equation";
+    if (["sorting", "sequence", "drag_drop", "concept_flow"].includes(normalized) && question?.type === "drag_drop") return "sorting";
+    if (["motion", "physics", "physics_motion"].includes(normalized)) return "motion";
+    if (["code", "code_trace"].includes(normalized)) return "code";
+    return "concept";
+  }
+
+  static _scene(sceneType, illustration, question, result, lang) {
+    if (sceneType === "equation") return this._equationScene(illustration, result);
+    if (sceneType === "sorting") return this._sortingScene(illustration, lang);
+    if (sceneType === "motion") return this._motionScene(illustration, result);
+    if (sceneType === "code") return this._codeScene(illustration, question, result);
+    return this._conceptScene(illustration, result, lang);
+  }
+
+  static _equationScene(illustration, result) {
+    const left = this._safeCount(illustration.leftCount, 2);
+    const right = this._safeCount(illustration.rightCount, 2);
+    const total = this._safeCount(illustration.total, left + right);
+    const formula = illustration.formula || illustration.example || `${left} + ${right} = ${total}`;
+    return `
+      <div class="quiz-illustration-scene quiz-illustration-scene--equation">
+        <div class="quiz-illustration-dots is-left">
+          ${Array.from({ length: left }).map((_, index) => `<i style="--idx:${index}"></i>`).join("")}
+        </div>
+        <b class="quiz-illustration-plus">+</b>
+        <div class="quiz-illustration-dots is-right">
+          ${Array.from({ length: right }).map((_, index) => `<i style="--idx:${index}"></i>`).join("")}
+        </div>
+        <b class="quiz-illustration-equals">=</b>
+        <div class="quiz-illustration-total">
+          ${Array.from({ length: total }).map((_, index) => `<i style="--idx:${index}"></i>`).join("")}
+        </div>
+        <strong class="quiz-illustration-formula">${this._escape(formula)}</strong>
+        <span class="quiz-illustration-final-mark"><i class="fas ${result === "correct" ? "fa-check" : "fa-lightbulb"}"></i></span>
+      </div>
+    `;
+  }
+
+  static _conceptScene(illustration, result, lang) {
+    const items = this._items(illustration.items, lang).slice(0, 3);
+    const target = illustration.target || (lang === "vi" ? "Kết luận" : "Result");
+    return `
+      <div class="quiz-illustration-scene quiz-illustration-scene--concept">
+        <div class="quiz-concept-source">
+          ${items.map((item, index) => `
+            <span style="--idx:${index}">
+              <i class="fas ${this._conceptIcon(index)}"></i>
+              <b>${this._escape(this._clip(item, 24))}</b>
+            </span>
+          `).join("")}
+        </div>
+        <div class="quiz-concept-target">
+          <i class="fas ${result === "correct" ? "fa-bullseye" : "fa-lightbulb"}"></i>
+          <strong>${this._escape(this._clip(target, 38))}</strong>
+        </div>
+        <svg class="quiz-concept-beam" viewBox="0 0 420 220" aria-hidden="true">
+          <path d="M88 72 C160 30, 230 40, 318 92"></path>
+          <path d="M88 150 C160 190, 235 182, 318 132"></path>
+        </svg>
+      </div>
+    `;
+  }
+
+  static _sortingScene(illustration, lang) {
+    const items = this._items(illustration.items, lang).slice(0, 4);
+    return `
+      <div class="quiz-illustration-scene quiz-illustration-scene--sorting">
+        <div class="quiz-sort-stack">
+          ${items.map((item, index) => `<span style="--idx:${index}">${this._escape(this._clip(item, 24))}</span>`).join("")}
+        </div>
+        <div class="quiz-sort-slots">
+          ${items.map((item, index) => `<b style="--idx:${index}">${index + 1}</b>`).join("")}
+        </div>
+        <strong class="quiz-sort-finish">${lang === "vi" ? "Đúng thứ tự" : "Correct order"}</strong>
+      </div>
+    `;
+  }
+
+  static _motionScene(illustration, result) {
+    return `
+      <div class="quiz-illustration-scene quiz-illustration-scene--motion">
+        <svg class="quiz-motion-path" viewBox="0 0 480 240" aria-hidden="true">
+          <path d="M42 178 C120 52, 220 46, 286 132 S390 220, 438 70"></path>
+        </svg>
+        <span class="quiz-motion-object"><i class="fas ${result === "correct" ? "fa-check" : "fa-lightbulb"}"></i></span>
+        <strong class="quiz-motion-label">${this._escape(this._clip(illustration.example || illustration.caption || "", 58))}</strong>
+      </div>
+    `;
+  }
+
+  static _codeScene(illustration, question, result) {
+    const answer = this._answerLabel(question) || illustration.example || "result";
+    return `
+      <div class="quiz-illustration-scene quiz-illustration-scene--code">
+        <div class="quiz-mini-code">
+          <span></span><span></span><span></span>
+          <code>input → check</code>
+          <code>rule → ${this._escape(this._clip(answer, 34))}</code>
+          <code>output → ${result === "correct" ? "ok" : "learn"}</code>
+        </div>
+      </div>
+    `;
+  }
+
+  static _deriveEquation(text) {
+    const match = String(text || "").match(/(\d+)\s*([+\-x×*])\s*(\d+)\s*=\s*(\d+)/);
+    if (!match) return null;
+    const a = Math.min(6, Math.max(1, Number(match[1]) + 1));
+    const b = Math.min(6, Math.max(1, Number(match[3]) + 1));
+    const op = match[2];
+    const total = op === "-" ? Math.max(1, a - b) : a + b;
+    return { left: a, right: op === "-" ? b : b, total, label: `${a} ${op === "*" || op === "x" ? "+" : op} ${b} = ${total}` };
+  }
+
+  static _conceptItems(text, options = []) {
+    const source = String(text || "");
+    const explicit = source
+      .split(/,|;|\/|\+|\bvà\b|\band\b/gi)
+      .map(item => item.replace(/[.:"'()]/g, "").trim())
+      .filter(item => item.length >= 2 && item.length <= 42);
+    const acronyms = source.match(/\b[A-Z][A-Z0-9+#.-]{1,}\b/g) || [];
+    const optionItems = (options || []).slice(0, 3).filter(item => String(item).length <= 42);
+    return [...new Set([...acronyms, ...explicit, ...optionItems])].slice(0, 3);
+  }
+
+  static _conceptExample(items, lang) {
+    if (items.length >= 2) {
+      return lang === "vi"
+        ? `${items[0]} và ${items[1]} cùng đi vào một tình huống minh họa.`
+        : `${items[0]} and ${items[1]} move into one example situation.`;
+    }
+    return lang === "vi" ? "Một ví dụ tương tự được mô phỏng bằng hoạt cảnh." : "A similar example is shown as a short scene.";
+  }
+
+  static _conceptTarget(question, lang) {
+    if (question?.type === "multiple_choice") return lang === "vi" ? "Ý đúng" : "Correct idea";
+    if (question?.type === "true_false") return lang === "vi" ? "Nhận định đúng" : "True statement";
+    if (question?.type === "short_answer") return lang === "vi" ? "Từ khóa" : "Key term";
+    return lang === "vi" ? "Khái niệm" : "Concept";
+  }
+
+  static _answerLabel(question) {
     if (!question) return "";
     if (question.type === "drag_drop") {
       const options = Array.isArray(question.options) ? question.options : [];
       const order = Array.isArray(question.correctAnswer) ? question.correctAnswer : options.map((_, index) => index);
       return order.map(index => options[index]).filter(Boolean).join(" → ");
     }
-    if (question.type === "short_answer") {
-      return this._clip(question.correctAnswer, 150);
-    }
+    if (question.type === "short_answer") return this._clip(question.correctAnswer, 150);
     const options = Array.isArray(question.options) ? question.options : [];
     const index = Number(question.correctAnswer);
     if (Number.isInteger(index) && options[index]) return this._clip(options[index], 150);
-    if (typeof question.correctAnswer === "string" && question.correctAnswer.trim()) {
-      return this._clip(question.correctAnswer, 150);
-    }
-    return "";
+    return typeof question.correctAnswer === "string" ? this._clip(question.correctAnswer, 150) : "";
   }
 
-  static _questionFocus(question, isVi) {
-    const raw = this._clip(question?.question, 80);
-    if (!raw) return isVi ? "Nội dung câu hỏi" : "Question concept";
-    const cleaned = raw
-      .replace(/^(theo bài học|according to the lesson|true or false|đúng hay sai)[:,\s]*/i, "")
-      .replace(/\?+$/, "")
-      .trim();
-    return this._clip(cleaned || raw, 58);
+  static _items(items, lang) {
+    const clean = Array.isArray(items)
+      ? items.map(item => String(item || "").trim()).filter(Boolean)
+      : [];
+    return clean.length ? clean : (lang === "vi" ? ["Ví dụ A", "Ví dụ B", "Kết quả"] : ["Example A", "Example B", "Result"]);
+  }
+
+  static _safeCount(value, fallback) {
+    return Math.min(8, Math.max(1, Number.parseInt(value, 10) || fallback));
+  }
+
+  static _conceptIcon(index) {
+    return ["fa-database", "fa-diagram-project", "fa-screwdriver-wrench"][index % 3];
+  }
+
+  static _defaultCaption(question, lang) {
+    const answer = this._answerLabel(question);
+    if (answer) return answer;
+    return lang === "vi" ? "Một ví dụ cùng bản chất với đáp án." : "An example with the same idea as the answer.";
   }
 
   static _clip(value, max = 120) {
@@ -265,33 +280,11 @@ export class QuizAnimationPlayer {
     return `${clean.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
   }
 
-  static _template(template) {
-    const allowed = new Set(["code_trace", "equation_steps", "physics_motion", "concept_flow", "generic_steps"]);
-    return allowed.has(template) ? template : "generic_steps";
-  }
-
-  static _icon(template, index) {
-    const icons = {
-      code_trace: ["{ }", "if", "=>", "✓"],
-      equation_steps: ["1", "2", "=", "✓"],
-      physics_motion: ["●", "→", "↗", "✓"],
-      concept_flow: ["A", "B", "C", "✓"],
-      generic_steps: ["1", "2", "3", "✓"],
-    };
-    const list = icons[template] || icons.generic_steps;
-    return list[index % list.length];
-  }
-
-  static _shortText(step, max = 24) {
-    const text = typeof step === "string" ? step : (step.text || step.title || "");
-    const clean = String(text).replace(/\s+/g, " ").trim();
-    return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean;
-  }
-
   static _escape(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 }
