@@ -402,7 +402,7 @@ export class CourseView {
               </button>
               ${nextLesson ? `
                 <button class="btn btn-lg btn-outline-primary" id="nextLessonBtn" data-next-lesson-id="${this._attr(nextLesson.id)}">
-                  <i class="fas fa-arrow-right mr-2"></i>${isCompleted ? t.next : t.finishNext}
+                  <i class="fas fa-arrow-right mr-2"></i>${t.next}
                 </button>
               ` : ""}
             </div>

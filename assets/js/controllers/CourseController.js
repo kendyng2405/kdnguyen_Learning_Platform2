@@ -155,7 +155,6 @@ export class CourseController {
       const nextLessonId = btn.dataset.nextLessonId;
       if (!nextLessonId) return;
       btn.disabled = true;
-      await markComplete({ silent: true });
       this.app.navigate("lesson", courseId, nextLessonId);
     });
 
