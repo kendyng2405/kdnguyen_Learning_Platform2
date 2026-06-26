@@ -4,9 +4,9 @@
 
 export class AuthView {
 
-  renderLanding(lang) {
+  renderLanding(lang, isLoggedIn = false) {
     const t = lang === "vi" ? {
-      login: "Đăng nhập",
+      login: isLoggedIn ? "Vào dashboard" : "Đăng nhập",
       badge: "Nền tảng học tập cá nhân hóa bằng AI",
       title: "Brilliant LMS",
       sub: "Học theo lộ trình riêng, làm quiz có phản hồi tức thì, theo dõi deadline và nhận chứng chỉ khi hoàn thành khóa học.",
@@ -29,7 +29,7 @@ export class AuthView {
       ctaTitle: "Bắt đầu với Brilliant LMS hôm nay",
       ctaSub: "Một nền tảng gọn, đẹp và có AI hỗ trợ đúng lúc.",
     } : {
-      login: "Sign in",
+      login: isLoggedIn ? "Go to dashboard" : "Sign in",
       badge: "AI-personalized learning platform",
       title: "Brilliant LMS",
       sub: "Follow a personal path, get instant quiz feedback, track deadlines, and earn certificates when courses are completed.",

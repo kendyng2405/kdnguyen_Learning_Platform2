@@ -3,7 +3,7 @@
 // ============================================================
 
 import { AuthModel } from "../models/AuthModel.js?v=10";
-import { AuthView }  from "../views/AuthView.js?v=11";
+import { AuthView }  from "../views/AuthView.js?v=12";
 
 export class AuthController {
   constructor(app) {
@@ -16,12 +16,16 @@ export class AuthController {
   showLandingPage() {
     const lang = window.__i18n.current;
     this.app._showAppChrome?.(false);
-    const html = this.view.renderLanding(lang);
+    const html = this.view.renderLanding(lang, !!this.app.getUser());
     this._renderPage(html, "landing");
     this._bindLandingPage();
   }
 
   showLoginPage() {
+    if (this.app.getUser()) {
+      this.app.navigate("dashboard");
+      return;
+    }
     const lang = window.__i18n.current;
     const html = this.view.renderLogin(lang);
     this._renderPage(html, "login");
@@ -29,6 +33,10 @@ export class AuthController {
   }
 
   showRegisterPage(role = "student") {
+    if (this.app.getUser() && !this.isCompletingOnboarding) {
+      this.app.navigate("dashboard");
+      return;
+    }
     const lang = window.__i18n.current;
     const html = this.view.renderRegister(lang, role);
     this._renderPage(html, "register");
@@ -36,9 +44,16 @@ export class AuthController {
   }
 
   _bindLandingPage() {
-    document.getElementById("landingStudentBtn")?.addEventListener("click", () => this.app.navigate("register", "student"));
-    document.getElementById("landingTeacherBtn")?.addEventListener("click", () => this.app.navigate("register", "teacher"));
-    document.getElementById("landingLoginBtn")?.addEventListener("click", () => this.app.navigate("login"));
+    const goToAuth = (target, role = null) => {
+      if (this.app.getUser()) {
+        this.app.navigate("dashboard");
+        return;
+      }
+      this.app.navigate(target, ...(role ? [role] : []));
+    };
+    document.getElementById("landingStudentBtn")?.addEventListener("click", () => goToAuth("register", "student"));
+    document.getElementById("landingTeacherBtn")?.addEventListener("click", () => goToAuth("register", "teacher"));
+    document.getElementById("landingLoginBtn")?.addEventListener("click", () => goToAuth("login"));
   }
 
   async logout() {

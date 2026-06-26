@@ -3,7 +3,7 @@
 //  Argon Dashboard layout with sidebar + top navbar
 // ============================================================
 
-import { AuthController }         from "./controllers/AuthController.js?v=11";
+import { AuthController }         from "./controllers/AuthController.js?v=12";
 import { CourseController }       from "./controllers/CourseController.js?v=14";
 import { QuizController }         from "./controllers/QuizController.js?v=19";
 import { ProgressController }     from "./controllers/ProgressController.js?v=11";
@@ -211,6 +211,11 @@ export class App {
 
   // ── Public navigate (pushes history) ─────────────────────
   navigate(page, ...args) {
+    if (this.currentUser && !this.authController?.isCompletingOnboarding && (page === "login" || page === "register")) {
+      page = "dashboard";
+      args = [];
+    }
+
     const pathMap = {
       dashboard: "/home",
       courses:   "/courses",
@@ -237,6 +242,13 @@ export class App {
 
   // ── Internal route dispatch ───────────────────────────────
   _dispatchRoute(path, pushState = true, ...args) {
+    const authOnlyPath = path === "/login" || path === "/register" || /^\/register\/(teacher|student)$/.test(path);
+    if (this.currentUser && authOnlyPath && !this.authController?.isCompletingOnboarding) {
+      this.currentPath = "/home";
+      history.replaceState({ path: "/home" }, "", "/home");
+      return this._dispatchRoute("/home", false);
+    }
+
     this.currentPath = path;
 
     // Update sidebar active state
