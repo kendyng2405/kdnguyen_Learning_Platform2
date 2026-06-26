@@ -179,9 +179,10 @@ export class App {
         const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quizzes", "/quiz", "/progress", "/leaderboard", "/calendar", "/missions", "/tracking", "/certificate", "/admin", "/profile"];
         const cur = this._getCurrentPath();
         if (protectedPaths.some(p => cur.startsWith(p))) {
-          this._dispatchRoute("/login", false);
+          history.replaceState({ path: "/" }, "", "/");
+          this._dispatchRoute("/", false);
         } else {
-          this._dispatchRoute(cur || "/login", false);
+          this._dispatchRoute(cur || "/", false);
         }
       }
 
