@@ -3,7 +3,7 @@
 //  Argon Dashboard layout with sidebar + top navbar
 // ============================================================
 
-import { AuthController }         from "./controllers/AuthController.js?v=12";
+import { AuthController }         from "./controllers/AuthController.js?v=13";
 import { CourseController }       from "./controllers/CourseController.js?v=15";
 import { QuizController }         from "./controllers/QuizController.js?v=19";
 import { ProgressController }     from "./controllers/ProgressController.js?v=11";
@@ -250,6 +250,12 @@ export class App {
     }
 
     this.currentPath = path;
+
+    // Force app chrome for protected routes to prevent missing navbar/sidebar issues
+    const protectedPaths = ["/home", "/courses", "/course", "/lesson", "/quizzes", "/quiz", "/progress", "/leaderboard", "/calendar", "/missions", "/tracking", "/certificate", "/admin", "/profile"];
+    if (this.currentUser && protectedPaths.some(p => path === p || path.startsWith(p + "/"))) {
+      this._showAppChrome(true);
+    }
 
     // Update sidebar active state
     document.querySelectorAll("#sidenav-main .nav-link").forEach(l => {
