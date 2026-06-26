@@ -4,7 +4,7 @@
 // ============================================================
 
 import { AuthController }         from "./controllers/AuthController.js?v=13";
-import { CourseController }       from "./controllers/CourseController.js?v=15";
+import { CourseController }       from "./controllers/CourseController.js?v=16";
 import { QuizController }         from "./controllers/QuizController.js?v=19";
 import { ProgressController }     from "./controllers/ProgressController.js?v=11";
 import { AdminController }        from "./controllers/AdminController.js?v=20";

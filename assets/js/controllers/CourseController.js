@@ -4,7 +4,7 @@
 
 import { CourseModel } from "../models/CourseModel.js?v=10";
 import { QuizModel }   from "../models/QuizModel.js?v=12";
-import { CourseView }  from "../views/CourseView.js?v=14";
+import { CourseView }  from "../views/CourseView.js?v=15";
 
 export class CourseController {
   constructor(app) {
