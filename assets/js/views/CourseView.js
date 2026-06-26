@@ -351,14 +351,18 @@ export class CourseView {
     `;
   }
 
-  renderLesson(course, lesson, progress, lang) {
+  renderLesson(course, lesson, progress, lang, navigation = {}) {
     const isCompleted = progress?.completedLessons?.includes(lesson.id);
+    const preparedLesson = this._prepareLessonContent(lesson, lang);
+    const nextLesson = navigation.nextLesson || null;
     const t = lang === "vi" ? {
       back: "← Quay lại khóa học", markDone: "Đánh dấu hoàn thành",
       completed: "✓ Đã hoàn thành", material: "Tài liệu đính kèm", openDoc: "Mở tài liệu",
+      next: "Bài tiếp theo", finishNext: "Hoàn thành & sang bài tiếp",
     } : {
       back: "← Back to course", markDone: "Mark as Complete",
       completed: "✓ Completed", material: "Attached Material", openDoc: "Open Document",
+      next: "Next lesson", finishNext: "Complete & next lesson",
     };
 
     return `
@@ -379,8 +383,12 @@ export class CourseView {
             ${lesson.videoUrl ? `
               <div class="video-container mb-4">${this._embedVideo(lesson.videoUrl)}</div>
             ` : ""}
-            ${lesson.content ? `
-              <div class="lesson-content-body">${this._parseContent(lesson.content)}</div>
+            ${preparedLesson.content ? `
+              <div class="lesson-content-body">${this._parseContent(preparedLesson.content)}</div>
+            ` : ""}
+            ${preparedLesson.miniQuiz.length ? this._renderLessonMiniQuiz(preparedLesson.miniQuiz, lang) : ""}
+            ${preparedLesson.contentAfter ? `
+              <div class="lesson-content-body lesson-content-body--after-quiz">${this._parseContent(preparedLesson.contentAfter)}</div>
             ` : ""}
             ${lesson.docUrl ? `
               <div class="mt-4 p-3 bg-secondary rounded">
@@ -388,10 +396,15 @@ export class CourseView {
                 <a href="${lesson.docUrl}" target="_blank" class="btn btn-sm btn-primary">${t.openDoc} ↗</a>
               </div>
             ` : ""}
-            <div class="mt-4 text-center">
+            <div class="lesson-actions-bar mt-4">
               <button class="btn btn-lg ${isCompleted ? 'btn-success' : 'btn-primary'}" id="markCompleteBtn" ${isCompleted ? 'disabled' : ''}>
                 ${isCompleted ? t.completed : t.markDone}
               </button>
+              ${nextLesson ? `
+                <button class="btn btn-lg btn-outline-primary" id="nextLessonBtn" data-next-lesson-id="${this._attr(nextLesson.id)}">
+                  <i class="fas fa-arrow-right mr-2"></i>${isCompleted ? t.next : t.finishNext}
+                </button>
+              ` : ""}
             </div>
           </div>
         </div>
@@ -516,6 +529,293 @@ export class CourseView {
       return `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" allowfullscreen></iframe>`;
     }
     return `<video controls src="${url}" class="lesson-video"></video>`;
+  }
+
+  _prepareLessonContent(lesson, lang) {
+    const sourceContent = String(lesson?.content || "");
+    const storedQuiz = this._normalizeMiniQuiz(lesson?.miniQuiz || lesson?.videoQuiz || lesson?.lessonQuiz || [], lang);
+    const markerSplit = this._splitMiniQuizMarker(sourceContent);
+    if (storedQuiz.length) {
+      return {
+        content: markerSplit ? markerSplit.before : sourceContent,
+        contentAfter: markerSplit ? markerSplit.after : "",
+        miniQuiz: storedQuiz,
+      };
+    }
+
+    const extracted = this._extractLessonMiniQuiz(sourceContent, lang);
+    return {
+      content: extracted.questions.length ? extracted.before : sourceContent,
+      contentAfter: extracted.questions.length ? extracted.after : "",
+      miniQuiz: extracted.questions,
+    };
+  }
+
+  _splitMiniQuizMarker(content) {
+    const marker = "<!-- lesson-mini-quiz -->";
+    const index = String(content || "").indexOf(marker);
+    if (index < 0) return null;
+    return {
+      before: content.slice(0, index).trim(),
+      after: content.slice(index + marker.length).trim(),
+    };
+  }
+
+  _renderLessonMiniQuiz(questions, lang) {
+    const t = lang === "vi" ? {
+      kicker: "Mini quiz",
+      title: "Kiểm tra nhanh sau video",
+      sub: "Chọn đáp án để tự kiểm tra xem bạn đã nắm ý chính chưa.",
+      question: "Câu",
+      correct: "Chính xác",
+      wrong: "Chưa đúng",
+      correctAnswer: "Đáp án đúng",
+    } : {
+      kicker: "Mini quiz",
+      title: "Quick check after the video",
+      sub: "Pick an answer to check whether you caught the main idea.",
+      question: "Question",
+      correct: "Correct",
+      wrong: "Not quite",
+      correctAnswer: "Correct answer",
+    };
+
+    return `
+      <section class="lesson-mini-quiz" id="lessonMiniQuiz">
+        <div class="lesson-mini-quiz-head">
+          <span><i class="fas fa-circle-question mr-2"></i>${t.kicker}</span>
+          <h2>${t.title}</h2>
+          <p>${t.sub}</p>
+        </div>
+        <div class="lesson-mini-quiz-list">
+          ${questions.map((question, questionIndex) => {
+            const correctIndex = this._safeCorrectIndex(question);
+            const correctText = question.options?.[correctIndex] || "";
+            return `
+              <article class="lesson-mini-quiz-card" data-mini-quiz-question="${questionIndex}">
+                <div class="lesson-mini-quiz-number">${t.question} ${questionIndex + 1}</div>
+                <h3>${this._escape(question.question)}</h3>
+                <div class="lesson-mini-quiz-options">
+                  ${(question.options || []).map((option, optionIndex) => `
+                    <button
+                      type="button"
+                      class="lesson-mini-quiz-option"
+                      data-mini-quiz-option
+                      data-question-index="${questionIndex}"
+                      data-option-index="${optionIndex}"
+                      data-correct="${optionIndex === correctIndex ? "true" : "false"}"
+                    >
+                      <span>${String.fromCharCode(65 + optionIndex)}</span>
+                      <strong>${this._escape(option)}</strong>
+                    </button>
+                  `).join("")}
+                </div>
+                <div class="lesson-mini-quiz-feedback" data-mini-quiz-feedback="${questionIndex}" data-correct-label="${this._attr(correctText)}">
+                  <strong data-mini-quiz-feedback-title></strong>
+                  <p data-mini-quiz-feedback-text></p>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  _extractLessonMiniQuiz(content, lang) {
+    const source = String(content || "").replace(/\r/g, "\n");
+    const block = this._findLessonMiniQuizBlock(source);
+    if (!block) return { content: source.trim(), questions: [] };
+
+    const questions = this._parseLessonMiniQuizBlock(block.text, lang);
+    if (!questions.length) return { content: source.trim(), questions: [] };
+
+    const before = source.slice(0, block.start).trim();
+    const after = source.slice(block.end).trim();
+    return {
+      content: [before, after].filter(Boolean).join("\n\n").trim(),
+      before,
+      after,
+      questions,
+    };
+  }
+
+  _findLessonMiniQuizBlock(content) {
+    const lines = content.split("\n");
+    let offset = 0;
+    let startLine = -1;
+    let startOffset = 0;
+
+    for (let i = 0; i < lines.length; i += 1) {
+      if (this._isMiniQuizHeading(lines[i])) {
+        startLine = i;
+        startOffset = offset;
+        break;
+      }
+      offset += lines[i].length + 1;
+    }
+
+    if (startLine < 0) return null;
+
+    let endLine = lines.length;
+    for (let i = startLine + 1; i < lines.length; i += 1) {
+      if (this._isPostMiniQuizHeading(lines[i])) {
+        endLine = i;
+        break;
+      }
+    }
+
+    const endOffset = lines.slice(0, endLine).join("\n").length + (endLine < lines.length ? 1 : 0);
+    return {
+      start: startOffset,
+      end: endOffset,
+      text: lines.slice(startLine, endLine).join("\n"),
+    };
+  }
+
+  _isMiniQuizHeading(line) {
+    const normalized = this._normalizeText(line)
+      .replace(/^#+\s*/, "")
+      .replace(/^\d+[\.)]\s*/, "")
+      .trim();
+    return normalized.length <= 90
+      && /(mini quiz|quiz mini|cau hoi trac nghiem|trac nghiem|multiple choice|quick check)/.test(normalized);
+  }
+
+  _isPostMiniQuizHeading(line) {
+    const normalized = this._normalizeText(line)
+      .replace(/^#+\s*/, "")
+      .replace(/^\d+[\.)]\s*/, "")
+      .trim();
+    return normalized.length <= 100
+      && /(flashcard|the ghi nho|ghi nho|ket luan|conclusion|tai lieu|references|bai tap|assignment)/.test(normalized);
+  }
+
+  _parseLessonMiniQuizBlock(block, lang) {
+    const questions = [];
+    let current = null;
+
+    const commit = () => {
+      if (!current) return;
+      const options = current.options.filter(Boolean).slice(0, 4);
+      const correctAnswer = Number.isInteger(current.correctAnswer) ? current.correctAnswer : 0;
+      if (current.question.length >= 8 && options.length >= 2 && correctAnswer >= 0 && correctAnswer < options.length) {
+        questions.push({
+          id: `mini_${questions.length + 1}`,
+          type: "multiple_choice",
+          question: current.question,
+          options,
+          correctAnswer,
+          explanation: current.explanation || "",
+        });
+      }
+      current = null;
+    };
+
+    block.split("\n").forEach(rawLine => {
+      const line = this._cleanQuizLine(rawLine);
+      if (!line || this._isMiniQuizHeading(line)) return;
+
+      const answerMatch = line.match(/(?:đáp án đúng|đáp án|dap an dung|dap an|correct answer|answer)\s*[:：]?\s*([a-d])/i);
+      if (answerMatch && current) {
+        current.correctAnswer = answerMatch[1].toLowerCase().charCodeAt(0) - 97;
+        const explanation = line.replace(answerMatch[0], "").replace(/^[\s:：.)-]+/, "").trim();
+        if (explanation) current.explanation = explanation;
+        return;
+      }
+
+      const optionMatch = line.match(/^(?:[-*]\s*)?([a-dA-D])[\).:-]\s*(.+)$/);
+      if (optionMatch && current) {
+        current.options[optionMatch[1].toLowerCase().charCodeAt(0) - 97] = this._cleanQuizText(optionMatch[2]);
+        return;
+      }
+
+      const questionMatch = line.match(/^(?:[-*]\s*)?(?:câu|cau)?\s*(\d+)[\).]\s*(.+)$/i);
+      if (questionMatch) {
+        commit();
+        current = {
+          question: this._cleanQuizText(questionMatch[2]),
+          options: [],
+          correctAnswer: null,
+          explanation: "",
+        };
+        return;
+      }
+
+      if (current && !current.options.length) {
+        current.question = this._cleanQuizText(`${current.question} ${line}`);
+      }
+    });
+
+    commit();
+    return this._normalizeMiniQuiz(questions, lang);
+  }
+
+  _normalizeMiniQuiz(questions, lang) {
+    if (!Array.isArray(questions)) return [];
+    return questions.map((question, index) => {
+      const options = Array.isArray(question.options)
+        ? question.options.map(option => this._cleanQuizText(option)).filter(Boolean).slice(0, 4)
+        : [];
+      const correctAnswer = this._safeCorrectIndex({ ...question, options });
+      return {
+        id: question.id || `mini_${index + 1}`,
+        type: "multiple_choice",
+        question: this._cleanQuizText(question.question || question.q || ""),
+        options,
+        correctAnswer,
+        explanation: this._cleanQuizText(question.explanation || ""),
+      };
+    }).filter(question => question.question.length >= 8 && question.options.length >= 2);
+  }
+
+  _safeCorrectIndex(question) {
+    const options = Array.isArray(question.options) ? question.options : [];
+    if (typeof question.correctAnswer === "number" && question.correctAnswer >= 0 && question.correctAnswer < options.length) {
+      return question.correctAnswer;
+    }
+    const raw = String(question.correctAnswer ?? question.answer ?? "").trim();
+    if (/^[a-d]$/i.test(raw)) return raw.toLowerCase().charCodeAt(0) - 97;
+    const parsed = parseInt(raw, 10);
+    if (!Number.isNaN(parsed) && parsed >= 0 && parsed < options.length) return parsed;
+    const matched = options.findIndex(option => this._normalizeText(option) === this._normalizeText(raw));
+    return matched >= 0 ? matched : 0;
+  }
+
+  _cleanQuizLine(line) {
+    return this._cleanQuizText(line)
+      .replace(/^#{1,4}\s*/, "")
+      .replace(/^>\s*/, "")
+      .trim();
+  }
+
+  _cleanQuizText(value) {
+    return String(value ?? "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/[*_`]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  _normalizeText(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[đ]/g, "d")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  _escape(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  _attr(value) {
+    return this._escape(value).replace(/"/g, "&quot;");
   }
 
   _parseContent(content) {

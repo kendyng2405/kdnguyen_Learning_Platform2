@@ -4,10 +4,10 @@
 // ============================================================
 
 import { AuthController }         from "./controllers/AuthController.js?v=12";
-import { CourseController }       from "./controllers/CourseController.js?v=14";
+import { CourseController }       from "./controllers/CourseController.js?v=15";
 import { QuizController }         from "./controllers/QuizController.js?v=19";
 import { ProgressController }     from "./controllers/ProgressController.js?v=11";
-import { AdminController }        from "./controllers/AdminController.js?v=19";
+import { AdminController }        from "./controllers/AdminController.js?v=20";
 import { ChatbotController }      from "./controllers/ChatbotController.js?v=11";
 import { ProfileController }      from "./controllers/ProfileController.js?v=10";
 import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=11";

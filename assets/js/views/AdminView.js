@@ -486,6 +486,7 @@ export class AdminView {
               </div>
             </div>
             <textarea id="lessonContent" class="form-control" rows="8">${lesson?.content || ""}</textarea>
+            <textarea id="lessonMiniQuizData" style="display:none;">${this._escape(JSON.stringify(lesson?.miniQuiz || []))}</textarea>
           </div>
           <div class="d-flex justify-content-end" style="gap:0.5rem;">
             <button class="btn btn-secondary" id="cancelModal">${t.cancel}</button>

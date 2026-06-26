@@ -4,7 +4,7 @@
 
 import { CourseModel } from "../models/CourseModel.js?v=10";
 import { QuizModel }   from "../models/QuizModel.js?v=12";
-import { CourseView }  from "../views/CourseView.js?v=13";
+import { CourseView }  from "../views/CourseView.js?v=14";
 
 export class CourseController {
   constructor(app) {
@@ -104,9 +104,10 @@ export class CourseController {
 
   async showLesson(courseId, lessonId) {
     this._renderPage('<div class="page-loading"><div class="spinner-ring"></div></div>', "lesson");
-    const [course, lesson] = await Promise.all([
+    const [course, lesson, lessons] = await Promise.all([
       this.courseModel.getCourseById(courseId),
       this.courseModel.getLessonById(courseId, lessonId),
+      this.courseModel.getLessons(courseId),
     ]);
 
     if (!lesson) {
@@ -118,19 +119,48 @@ export class CourseController {
     const uid      = this.app.getUser().uid;
     const progress = await this.quizModel.getProgress(uid, courseId);
     const lang     = window.__i18n.current;
+    const navigation = this._lessonNavigation(lessons, lessonId);
 
-    const html = this.view.renderLesson(course, lesson, progress, lang);
+    const html = this.view.renderLesson(course, lesson, progress, lang, navigation);
     this._renderPage(html, "lesson");
 
-    // Mark complete button
-    document.getElementById("markCompleteBtn")?.addEventListener("click", async () => {
-      await this.quizModel.markLessonComplete(uid, courseId, lessonId);
-      window.__toast.success(lang === "vi" ? "Đã hoàn thành bài học! 🎉" : "Lesson completed! 🎉");
-      document.getElementById("markCompleteBtn").disabled = true;
-      document.getElementById("markCompleteBtn").textContent = lang === "vi" ? "✓ Đã hoàn thành" : "✓ Completed";
+    let completed = progress?.completedLessons?.includes(lessonId);
+    const markComplete = async ({ silent = false } = {}) => {
+      if (!completed) {
+        await this.quizModel.markLessonComplete(uid, courseId, lessonId);
+        completed = true;
+        if (!silent) {
+          window.__toast.success(lang === "vi" ? "Đã hoàn thành bài học! 🎉" : "Lesson completed! 🎉");
+        }
+      }
+
+      const markBtn = document.getElementById("markCompleteBtn");
+      if (markBtn) {
+        markBtn.disabled = true;
+        markBtn.classList.remove("btn-primary");
+        markBtn.classList.add("btn-success");
+        markBtn.textContent = lang === "vi" ? "✓ Đã hoàn thành" : "✓ Completed";
+      }
+
+      const nextBtn = document.getElementById("nextLessonBtn");
+      if (nextBtn) {
+        nextBtn.innerHTML = `<i class="fas fa-arrow-right mr-2"></i>${lang === "vi" ? "Bài tiếp theo" : "Next lesson"}`;
+      }
+    };
+
+    document.getElementById("markCompleteBtn")?.addEventListener("click", () => markComplete());
+
+    document.getElementById("nextLessonBtn")?.addEventListener("click", async (event) => {
+      const btn = event.currentTarget;
+      const nextLessonId = btn.dataset.nextLessonId;
+      if (!nextLessonId) return;
+      btn.disabled = true;
+      await markComplete({ silent: true });
+      this.app.navigate("lesson", courseId, nextLessonId);
     });
 
     document.getElementById("backToCourse")?.addEventListener("click", () => this.app.navigate("course", courseId));
+    this._bindLessonMiniQuiz(lang);
     
   }
 
@@ -212,6 +242,55 @@ export class CourseController {
         if (qid) this.app.navigate("quiz", courseId, qid);
       });
     });
+  }
+
+  _bindLessonMiniQuiz(lang) {
+    const t = lang === "vi" ? {
+      correct: "Chính xác",
+      wrong: "Chưa đúng",
+      correctAnswer: "Đáp án đúng",
+    } : {
+      correct: "Correct",
+      wrong: "Not quite",
+      correctAnswer: "Correct answer",
+    };
+
+    document.querySelectorAll("[data-mini-quiz-option]").forEach(button => {
+      button.addEventListener("click", () => {
+        const card = button.closest("[data-mini-quiz-question]");
+        if (!card || card.dataset.answered === "true") return;
+
+        card.dataset.answered = "true";
+        const isCorrect = button.dataset.correct === "true";
+        const options = card.querySelectorAll("[data-mini-quiz-option]");
+        options.forEach(option => {
+          option.disabled = true;
+          if (option.dataset.correct === "true") option.classList.add("is-correct");
+        });
+
+        button.classList.add(isCorrect ? "is-selected-correct" : "is-selected-wrong");
+
+        const feedback = card.querySelector("[data-mini-quiz-feedback]");
+        const title = feedback?.querySelector("[data-mini-quiz-feedback-title]");
+        const text = feedback?.querySelector("[data-mini-quiz-feedback-text]");
+        if (feedback && title && text) {
+          feedback.classList.add(isCorrect ? "is-correct" : "is-wrong", "show");
+          title.textContent = isCorrect ? t.correct : t.wrong;
+          text.textContent = isCorrect
+            ? (lang === "vi" ? "Bạn đã chọn đúng." : "You picked the right answer.")
+            : `${t.correctAnswer}: ${feedback.dataset.correctLabel || ""}`;
+        }
+      });
+    });
+  }
+
+  _lessonNavigation(lessons, lessonId) {
+    const safeLessons = Array.isArray(lessons) ? lessons : [];
+    const currentIndex = safeLessons.findIndex(lesson => lesson.id === lessonId);
+    return {
+      previousLesson: currentIndex > 0 ? safeLessons[currentIndex - 1] : null,
+      nextLesson: currentIndex >= 0 && currentIndex < safeLessons.length - 1 ? safeLessons[currentIndex + 1] : null,
+    };
   }
 
   _renderPage(html, name) {

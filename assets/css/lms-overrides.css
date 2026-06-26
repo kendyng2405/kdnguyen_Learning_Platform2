@@ -4019,6 +4019,210 @@ html[data-theme="dark"] .tracking-track {
   backdrop-filter: blur(10px);
 }
 
+.lesson-actions-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #edf1f6;
+}
+
+.lesson-actions-bar .btn {
+  min-width: 190px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+.lesson-mini-quiz {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border: 1px solid #e7edf6;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fbfdff 0%, #f7fafc 100%);
+}
+
+.lesson-mini-quiz-head {
+  margin-bottom: 1rem;
+}
+
+.lesson-mini-quiz-head span {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.45rem;
+  color: #5e72e4;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.lesson-mini-quiz-head h2 {
+  margin: 0;
+  color: #172b4d;
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.lesson-mini-quiz-head p {
+  max-width: 680px;
+  margin: 0.4rem 0 0;
+  color: #63708a;
+  line-height: 1.55;
+}
+
+.lesson-mini-quiz-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.lesson-mini-quiz-card {
+  padding: 1rem;
+  border: 1px solid #e9eef6;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.lesson-mini-quiz-number {
+  margin-bottom: 0.45rem;
+  color: #8898aa;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.lesson-mini-quiz-card h3 {
+  margin: 0 0 0.85rem;
+  color: #26324f;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.lesson-mini-quiz-options {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.lesson-mini-quiz-option {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 50px;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #e5eaf3;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #42526e;
+  text-align: left;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.lesson-mini-quiz-option span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #f1f5fb;
+  color: #5e72e4;
+  font-weight: 900;
+}
+
+.lesson-mini-quiz-option strong {
+  min-width: 0;
+  font-weight: 750;
+  line-height: 1.4;
+  text-align: left;
+  word-break: break-word;
+}
+
+.lesson-mini-quiz-option:hover:not(:disabled) {
+  border-color: #5e72e4;
+  box-shadow: 0 10px 24px rgba(94,114,228,0.12);
+  transform: translateY(-1px);
+}
+
+.lesson-mini-quiz-option.is-correct,
+.lesson-mini-quiz-option.is-selected-correct {
+  border-color: rgba(45,206,137,0.5);
+  background: rgba(45,206,137,0.08);
+}
+
+.lesson-mini-quiz-option.is-correct span,
+.lesson-mini-quiz-option.is-selected-correct span {
+  background: #2dce89;
+  color: #ffffff;
+}
+
+.lesson-mini-quiz-option.is-selected-wrong {
+  border-color: rgba(245,54,92,0.5);
+  background: rgba(245,54,92,0.08);
+}
+
+.lesson-mini-quiz-option.is-selected-wrong span {
+  background: #f5365c;
+  color: #ffffff;
+}
+
+.lesson-mini-quiz-option:disabled {
+  cursor: default;
+}
+
+.lesson-mini-quiz-feedback {
+  display: none;
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  line-height: 1.5;
+}
+
+.lesson-mini-quiz-feedback.show {
+  display: block;
+}
+
+.lesson-mini-quiz-feedback strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-weight: 900;
+}
+
+.lesson-mini-quiz-feedback p {
+  margin: 0;
+}
+
+.lesson-mini-quiz-feedback.is-correct {
+  background: rgba(45,206,137,0.1);
+  color: #1f8f63;
+}
+
+.lesson-mini-quiz-feedback.is-wrong {
+  background: rgba(251,99,64,0.1);
+  color: #c84f32;
+}
+
+html[data-theme="dark"] .lesson-mini-quiz,
+html[data-theme="dark"] .lesson-mini-quiz-card,
+html[data-theme="dark"] .lesson-mini-quiz-option {
+  border-color: rgba(255,255,255,0.1);
+  background: #111827;
+}
+
+html[data-theme="dark"] .lesson-mini-quiz-head h2,
+html[data-theme="dark"] .lesson-mini-quiz-card h3,
+html[data-theme="dark"] .lesson-mini-quiz-option {
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .lesson-mini-quiz-head p,
+html[data-theme="dark"] .lesson-mini-quiz-number {
+  color: #a7b2c4;
+}
+
 /* Admin quiz authoring */
 .admin-lesson-ai-tools {
   display: flex;

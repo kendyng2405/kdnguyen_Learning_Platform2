@@ -4,7 +4,7 @@
 
 import { CourseModel } from "../models/CourseModel.js?v=10";
 import { QuizModel }   from "../models/QuizModel.js?v=12";
-import { AdminView }   from "../views/AdminView.js?v=11";
+import { AdminView }   from "../views/AdminView.js?v=12";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 export class AdminController {
@@ -392,13 +392,13 @@ export class AdminController {
       if (transcript && transcript.length > 50) {
         if (transcript.length > 15000) transcript = transcript.substring(0, 15000) + "...";
         const msg = targetLang === "vi"
-          ? `Dựa vào phụ đề của video "${title}" dưới đây, hãy viết nội dung bài học bằng Markdown chi tiết gồm: 1. Tóm tắt ngắn gọn. 2. Timeline sự kiện. 3. Các khái niệm chính. 4. Tạo 3 câu trắc nghiệm. 5. Tạo 3 flashcards.\n\nTranscript: ${transcript}`
-          : `Based on the transcript of "${title}", write a detailed Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. 3-question quiz. 5. 3 flashcards.\n\nTranscript: ${transcript}`;
+          ? `Dựa vào phụ đề của video "${title}" dưới đây, hãy viết nội dung bài học bằng Markdown chi tiết gồm: 1. Tóm tắt ngắn gọn. 2. Timeline sự kiện. 3. Các khái niệm chính. 4. Mini quiz gồm đúng 3 câu trắc nghiệm, mỗi câu có a) b) c) d) và dòng "* Đáp án đúng: <chữ cái>) <nội dung>". 5. Tạo 3 flashcards.\n\nTranscript: ${transcript}`
+          : `Based on the transcript of "${title}", write a detailed Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. A Mini quiz with exactly 3 multiple-choice questions, each with a) b) c) d) and a "* Correct answer: <letter>) <answer>" line. 5. 3 flashcards.\n\nTranscript: ${transcript}`;
         parts.push({ text: msg });
       } else {
         const msg = targetLang === "vi"
-          ? `Hãy xem video YouTube đính kèm và viết một bài học Markdown chi tiết gồm: 1. Tóm tắt ngắn gọn. 2. Timeline. 3. Khái niệm chính. 4. 3 câu hỏi trắc nghiệm. 5. 3 thẻ ghi nhớ.\nNẾU BẠN KHÔNG XEM ĐƯỢC VIDEO NÀY, HÃY TRẢ LỜI: "ERROR_CANNOT_ACCESS_VIDEO".`
-          : `Please watch the attached YouTube video and write a Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. 3-question quiz. 5. 3 flashcards.\nIF YOU CANNOT WATCH THIS VIDEO, REPLY: "ERROR_CANNOT_ACCESS_VIDEO".`;
+          ? `Hãy xem video YouTube đính kèm và viết một bài học Markdown chi tiết gồm: 1. Tóm tắt ngắn gọn. 2. Timeline. 3. Khái niệm chính. 4. Mini quiz gồm đúng 3 câu trắc nghiệm, mỗi câu có a) b) c) d) và dòng "* Đáp án đúng: <chữ cái>) <nội dung>". 5. 3 thẻ ghi nhớ.\nNẾU BẠN KHÔNG XEM ĐƯỢC VIDEO NÀY, HÃY TRẢ LỜI: "ERROR_CANNOT_ACCESS_VIDEO".`
+          : `Please watch the attached YouTube video and write a Markdown lesson including: 1. Summary. 2. Timeline. 3. Key concepts. 4. A Mini quiz with exactly 3 multiple-choice questions, each with a) b) c) d) and a "* Correct answer: <letter>) <answer>" line. 5. 3 flashcards.\nIF YOU CANNOT WATCH THIS VIDEO, REPLY: "ERROR_CANNOT_ACCESS_VIDEO".`;
         
         const yUrlMatch = videoUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s?]+)/);
         if (yUrlMatch) {
@@ -424,7 +424,10 @@ export class AdminController {
           throw new Error(lang === "vi" ? "AI không thể xem nội dung video này. Vui lòng thêm API Key chính chủ!" : "AI cannot watch this video. Please use a direct API Key.");
         }
         
-        document.getElementById("lessonContent").value = response;
+        const preparedLesson = this._extractLessonMiniQuiz(response, targetLang);
+        document.getElementById("lessonContent").value = preparedLesson.questions.length ? this._contentWithMiniQuizMarker(preparedLesson) : response;
+        const miniQuizField = document.getElementById("lessonMiniQuizData");
+        if (miniQuizField) miniQuizField.value = JSON.stringify(preparedLesson.questions);
         window.__toast.success(lang === "vi" ? "Đã tạo nội dung bài học!" : "Lesson content generated!");
       } catch (e) {
         if (e.message.includes("1048576") || e.message.includes("exceeds the maximum number of tokens")) {
@@ -441,7 +444,7 @@ export class AdminController {
     document.getElementById("saveLessonBtn")?.addEventListener("click", async () => {
       const title    = document.getElementById("lessonTitle").value.trim();
       const type     = document.getElementById("lessonType").value;
-      const content  = document.getElementById("lessonContent").value.trim();
+      let content    = document.getElementById("lessonContent").value.trim();
       const videoUrl = document.getElementById("lessonVideoUrl").value.trim();
       const docUrl   = document.getElementById("lessonDocUrl").value.trim();
       const order    = parseInt(document.getElementById("lessonOrder").value) || 0;
@@ -452,7 +455,19 @@ export class AdminController {
         return;
       }
 
-      const data = { title, type, content, videoUrl, docUrl, order, duration };
+      const extractedLesson = this._extractLessonMiniQuiz(content, lang);
+      let miniQuiz = extractedLesson.questions;
+      if (miniQuiz.length) {
+        content = this._contentWithMiniQuizMarker(extractedLesson);
+      } else {
+        try {
+          miniQuiz = JSON.parse(document.getElementById("lessonMiniQuizData")?.value || "[]");
+        } catch {
+          miniQuiz = [];
+        }
+      }
+
+      const data = { title, type, content, videoUrl, docUrl, order, duration, miniQuiz };
       try {
         if (isEdit) {
           await this.courseModel.updateLesson(courseId, lesson.id, data);
@@ -467,6 +482,189 @@ export class AdminController {
         window.__toast.error(e.message);
       }
     });
+  }
+
+  _extractLessonMiniQuiz(content, lang) {
+    const source = String(content || "").replace(/\r/g, "\n");
+    const block = this._findLessonMiniQuizBlock(source);
+    if (!block) return { content: source.trim(), questions: [] };
+
+    const questions = this._parseLessonMiniQuizBlock(block.text, lang);
+    if (!questions.length) return { content: source.trim(), questions: [] };
+
+    const before = source.slice(0, block.start).trim();
+    const after = source.slice(block.end).trim();
+    return {
+      content: [before, after].filter(Boolean).join("\n\n").trim(),
+      before,
+      after,
+      questions,
+    };
+  }
+
+  _contentWithMiniQuizMarker(extractedLesson) {
+    const marker = "<!-- lesson-mini-quiz -->";
+    return [extractedLesson.before, marker, extractedLesson.after]
+      .filter(part => String(part || "").trim())
+      .join("\n\n")
+      .trim();
+  }
+
+  _findLessonMiniQuizBlock(content) {
+    const lines = content.split("\n");
+    let offset = 0;
+    let startLine = -1;
+    let startOffset = 0;
+
+    for (let i = 0; i < lines.length; i += 1) {
+      if (this._isLessonMiniQuizHeading(lines[i])) {
+        startLine = i;
+        startOffset = offset;
+        break;
+      }
+      offset += lines[i].length + 1;
+    }
+
+    if (startLine < 0) return null;
+
+    let endLine = lines.length;
+    for (let i = startLine + 1; i < lines.length; i += 1) {
+      if (this._isPostLessonMiniQuizHeading(lines[i])) {
+        endLine = i;
+        break;
+      }
+    }
+
+    const endOffset = lines.slice(0, endLine).join("\n").length + (endLine < lines.length ? 1 : 0);
+    return {
+      start: startOffset,
+      end: endOffset,
+      text: lines.slice(startLine, endLine).join("\n"),
+    };
+  }
+
+  _isLessonMiniQuizHeading(line) {
+    const normalized = this._normalizeTextForQuality(line)
+      .replace(/^#+\s*/, "")
+      .replace(/^\d+[\.)]\s*/, "")
+      .trim();
+    return normalized.length <= 90
+      && /(mini quiz|quiz mini|cau hoi trac nghiem|trac nghiem|multiple choice|quick check)/.test(normalized);
+  }
+
+  _isPostLessonMiniQuizHeading(line) {
+    const normalized = this._normalizeTextForQuality(line)
+      .replace(/^#+\s*/, "")
+      .replace(/^\d+[\.)]\s*/, "")
+      .trim();
+    return normalized.length <= 100
+      && /(flashcard|the ghi nho|ghi nho|ket luan|conclusion|tai lieu|references|bai tap|assignment)/.test(normalized);
+  }
+
+  _parseLessonMiniQuizBlock(block, lang) {
+    const questions = [];
+    let current = null;
+
+    const commit = () => {
+      if (!current) return;
+      const options = current.options.filter(Boolean).slice(0, 4);
+      const correctAnswer = Number.isInteger(current.correctAnswer) ? current.correctAnswer : 0;
+      if (current.question.length >= 8 && options.length >= 2 && correctAnswer >= 0 && correctAnswer < options.length) {
+        questions.push({
+          id: `mini_${questions.length + 1}`,
+          type: "multiple_choice",
+          question: current.question,
+          options,
+          correctAnswer,
+          explanation: current.explanation || "",
+        });
+      }
+      current = null;
+    };
+
+    block.split("\n").forEach(rawLine => {
+      const line = this._cleanLessonQuizLine(rawLine);
+      if (!line || this._isLessonMiniQuizHeading(line)) return;
+
+      const answerMatch = line.match(/(?:đáp án đúng|đáp án|dap an dung|dap an|correct answer|answer)\s*[:：]?\s*([a-d])/i);
+      if (answerMatch && current) {
+        current.correctAnswer = answerMatch[1].toLowerCase().charCodeAt(0) - 97;
+        const explanation = line.replace(answerMatch[0], "").replace(/^[\s:：.)-]+/, "").trim();
+        if (explanation) current.explanation = explanation;
+        return;
+      }
+
+      const optionMatch = line.match(/^(?:[-*]\s*)?([a-dA-D])[\).:-]\s*(.+)$/);
+      if (optionMatch && current) {
+        current.options[optionMatch[1].toLowerCase().charCodeAt(0) - 97] = this._cleanLessonQuizText(optionMatch[2]);
+        return;
+      }
+
+      const questionMatch = line.match(/^(?:[-*]\s*)?(?:câu|cau)?\s*(\d+)[\).]\s*(.+)$/i);
+      if (questionMatch) {
+        commit();
+        current = {
+          question: this._cleanLessonQuizText(questionMatch[2]),
+          options: [],
+          correctAnswer: null,
+          explanation: "",
+        };
+        return;
+      }
+
+      if (current && !current.options.length) {
+        current.question = this._cleanLessonQuizText(`${current.question} ${line}`);
+      }
+    });
+
+    commit();
+    return this._normalizeLessonMiniQuiz(questions, lang);
+  }
+
+  _normalizeLessonMiniQuiz(questions, lang) {
+    if (!Array.isArray(questions)) return [];
+    return questions.map((question, index) => {
+      const options = Array.isArray(question.options)
+        ? question.options.map(option => this._cleanLessonQuizText(option)).filter(Boolean).slice(0, 4)
+        : [];
+      const correctAnswer = this._safeLessonQuizCorrectIndex({ ...question, options });
+      return {
+        id: question.id || `mini_${index + 1}`,
+        type: "multiple_choice",
+        question: this._cleanLessonQuizText(question.question || question.q || ""),
+        options,
+        correctAnswer,
+        explanation: this._cleanLessonQuizText(question.explanation || ""),
+      };
+    }).filter(question => question.question.length >= 8 && question.options.length >= 2);
+  }
+
+  _safeLessonQuizCorrectIndex(question) {
+    const options = Array.isArray(question.options) ? question.options : [];
+    if (typeof question.correctAnswer === "number" && question.correctAnswer >= 0 && question.correctAnswer < options.length) {
+      return question.correctAnswer;
+    }
+    const raw = String(question.correctAnswer ?? question.answer ?? "").trim();
+    if (/^[a-d]$/i.test(raw)) return raw.toLowerCase().charCodeAt(0) - 97;
+    const parsed = parseInt(raw, 10);
+    if (!Number.isNaN(parsed) && parsed >= 0 && parsed < options.length) return parsed;
+    const matched = options.findIndex(option => this._normalizeTextForQuality(option) === this._normalizeTextForQuality(raw));
+    return matched >= 0 ? matched : 0;
+  }
+
+  _cleanLessonQuizLine(line) {
+    return this._cleanLessonQuizText(line)
+      .replace(/^#{1,4}\s*/, "")
+      .replace(/^>\s*/, "")
+      .trim();
+  }
+
+  _cleanLessonQuizText(value) {
+    return String(value ?? "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/[*_`]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   async _showQuizzesManager(courseId) {
