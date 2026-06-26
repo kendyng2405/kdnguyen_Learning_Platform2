@@ -207,7 +207,7 @@ export class AuthView {
                   <div class="text-center text-muted mb-4">
                     <small>${t.title}</small>
                   </div>
-                  <form id="loginForm" autocomplete="on" novalidate>
+                  <form id="loginForm" autocomplete="on" novalidate method="post" action="#">
                     <div class="form-group mb-3">
                       <div class="input-group input-group-alternative">
                         <div class="input-group-prepend">
@@ -310,7 +310,7 @@ export class AuthView {
                   <div class="text-center text-muted mb-4">
                     <small>${isTeacher ? (lang === "vi" ? "Tạo tài khoản giảng viên" : "Create Teacher Account") : t.title}</small>
                   </div>
-                  <form id="registerForm" autocomplete="on" novalidate>
+                  <form id="registerForm" autocomplete="on" novalidate method="post" action="#">
                     <input type="hidden" id="registerRole" value="${isTeacher ? "teacher" : "student"}" />
                     <div class="form-group">
                       <div class="input-group input-group-alternative mb-3">
