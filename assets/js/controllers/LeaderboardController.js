@@ -3,7 +3,7 @@
 // ============================================================
 
 import { AuthModel } from "../models/AuthModel.js?v=10";
-import { QuizModel } from "../models/QuizModel.js?v=10";
+import { QuizModel } from "../models/QuizModel.js?v=12";
 import { LeaderboardView } from "../views/LeaderboardView.js?v=10";
 
 export class LeaderboardController {

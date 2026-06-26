@@ -3,7 +3,7 @@
 // ============================================================
 
 import { CourseModel } from "../models/CourseModel.js?v=10";
-import { QuizModel }   from "../models/QuizModel.js?v=11";
+import { QuizModel }   from "../models/QuizModel.js?v=12";
 import { TrackingView } from "../views/TrackingView.js?v=10";
 
 export class TrackingController {

@@ -2,7 +2,7 @@
 //  ProgressController.js — Progress Tracking
 // ============================================================
 
-import { QuizModel }    from "../models/QuizModel.js?v=10";
+import { QuizModel }    from "../models/QuizModel.js?v=12";
 import { CourseModel }  from "../models/CourseModel.js?v=10";
 import { ProgressView } from "../views/ProgressView.js?v=10";
 

@@ -55,7 +55,8 @@ export class QuizModel {
   async markLessonComplete(uid, courseId, lessonId) {
     const ref = doc(this.db, "progress", `${uid}_${courseId}`);
     const snap = await getDoc(ref);
-    const data = snap.exists() ? snap.data() : { completedLessons: [], quizScores: {}, enrolledAt: serverTimestamp() };
+    const data = snap.exists() ? snap.data() : { uid, courseId, completedLessons: [], quizScores: {}, enrolledAt: null };
+    data.completedLessons = Array.isArray(data.completedLessons) ? data.completedLessons : [];
 
     if (!data.completedLessons.includes(lessonId)) {
       data.completedLessons.push(lessonId);
@@ -67,7 +68,7 @@ export class QuizModel {
   async saveQuizScore(uid, courseId, quizId, score, total) {
     const ref = doc(this.db, "progress", `${uid}_${courseId}`);
     const snap = await getDoc(ref);
-    const data = snap.exists() ? snap.data() : { completedLessons: [], quizScores: {}, enrolledAt: serverTimestamp() };
+    const data = snap.exists() ? snap.data() : { uid, courseId, completedLessons: [], quizScores: {}, enrolledAt: null };
 
     data.quizScores = data.quizScores || {};
     // Keep best score
@@ -118,15 +119,21 @@ export class QuizModel {
   async enrollCourse(uid, courseId) {
     const ref = doc(this.db, "progress", `${uid}_${courseId}`);
     const snap = await getDoc(ref);
-    const isNewEnrollment = !snap.exists();
-    if (!snap.exists()) {
-      await setDoc(ref, {
+    const existing = snap.exists() ? snap.data() : null;
+    const isNewEnrollment = !existing?.enrolledAt;
+
+    await setDoc(ref, {
+      uid,
+      courseId,
+      ...(existing || {
         completedLessons: [],
         quizScores: {},
-        enrolledAt: serverTimestamp(),
-        lastUpdated: serverTimestamp(),
-      });
-    }
+      }),
+      enrolledAt: existing?.enrolledAt || serverTimestamp(),
+      enrollmentSource: "course_enroll",
+      lastUpdated: serverTimestamp(),
+    }, { merge: true });
+
     // Also update user's enrolledCourses
     const userRef = doc(this.db, "users", uid);
     const userSnap = await getDoc(userRef);
@@ -158,10 +165,8 @@ export class QuizModel {
 
   _isEnrollmentProgress(progress) {
     return !!(
-      progress?.enrolledAt ||
-      progress?.lastUpdated ||
-      progress?.completedLessons?.length ||
-      Object.keys(progress?.quizScores || {}).length
+      progress?.enrollmentSource === "course_enroll" ||
+      progress?.enrolledAt
     );
   }
 }

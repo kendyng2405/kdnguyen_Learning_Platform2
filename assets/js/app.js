@@ -4,17 +4,17 @@
 // ============================================================
 
 import { AuthController }         from "./controllers/AuthController.js?v=11";
-import { CourseController }       from "./controllers/CourseController.js?v=13";
-import { QuizController }         from "./controllers/QuizController.js?v=18";
-import { ProgressController }     from "./controllers/ProgressController.js?v=10";
-import { AdminController }        from "./controllers/AdminController.js?v=18";
+import { CourseController }       from "./controllers/CourseController.js?v=14";
+import { QuizController }         from "./controllers/QuizController.js?v=19";
+import { ProgressController }     from "./controllers/ProgressController.js?v=11";
+import { AdminController }        from "./controllers/AdminController.js?v=19";
 import { ChatbotController }      from "./controllers/ChatbotController.js?v=11";
 import { ProfileController }      from "./controllers/ProfileController.js?v=10";
-import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=10";
-import { MissionsController }     from "./controllers/MissionsController.js?v=10";
-import { CalendarController }     from "./controllers/CalendarController.js?v=10";
-import { CertificateController }  from "./controllers/CertificateController.js?v=10";
-import { TrackingController }     from "./controllers/TrackingController.js?v=10";
+import { LeaderboardController }  from "./controllers/LeaderboardController.js?v=11";
+import { MissionsController }     from "./controllers/MissionsController.js?v=11";
+import { CalendarController }     from "./controllers/CalendarController.js?v=11";
+import { CertificateController }  from "./controllers/CertificateController.js?v=11";
+import { TrackingController }     from "./controllers/TrackingController.js?v=11";
 import { AuthModel }              from "./models/AuthModel.js?v=10";
 import { I18nService }            from "./services/I18nService.js?v=10";
 import { ThemeService }           from "./services/ThemeService.js?v=10";

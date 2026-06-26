@@ -3,7 +3,7 @@
 // ============================================================
 
 import { CourseModel } from "../models/CourseModel.js?v=10";
-import { QuizModel } from "../models/QuizModel.js?v=10";
+import { QuizModel } from "../models/QuizModel.js?v=12";
 import { CalendarView } from "../views/CalendarView.js?v=10";
 
 export class CalendarController {

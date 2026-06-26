@@ -2,7 +2,7 @@
 //  QuizController.js - Quiz Business Logic
 // ============================================================
 
-import { QuizModel } from "../models/QuizModel.js?v=11";
+import { QuizModel } from "../models/QuizModel.js?v=12";
 import { CourseModel } from "../models/CourseModel.js?v=10";
 import { QuizView } from "../views/QuizView.js?v=18";
 
@@ -145,12 +145,16 @@ export class QuizController {
 
   async _buildQuizListRows(courses, progressMap, profile, lang) {
     const rows = [];
+    const canManageCourses = this.app.canManageCourses();
+
     await Promise.all(courses.map(async course => {
       try {
         const quizzes = await this.quizModel.getQuizzesByCourse(course.id);
         quizzes.forEach(quiz => {
           const progress = progressMap[course.id] || null;
           const access = this._canAccessCourse(course.id, progress, profile);
+          if (!canManageCourses && !access) return;
+
           const status = this._quizStatus(quiz, lang);
           const score = progress?.quizScores?.[quiz.id] || null;
           const hasQuestions = Array.isArray(quiz.questions) && quiz.questions.length > 0;
@@ -215,27 +219,25 @@ export class QuizController {
   async _learnerHasCourseAccess(courseId) {
     const uid = this.app.getUser()?.uid;
     const profile = this.app.getUserProfile();
-    if (Array.isArray(profile?.enrolledCourses) && profile.enrolledCourses.includes(courseId)) {
-      return true;
-    }
     if (!uid) return false;
     const progress = await this.quizModel.getProgress(uid, courseId);
-    return this._hasEnrollmentProgress(progress);
+    return this._isExplicitlyEnrolled(courseId, progress, profile);
   }
 
   _canAccessCourse(courseId, progress, profile) {
     if (this.app.canManageCourses()) return true;
-    if (Array.isArray(profile?.enrolledCourses) && profile.enrolledCourses.includes(courseId)) return true;
-    return this._hasEnrollmentProgress(progress);
+    return this._isExplicitlyEnrolled(courseId, progress, profile);
   }
 
-  _hasEnrollmentProgress(progress) {
-    return !!(
-      progress?.enrolledAt ||
-      progress?.lastUpdated ||
-      progress?.completedLessons?.length ||
-      Object.keys(progress?.quizScores || {}).length
-    );
+  _isExplicitlyEnrolled(courseId, progress, profile) {
+    const enrolledCourses = Array.isArray(profile?.enrolledCourses) ? profile.enrolledCourses : [];
+    const listedInProfile = enrolledCourses.some(item => (
+      item === courseId || item?.id === courseId || item?.courseId === courseId
+    ));
+    if (listedInProfile) {
+      return true;
+    }
+    return progress?.enrollmentSource === "course_enroll";
   }
 
   _quizStatus(quiz, lang) {

@@ -3,8 +3,8 @@
 // ============================================================
 
 import { CourseModel } from "../models/CourseModel.js?v=10";
-import { QuizModel }   from "../models/QuizModel.js?v=11";
-import { CourseView }  from "../views/CourseView.js?v=12";
+import { QuizModel }   from "../models/QuizModel.js?v=12";
+import { CourseView }  from "../views/CourseView.js?v=13";
 
 export class CourseController {
   constructor(app) {
@@ -144,6 +144,13 @@ export class CourseController {
       
       const doEnroll = async () => {
         await this.quizModel.enrollCourse(uid, courseId);
+        const profile = this.app.getUserProfile();
+        if (profile) {
+          const enrolledCourses = Array.isArray(profile.enrolledCourses) ? profile.enrolledCourses : [];
+          if (!enrolledCourses.includes(courseId)) {
+            profile.enrolledCourses = [...enrolledCourses, courseId];
+          }
+        }
         window.__toast.success(lang === "vi" ? "Đăng ký khóa học thành công!" : "Enrolled successfully!");
         this.showCourseDetail(courseId);
       };

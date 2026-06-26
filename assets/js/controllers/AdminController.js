@@ -3,7 +3,7 @@
 // ============================================================
 
 import { CourseModel } from "../models/CourseModel.js?v=10";
-import { QuizModel }   from "../models/QuizModel.js?v=11";
+import { QuizModel }   from "../models/QuizModel.js?v=12";
 import { AdminView }   from "../views/AdminView.js?v=11";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 

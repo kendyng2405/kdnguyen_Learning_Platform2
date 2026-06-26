@@ -20,6 +20,7 @@ export class CourseView {
     const courseLevel = recommended ? (recommended.level || "LEVEL 1").toUpperCase() : "";
     const courseThumb = recommended?.thumbnail || "";
     const startAction = recommended ? `window.__router.navigate('course', '${recommended.id}')` : "window.__router.navigate('courses')";
+    const recommendedVisibility = recommended ? this._courseVisibility(recommended, lang) : null;
     
     const t = lang === "vi" ? {
       solve: "Giải thêm 3 bài tập để bắt đầu chuỗi ngày",
@@ -103,6 +104,7 @@ export class CourseView {
               <div class="dashboard-course-meta mb-4">
                 <span><i class="fas fa-route mr-2 text-success"></i>${recommended?.category || t.courseMeta}</span>
                 <span><i class="fas fa-book-open mr-2 text-info"></i>${recommended?.lessonCount || 0} ${t.lessons}</span>
+                <span class="course-visibility-pill ${recommendedVisibility.className}"><i class="fas ${recommendedVisibility.icon} mr-2"></i>${recommendedVisibility.label}</span>
                 <span><i class="fas fa-users mr-2 text-primary"></i>${recommended?.enrolledCount || 0} ${lang === "vi" ? "người học" : "learners"}</span>
               </div>
               
@@ -151,7 +153,7 @@ export class CourseView {
             ? `<div class="col-12"><div class="brilliant-card text-center py-5"><p class="text-muted">${t.noCourses}</p></div></div>`
             : courses.map(c => {
                 const progress = progressMap[c.id];
-                const isEnrolled = !!progress?.enrolledAt;
+                const isEnrolled = this._isCourseEnrolled(c.id, progress, profile);
                 return this._courseCardFull(c, progress, isEnrolled, t, lang);
               }).join("")
           }
@@ -161,11 +163,12 @@ export class CourseView {
   }
 
   renderCourseDetail(course, lessons, quizzes, progress, profile, lang) {
-    const isEnrolled    = !!progress?.enrolledAt;
+    const isEnrolled    = this._isCourseEnrolled(course.id, progress, profile);
     const completedLess = progress?.completedLessons || [];
     const totalLessons  = lessons.length;
     const totalExercises = quizzes.length;
     const courseCompleted = isEnrolled && totalLessons > 0 && completedLess.length >= totalLessons;
+    const visibility = this._courseVisibility(course, lang);
     
     // Determine active lesson
     let activeLessonIdx = lessons.findIndex(l => !completedLess.includes(l.id));
@@ -195,7 +198,10 @@ export class CourseView {
                   ? `<img src="${course.thumbnail}" alt="Course" class="img-fluid" />`
                   : `<div class="course-thumb-placeholder course-thumb-placeholder--sm"><i class="fas fa-book-open"></i></div>`}
               </div>
-              <h2 class="font-weight-bold text-dark mb-3">${course.title}</h2>
+              <div class="course-detail-heading">
+                <h2 class="font-weight-bold text-dark mb-0">${course.title}</h2>
+                <span class="course-visibility-pill ${visibility.className}"><i class="fas ${visibility.icon} mr-2"></i>${visibility.label}</span>
+              </div>
               <p class="text-muted mb-4" style="font-size: 1.05rem; line-height: 1.6;">${course.description || ""}</p>
               
               <div class="d-flex align-items-center text-muted font-weight-bold" style="gap: 1.5rem;">
@@ -397,6 +403,7 @@ export class CourseView {
 
   _courseCard(course, progress, lang) {
     const pct = this._calcProgress(course, progress);
+    const visibility = this._courseVisibility(course, lang);
     return `
       <div class="col-xl-3 col-lg-6 mb-4">
         <div class="card shadow h-100" data-course-id="${course.id}" style="cursor:pointer;">
@@ -404,6 +411,9 @@ export class CourseView {
             ${course.thumbnail ? `<img src="${course.thumbnail}" alt="${course.title}" />` : `<span>📚</span>`}
           </div>
           <div class="card-body d-flex flex-column">
+            <div class="course-card-meta-row mb-2">
+              <span class="course-visibility-pill ${visibility.className}"><i class="fas ${visibility.icon} mr-2"></i>${visibility.label}</span>
+            </div>
             <h5 class="card-title mb-1">${course.title}</h5>
             <p class="text-muted small mb-2">${(course.description || "").slice(0, 80)}${course.description?.length > 80 ? "…" : ""}</p>
             <div class="d-flex justify-content-between align-items-center mt-auto">
@@ -420,6 +430,7 @@ export class CourseView {
     const pct = this._calcProgress(course, progress);
     const levelMap = { beginner: "success", intermediate: "warning", advanced: "danger" };
     const levelColor = levelMap[course.level] || "primary";
+    const visibility = this._courseVisibility(course, lang);
 
     return `
       <div class="col-xl-3 col-lg-6 mb-4">
@@ -428,7 +439,10 @@ export class CourseView {
             ${course.thumbnail ? `<img src="${course.thumbnail}" alt="${course.title}" />` : `<span>📚</span>`}
           </div>
           <div class="card-body d-flex flex-column">
-            ${course.category ? `<span class="badge badge-primary badge-sm mb-2 align-self-start">${course.category}</span>` : ""}
+            <div class="course-card-meta-row mb-2">
+              ${course.category ? `<span class="badge badge-primary badge-sm">${course.category}</span>` : "<span></span>"}
+              <span class="course-visibility-pill ${visibility.className}"><i class="fas ${visibility.icon} mr-2"></i>${visibility.label}</span>
+            </div>
             <h5 class="card-title mb-1">${course.title}</h5>
             <p class="text-muted small mb-2">${(course.description || "").slice(0, 100)}${(course.description || "").length > 100 ? "…" : ""}</p>
             <div class="mt-auto">
@@ -445,6 +459,33 @@ export class CourseView {
         </div>
       </div>
     `;
+  }
+
+  _courseVisibility(course, lang) {
+    const visibility = String(course?.visibility || course?.privacy || course?.access || "").toLowerCase();
+    const hasPassword = !!String(course?.password || "").trim();
+    const explicitPrivate = course?.isPrivate === true
+      || course?.private === true
+      || course?.isPublic === false
+      || ["private", "locked", "restricted", "hidden"].includes(visibility);
+    const isPrivate = hasPassword || explicitPrivate;
+
+    return {
+      isPrivate,
+      icon: isPrivate ? "fa-lock" : "fa-globe",
+      className: isPrivate ? "is-private" : "is-public",
+      label: lang === "vi"
+        ? (isPrivate ? "Riêng tư" : "Công khai")
+        : (isPrivate ? "Private" : "Public"),
+    };
+  }
+
+  _isCourseEnrolled(courseId, progress, profile) {
+    const enrolledCourses = Array.isArray(profile?.enrolledCourses) ? profile.enrolledCourses : [];
+    const listedInProfile = enrolledCourses.some(item => (
+      item === courseId || item?.id === courseId || item?.courseId === courseId
+    ));
+    return listedInProfile || progress?.enrollmentSource === "course_enroll";
   }
 
   _calcProgress(course, progress) {
