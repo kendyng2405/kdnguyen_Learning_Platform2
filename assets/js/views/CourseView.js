@@ -23,9 +23,6 @@ export class CourseView {
     
     const t = lang === "vi" ? {
       solve: "Giải thêm 3 bài tập để bắt đầu chuỗi ngày",
-      premiumTitle: "Mở khóa toàn bộ tính năng Premium",
-      premiumSub: "để học thông minh hơn, nhanh hơn",
-      premiumBtn: "Khám phá Premium",
       leagues: leaderboardUnlocked ? "BẢNG XẾP HẠNG" : "MỞ KHÓA BẢNG XẾP HẠNG",
       leaderboardSub: `${completedLessons} / ${leaderboardGoal} bài học`,
       courseMeta: "Lộ trình học",
@@ -38,9 +35,6 @@ export class CourseView {
       days: ["T3", "T4", "T5", "T6", "T7"]
     } : {
       solve: "Solve 3 problems to start a streak",
-      premiumTitle: "Unlock all learning with Premium",
-      premiumSub: "to get smarter, faster",
-      premiumBtn: "Explore Premium",
       leagues: leaderboardUnlocked ? "LEADERBOARD" : "UNLOCK LEADERBOARD",
       leaderboardSub: `${completedLessons} / ${leaderboardGoal} lessons`,
       courseMeta: "Learning path",
@@ -78,16 +72,6 @@ export class CourseView {
                   </div>
                 `).join('')}
               </div>
-            </div>
-
-            <!-- Premium Card -->
-            <div class="brilliant-card mb-4 text-center" style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);">
-              <div class="d-flex align-items-center justify-content-center mb-2">
-                <i class="fas fa-gem text-info mr-2" style="font-size: 1.5rem;"></i>
-                <h4 class="mb-0 font-weight-bold">${t.premiumTitle}</h4>
-              </div>
-              <p class="text-muted mb-4">${t.premiumSub}</p>
-              <button class="brilliant-btn-gradient-orange w-100 shadow-sm" onclick="window.__router.navigate('courses')">${t.premiumBtn}</button>
             </div>
 
             <!-- Leaderboard Card -->

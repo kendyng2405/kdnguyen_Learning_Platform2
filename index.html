@@ -18,7 +18,7 @@
   <!-- Argon Dashboard CSS -->
   <link rel="stylesheet" href="assets/css/argon-dashboard.css" />
   <!-- LMS Custom Overrides -->
-  <link rel="stylesheet" href="assets/css/lms-overrides.css?v=24" />
+  <link rel="stylesheet" href="assets/css/lms-overrides.css?v=25" />
 </head>
 <body>
 
@@ -242,7 +242,7 @@
     window.__firebaseDB      = getFirestore(app);
     window.__firebaseStorage = getStorage(app);
 
-    const { App } = await import("./assets/js/app.js?v=23");
+    const { App } = await import("./assets/js/app.js?v=25");
     window.__app = new App();
     window.__app.init();
   </script>
